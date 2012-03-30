@@ -1,0 +1,29 @@
+#ifndef CUTEIPCINTERFACE_H
+#define CUTEIPCINTERFACE_H
+
+// Qt
+#include <QObject>
+class QLocalSocket;
+
+
+class CuteIPCInterface : public QObject
+{
+  Q_OBJECT
+
+  public:
+    CuteIPCInterface(QObject* parent = 0);
+
+    bool connectToServer(const QString& name);
+
+    void call(const QString& method, QGenericArgument val0 = QGenericArgument(),
+              QGenericArgument val1 = QGenericArgument(), QGenericArgument val2 = QGenericArgument(),
+              QGenericArgument val3 = QGenericArgument(), QGenericArgument val4 = QGenericArgument(),
+              QGenericArgument val5 = QGenericArgument(), QGenericArgument val6 = QGenericArgument(),
+              QGenericArgument val7 = QGenericArgument(), QGenericArgument val8 = QGenericArgument(),
+              QGenericArgument val9 = QGenericArgument());
+
+  private:
+    QLocalSocket* m_socket;
+};
+
+#endif // CUTEIPCINTERFACE_H

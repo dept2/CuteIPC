@@ -1,0 +1,79 @@
+# Old temorary source copies
+*.orig
+*~
+
+# Object files and build directories
+*.[oa]
+
+# CMake temporary files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+install_manifest.txt
+
+# Makefiles (we use CMake for all the project features)
+Makefile
+
+# Qt moc, uic and qrc generated files
+moc_*.cxx
+ui_*.h
+qrc_*.cxx
+*.rcc
+
+*.properties
+.springBeans
+
+# Directories with built binaries
+build/
+*-build/
+*-build-*/
+
+# IDE project files
+*.iml
+*.ipr
+*.iws
+*.kdevelop
+*.kdevelop.pcs
+*.kdevelop.filelist
+*.kdevses
+*.kdev4
+*.cbp
+*.pro.user
+.idea
+CMakeLists.txt.user*
+CMakeLists.txt.shared
+classes
+target
+temp
+jbiServiceUnits
+
+#for Eclipse
+.settings
+.classpath
+.project
+.metadata
+
+# for Dolphin
+.directory
+
+# User's description
+ignoreme*
+
+# for test logs
+*.log
+*.out
+*.epoch
+
+MANIFEST.MF
+
+bin/
+
+debug.log*
+
+server/utils/mq/MQFilesPutter/*
+41_MrcodRequestState.etl.xml
+98_DefaultDepartment.etl.xml
+99_TrModelDefaultDepartment.etl.xml
+
+#BIRT
+*.rptconfig
