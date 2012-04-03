@@ -61,4 +61,3 @@ void CuteIPCService::newConnection()
 
   new CuteIPCServiceConnection(socket, this);
 }
-

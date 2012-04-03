@@ -15,6 +15,13 @@ class CuteIPCInterface : public QObject
 
     bool connectToServer(const QString& name);
 
+    bool call(const QString& method, QString returnType, QGenericArgument val0 = QGenericArgument(),
+              QGenericArgument val1 = QGenericArgument(), QGenericArgument val2 = QGenericArgument(),
+              QGenericArgument val3 = QGenericArgument(), QGenericArgument val4 = QGenericArgument(),
+              QGenericArgument val5 = QGenericArgument(), QGenericArgument val6 = QGenericArgument(),
+              QGenericArgument val7 = QGenericArgument(), QGenericArgument val8 = QGenericArgument(),
+              QGenericArgument val9 = QGenericArgument());
+
     void call(const QString& method, QGenericArgument val0 = QGenericArgument(),
               QGenericArgument val1 = QGenericArgument(), QGenericArgument val2 = QGenericArgument(),
               QGenericArgument val3 = QGenericArgument(), QGenericArgument val4 = QGenericArgument(),
@@ -22,8 +29,16 @@ class CuteIPCInterface : public QObject
               QGenericArgument val7 = QGenericArgument(), QGenericArgument val8 = QGenericArgument(),
               QGenericArgument val9 = QGenericArgument());
 
+  signals:
+    void returnValue(QGenericArgument ret);
+
+  public slots:
+    void readyRead();
+
   private:
     QLocalSocket* m_socket;
+    quint32 m_nextBlockSize;
+    QByteArray m_block;
 };
 
 #endif // CUTEIPCINTERFACE_H

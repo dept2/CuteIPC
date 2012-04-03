@@ -3,7 +3,7 @@
 
 // Qt
 #include <QObject>
-class QLocalSocket;
+#include <QLocalSocket>
 
 // Local
 #include "CuteIPCService.h"
@@ -18,11 +18,14 @@ class CuteIPCServiceConnection : public QObject
 
   public slots:
     void readyRead();
+    void errorOccured(QLocalSocket::LocalSocketError);
+    void sendReturnedValue(QGenericArgument arg);
 
   private:
     QLocalSocket* m_socket;
     quint32 m_nextBlockSize;
     QByteArray m_block;
 };
+
 
 #endif // CUTEIPCSERVICECONNECTION_P_H

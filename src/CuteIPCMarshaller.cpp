@@ -8,15 +8,27 @@
 #include <QDebug>
 
 
-QByteArray CuteIPCMarshaller::marshallCall(const QString& method, QGenericArgument val0, QGenericArgument val1,
+QByteArray CuteIPCMarshaller::marshallCall(const QString& method,
+    QGenericArgument val0, QGenericArgument val1,
     QGenericArgument val2, QGenericArgument val3, QGenericArgument val4, QGenericArgument val5, QGenericArgument val6,
-    QGenericArgument val7, QGenericArgument val8, QGenericArgument val9)
+    QGenericArgument val7, QGenericArgument val8, QGenericArgument val9, QString retType)
 {
   QByteArray result;
   QDataStream stream(&result, QIODevice::WriteOnly);
 
   // Method name
   stream << method;
+
+  // "isVoid" boolean value and it's type
+  if (retType.isEmpty())
+  {
+    stream << true;
+  }
+  else
+  {
+    stream << false;
+    stream << retType;
+  }
 
   // Parse input args
   Arguments args;
@@ -44,29 +56,49 @@ QByteArray CuteIPCMarshaller::marshallCall(const QString& method, QGenericArgume
   // Write args to stream
   stream << args.size(); // Argument count
 
+  bool successfullyMarshalled;
   foreach (const QGenericArgument& arg, args)
   {
-    // Detect and check type
-    int type = QMetaType::type(arg.name());
-    if (type == 0)
-    {
-      qWarning() << "Type" << arg.name() << "have not been registered in Qt metaobject system";
+    successfullyMarshalled = marshallArgumentToStream(arg, stream);
+    if (!successfullyMarshalled)
       return QByteArray();
-    }
-
-    stream << QString::fromLatin1(arg.name());
-    bool ok = QMetaType::save(stream, type, arg.data());
-    if (!ok)
-    {
-      qWarning() << "Failed to serialize" << arg.name() << "to data stream. Call qRegisterMetaTypeStreamOperators to"
-                    " register stream operators for this metatype";
-      return QByteArray();
-    }
   }
 
   return result;
 }
 
+QByteArray CuteIPCMarshaller::marshallReturnedValue(QGenericArgument returnedValue)
+{
+  QByteArray result;
+  QDataStream stream(&result, QIODevice::WriteOnly);
+
+  bool successfullyMarshalled = marshallArgumentToStream(returnedValue, stream);
+  if (!successfullyMarshalled)
+    return QByteArray();
+  return result;
+}
+
+bool CuteIPCMarshaller::marshallArgumentToStream(QGenericArgument returnedValue, QDataStream& stream)
+{
+  // Detect and check type
+  int type = QMetaType::type(returnedValue.name());
+    if (type == 0)
+    {
+      qWarning() << "Type" << returnedValue.name() << "have not been registered in Qt metaobject system";
+      return false;
+    }
+
+    stream << QString::fromLatin1(returnedValue.name());
+    bool ok = QMetaType::save(stream, type, returnedValue.data());
+    if (!ok)
+    {
+      qWarning() << "Failed to serialize" << returnedValue.name() << "to data stream. Call qRegisterMetaTypeStreamOperators to"
+                    " register stream operators for this metatype";
+      return false;
+    }
+
+  return true;
+}
 
 CuteIPCMarshaller::Call CuteIPCMarshaller::demarshallCall(QByteArray call)
 {
@@ -75,6 +107,14 @@ CuteIPCMarshaller::Call CuteIPCMarshaller::demarshallCall(QByteArray call)
   // Method
   QString method;
   stream >> method;
+
+  bool isVoid;
+  QString retType;
+  stream >> isVoid;
+  if (!isVoid)
+  {
+    stream >> retType;
+  }
 
   // Arguments count
   int argc = 0;
@@ -85,37 +125,64 @@ CuteIPCMarshaller::Call CuteIPCMarshaller::demarshallCall(QByteArray call)
 
   for (int i = 0; i < argc; ++i)
   {
-    // Load type
-    QString typeName;
-    stream >> typeName;
-
-    // Check type
-    int type = QMetaType::type(typeName.toLatin1());
-    if (type == 0)
-    {
-      qWarning() << "Unsupported type of argument" << i << ":" << typeName;
-      break; // TODO quit (don't forget to clear the already allocated memory
-    }
-
-    // Read argument data from stream
-    void* data = QMetaType::construct(type);
-    bool ok = QMetaType::load(stream, type, data);
+    bool ok;
+    QGenericArgument argument = demarshallArgumentFromStream(ok, stream);
     if (!ok)
     {
-      qWarning() << "Failed to deserialize argument" << i << "of type" << typeName;
-      break; // TODO quit (don't forget to clear the already allocated memory
+      qWarning() << "Failed to deserialize argument" << i;
+      break;
     }
-
-    args.append(QGenericArgument(qstrdup(typeName.toLatin1()), data));
+    args.append(argument);
   }
 
   // Fill empty args
   while (args.size() < 10)
     args.append(QGenericArgument());
 
-  return qMakePair(method, args);
+  return Call(method, args, retType);
+//  return qMakePair(method, args);
 }
 
+QGenericArgument CuteIPCMarshaller::demarshallReturnedValue(QByteArray value)
+{
+  QDataStream stream(&value, QIODevice::ReadOnly);
+
+  bool ok;
+  QGenericArgument returnedValue = demarshallArgumentFromStream(ok, stream);
+  if (!ok)
+    qDebug() << "Failed to demarshall returned value";
+  return returnedValue;
+}
+
+QGenericArgument CuteIPCMarshaller::demarshallArgumentFromStream(bool& ok, QDataStream& stream)
+{
+  // Load type
+  QString typeName;
+  stream >> typeName;
+
+  // Check type
+  int type = QMetaType::type(typeName.toLatin1());
+  if (type == 0)
+  {
+    qWarning() << "Unsupported type of argument " << ":" << typeName;
+    ok = false;
+    return QGenericArgument();
+  }
+
+  // Read argument data from stream
+  void* data = QMetaType::construct(type);
+  bool dataLoaded = QMetaType::load(stream, type, data);
+  if (!dataLoaded)
+  {
+    qWarning() << "Failed to deserialize argument value" << "of type" << typeName;
+    QMetaType::destroy(type, data);
+    ok = false;
+    return QGenericArgument(); //TODO!: need to discuss
+  }
+
+  ok = true;
+  return QGenericArgument(qstrdup(typeName.toLatin1()), data);
+}
 
 void CuteIPCMarshaller::freeArguments(const CuteIPCMarshaller::Arguments& args)
 {
@@ -129,4 +196,12 @@ void CuteIPCMarshaller::freeArguments(const CuteIPCMarshaller::Arguments& args)
     QMetaType::destroy(QMetaType::type(arg.name()), arg.data());
     delete[] arg.name();
   }
+}
+
+
+CuteIPCMarshaller::Call::Call(QString method, Arguments arguments, QString retType)
+{
+  this->first = method;
+  this->second = arguments;
+  this->retType = retType;
 }
