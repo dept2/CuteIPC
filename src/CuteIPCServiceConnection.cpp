@@ -17,7 +17,7 @@ CuteIPCServiceConnection::CuteIPCServiceConnection(QLocalSocket* socket, CuteIPC
   // Delete connection after the socket have been disconnected
   connect(socket, SIGNAL(disconnected()), socket, SLOT(deleteLater()));
   connect(socket, SIGNAL(disconnected()), SLOT(deleteLater()));
-  connect(socket, SIGNAL(error(QLocalSocket::LocalSocketError)), this, SLOT(errorOccured(QLocalSocket::LocalSocketError)));
+  connect(socket, SIGNAL(error(QLocalSocket::LocalSocketError)), SLOT(errorOccured(QLocalSocket::LocalSocketError)));
 
   connect(socket, SIGNAL(readyRead()), SLOT(readyRead()));
   if (!socket->open(QIODevice::ReadWrite))
@@ -53,12 +53,24 @@ void CuteIPCServiceConnection::readyRead()
     // Fetched enough, need to parse
     qDebug() << "Fetching block finished. Got" << m_block.size() << "bytes:" << QTime::currentTime().toString("hh:mm:ss.zzz");
 
+    makeCall();
+
+    // Cleanup
+    m_nextBlockSize = 0;
+    m_block.clear();
+  }
+}
+
+
+void CuteIPCServiceConnection::makeCall()
+{
     CuteIPCMarshaller::Call call = CuteIPCMarshaller::demarshallCall(m_block);
 
     bool invokeWithReturn = false;
+
     int retType = 0;
     void* retData;
-    if (!call.retType.isEmpty())
+    if (call.calltype == CuteIPCMarshaller::CALL_WITH_RETURN) //!call.retType.isEmpty())
     {
       invokeWithReturn = true;
       retType = QMetaType::type(call.retType.toLatin1());
@@ -91,17 +103,23 @@ void CuteIPCServiceConnection::readyRead()
                                 call.second.at(1), call.second.at(2), call.second.at(3),
                                 call.second.at(4), call.second.at(5), call.second.at(6),
                                 call.second.at(7), call.second.at(8), call.second.at(9));
+      if (call.calltype == CuteIPCMarshaller::CALL_WITH_CONFIRM)
+        sendConfirm();
     }
 
     // Cleanup
     CuteIPCMarshaller::freeArguments(call.second);
     if (retType)
       QMetaType::destroy(retType, retData);
-
-    m_nextBlockSize = 0;
-    m_block.clear();
-  }
 }
+
+
+void CuteIPCServiceConnection::sendConfirm()
+{
+  bool ok = true;
+  sendReturnedValue(Q_RETURN_ARG(bool, ok));
+}
+
 
 void CuteIPCServiceConnection::sendReturnedValue(QGenericArgument arg)
 {
@@ -116,8 +134,9 @@ void CuteIPCServiceConnection::sendReturnedValue(QGenericArgument arg)
 
   m_socket->flush();
   m_socket->waitForBytesWritten(5000);
-  qDebug() << "Returned value was send";
+  qDebug() << "Returned value was sent";
 }
+
 
 void CuteIPCServiceConnection::errorOccured(QLocalSocket::LocalSocketError) {
   qDebug() << "Socket error: " << m_socket->errorString();

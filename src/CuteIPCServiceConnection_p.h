@@ -19,12 +19,15 @@ class CuteIPCServiceConnection : public QObject
   public slots:
     void readyRead();
     void errorOccured(QLocalSocket::LocalSocketError);
-    void sendReturnedValue(QGenericArgument arg);
 
   private:
     QLocalSocket* m_socket;
     quint32 m_nextBlockSize;
     QByteArray m_block;
+
+    void makeCall();
+    void sendReturnedValue(QGenericArgument arg);
+    void sendConfirm();
 };
 
 

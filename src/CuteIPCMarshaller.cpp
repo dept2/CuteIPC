@@ -11,7 +11,7 @@
 QByteArray CuteIPCMarshaller::marshallCall(const QString& method,
     QGenericArgument val0, QGenericArgument val1,
     QGenericArgument val2, QGenericArgument val3, QGenericArgument val4, QGenericArgument val5, QGenericArgument val6,
-    QGenericArgument val7, QGenericArgument val8, QGenericArgument val9, QString retType)
+    QGenericArgument val7, QGenericArgument val8, QGenericArgument val9, QString retType, bool withConfirm)
 {
   QByteArray result;
   QDataStream stream(&result, QIODevice::WriteOnly);
@@ -22,11 +22,11 @@ QByteArray CuteIPCMarshaller::marshallCall(const QString& method,
   // "isVoid" boolean value and it's type
   if (retType.isEmpty())
   {
-    stream << true;
+    stream << (withConfirm ? CALL_WITH_CONFIRM : CALL_WITHOUT_CONFIRM);
   }
   else
   {
-    stream << false;
+    stream << CALL_WITH_RETURN;
     stream << retType;
   }
 
@@ -67,6 +67,7 @@ QByteArray CuteIPCMarshaller::marshallCall(const QString& method,
   return result;
 }
 
+
 QByteArray CuteIPCMarshaller::marshallReturnedValue(QGenericArgument returnedValue)
 {
   QByteArray result;
@@ -77,6 +78,7 @@ QByteArray CuteIPCMarshaller::marshallReturnedValue(QGenericArgument returnedVal
     return QByteArray();
   return result;
 }
+
 
 bool CuteIPCMarshaller::marshallArgumentToStream(QGenericArgument returnedValue, QDataStream& stream)
 {
@@ -100,6 +102,7 @@ bool CuteIPCMarshaller::marshallArgumentToStream(QGenericArgument returnedValue,
   return true;
 }
 
+
 CuteIPCMarshaller::Call CuteIPCMarshaller::demarshallCall(QByteArray call)
 {
   QDataStream stream(&call, QIODevice::ReadOnly);
@@ -108,13 +111,15 @@ CuteIPCMarshaller::Call CuteIPCMarshaller::demarshallCall(QByteArray call)
   QString method;
   stream >> method;
 
-  bool isVoid;
+  CallType calltype;
   QString retType;
-  stream >> isVoid;
-  if (!isVoid)
-  {
+
+  int buffer;
+  stream >> buffer;
+  calltype = CallType(buffer);
+
+  if (calltype == CALL_WITH_RETURN)
     stream >> retType;
-  }
 
   // Arguments count
   int argc = 0;
@@ -139,20 +144,36 @@ CuteIPCMarshaller::Call CuteIPCMarshaller::demarshallCall(QByteArray call)
   while (args.size() < 10)
     args.append(QGenericArgument());
 
-  return Call(method, args, retType);
+  return Call(method, args, retType, calltype);
 //  return qMakePair(method, args);
 }
 
-QGenericArgument CuteIPCMarshaller::demarshallReturnedValue(QByteArray value)
+
+void CuteIPCMarshaller::demarshallReturnedValue(QByteArray value, QGenericReturnArgument arg)
 {
   QDataStream stream(&value, QIODevice::ReadOnly);
 
-  bool ok;
-  QGenericArgument returnedValue = demarshallArgumentFromStream(ok, stream);
-  if (!ok)
-    qDebug() << "Failed to demarshall returned value";
-  return returnedValue;
+  // Load type
+  QString typeName;
+  stream >> typeName;
+
+  // Check type
+  int type = QMetaType::type(typeName.toLatin1());
+  if (type == 0)
+  {
+    qWarning() << "Unsupported type of argument " << ":" << typeName;
+  }
+
+  // Read argument data from stream
+//  void* data = QMetaType::construct(type);
+
+  bool dataLoaded = QMetaType::load(stream, type, arg.data());
+  if (!dataLoaded)
+  {
+    qWarning() << "Failed to deserialize argument value" << "of type" << typeName;
+  }
 }
+
 
 QGenericArgument CuteIPCMarshaller::demarshallArgumentFromStream(bool& ok, QDataStream& stream)
 {
@@ -184,6 +205,7 @@ QGenericArgument CuteIPCMarshaller::demarshallArgumentFromStream(bool& ok, QData
   return QGenericArgument(qstrdup(typeName.toLatin1()), data);
 }
 
+
 void CuteIPCMarshaller::freeArguments(const CuteIPCMarshaller::Arguments& args)
 {
   // Free allocated memory
@@ -199,9 +221,10 @@ void CuteIPCMarshaller::freeArguments(const CuteIPCMarshaller::Arguments& args)
 }
 
 
-CuteIPCMarshaller::Call::Call(QString method, Arguments arguments, QString retType)
+CuteIPCMarshaller::Call::Call(QString method, Arguments arguments, QString retType, CallType calltype)
 {
   this->first = method;
   this->second = arguments;
   this->retType = retType;
+  this->calltype = calltype;
 }

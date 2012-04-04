@@ -5,6 +5,8 @@
 #include <QObject>
 class QLocalSocket;
 
+// local
+class CuteIPCInterfaceConnection;
 
 class CuteIPCInterface : public QObject
 {
@@ -12,10 +14,9 @@ class CuteIPCInterface : public QObject
 
   public:
     CuteIPCInterface(QObject* parent = 0);
-
     bool connectToServer(const QString& name);
 
-    bool call(const QString& method, QString returnType, QGenericArgument val0 = QGenericArgument(),
+    bool call(const QString& method, QGenericReturnArgument ret, QGenericArgument val0 = QGenericArgument(),
               QGenericArgument val1 = QGenericArgument(), QGenericArgument val2 = QGenericArgument(),
               QGenericArgument val3 = QGenericArgument(), QGenericArgument val4 = QGenericArgument(),
               QGenericArgument val5 = QGenericArgument(), QGenericArgument val6 = QGenericArgument(),
@@ -29,16 +30,18 @@ class CuteIPCInterface : public QObject
               QGenericArgument val7 = QGenericArgument(), QGenericArgument val8 = QGenericArgument(),
               QGenericArgument val9 = QGenericArgument());
 
-  signals:
-    void returnValue(QGenericArgument ret);
-
-  public slots:
-    void readyRead();
+    void callAsynchronous(const QString& method, QGenericArgument val0 = QGenericArgument(),
+              QGenericArgument val1 = QGenericArgument(), QGenericArgument val2 = QGenericArgument(),
+              QGenericArgument val3 = QGenericArgument(), QGenericArgument val4 = QGenericArgument(),
+              QGenericArgument val5 = QGenericArgument(), QGenericArgument val6 = QGenericArgument(),
+              QGenericArgument val7 = QGenericArgument(), QGenericArgument val8 = QGenericArgument(),
+              QGenericArgument val9 = QGenericArgument());
 
   private:
     QLocalSocket* m_socket;
-    quint32 m_nextBlockSize;
-    QByteArray m_block;
+    CuteIPCInterfaceConnection* m_connection;
+
+    void sendSynchronousRequest(QByteArray request);
 };
 
 #endif // CUTEIPCINTERFACE_H
