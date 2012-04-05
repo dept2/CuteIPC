@@ -23,7 +23,7 @@ class CuteIPCInterface : public QObject
               QGenericArgument val7 = QGenericArgument(), QGenericArgument val8 = QGenericArgument(),
               QGenericArgument val9 = QGenericArgument());
 
-    void call(const QString& method, QGenericArgument val0 = QGenericArgument(),
+    bool call(const QString& method, QGenericArgument val0 = QGenericArgument(),
               QGenericArgument val1 = QGenericArgument(), QGenericArgument val2 = QGenericArgument(),
               QGenericArgument val3 = QGenericArgument(), QGenericArgument val4 = QGenericArgument(),
               QGenericArgument val5 = QGenericArgument(), QGenericArgument val6 = QGenericArgument(),
@@ -37,11 +37,13 @@ class CuteIPCInterface : public QObject
               QGenericArgument val7 = QGenericArgument(), QGenericArgument val8 = QGenericArgument(),
               QGenericArgument val9 = QGenericArgument());
 
+    QString lastError() const;
+
   private:
     QLocalSocket* m_socket;
     CuteIPCInterfaceConnection* m_connection;
 
-    void sendSynchronousRequest(const QByteArray& request);
+    bool sendSynchronousRequest(const QByteArray& request);
 };
 
 #endif // CUTEIPCINTERFACE_H

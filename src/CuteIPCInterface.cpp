@@ -50,12 +50,11 @@ bool CuteIPCInterface::call(const QString& method, QGenericReturnArgument ret, Q
   m_connection->setReturnedObject(ret);
   qDebug() << "Trying to call" << method;
 
-  sendSynchronousRequest(request);
-  return true;
+  return sendSynchronousRequest(request);
 }
 
 
-void CuteIPCInterface::call(const QString& method, QGenericArgument val0, QGenericArgument val1, QGenericArgument val2,
+bool CuteIPCInterface::call(const QString& method, QGenericArgument val0, QGenericArgument val1, QGenericArgument val2,
                             QGenericArgument val3, QGenericArgument val4, QGenericArgument val5, QGenericArgument val6,
                             QGenericArgument val7, QGenericArgument val8, QGenericArgument val9)
 {
@@ -65,11 +64,11 @@ void CuteIPCInterface::call(const QString& method, QGenericArgument val0, QGener
                                                        val5, val6, val7, val8, val9, QString());
   qDebug() << "Trying to call" << method;
 
-  sendSynchronousRequest(request);
+  return sendSynchronousRequest(request);
 }
 
 
-void CuteIPCInterface::sendSynchronousRequest(const QByteArray& request)
+bool CuteIPCInterface::sendSynchronousRequest(const QByteArray& request)
 {
   qDebug() << "(Method serialized into" << request.size() << "bytes)";
   m_connection->sendCallRequest(request);
@@ -77,13 +76,15 @@ void CuteIPCInterface::sendSynchronousRequest(const QByteArray& request)
   QEventLoop loop;
   connect(m_connection, SIGNAL(callFinished()), &loop, SLOT(quit()));
   loop.exec();
+
+  return m_connection->lastCallSuccessful();
 }
 
 
 void CuteIPCInterface::callAsynchronous(const QString &method, QGenericArgument val0, QGenericArgument val1,
-                                               QGenericArgument val2, QGenericArgument val3, QGenericArgument val4,
-                                               QGenericArgument val5, QGenericArgument val6, QGenericArgument val7,
-                                               QGenericArgument val8, QGenericArgument val9)
+                                        QGenericArgument val2, QGenericArgument val3, QGenericArgument val4,
+                                        QGenericArgument val5, QGenericArgument val6, QGenericArgument val7,
+                                        QGenericArgument val8, QGenericArgument val9)
 {
   qDebug() << "";
   qDebug() << "Before marshalling:" << QTime::currentTime().toString("hh:mm:ss.zzz");
@@ -92,4 +93,10 @@ void CuteIPCInterface::callAsynchronous(const QString &method, QGenericArgument 
   qDebug() << "Call (asynchronously)" << method;
   qDebug() << "(Method serialized into" << request.size() << "bytes)";
   m_connection->sendCallRequest(request);
+}
+
+
+QString CuteIPCInterface::lastError() const
+{
+  return m_connection->lastError();
 }

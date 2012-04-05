@@ -169,7 +169,6 @@ void CuteIPCServiceConnection::sendResponse(QByteArray request)
     qDebug() << "Written bytes and request size doesn't match";
 
   m_socket->flush();
-  m_socket->waitForBytesWritten(5000);
 }
 
 

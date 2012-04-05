@@ -33,7 +33,7 @@ void CuteIPCInterfaceConnection::sendCallRequest(const QByteArray& request)
     qDebug() << "Written bytes and request size doesn't match";
 
   m_socket->flush();
-  bool ok = m_socket->waitForBytesWritten(5000);
+  m_lastCallSuccessful = true;
 }
 
 
@@ -77,7 +77,8 @@ void CuteIPCInterfaceConnection::readyRead()
         if (!status.first)
         {
             qDebug() << "SERVER: ERROR: " << status.second;
-            //TODO: alert the CuteIPCInterface about errors.
+            m_lastError = status.second;
+            m_lastCallSuccessful = false;
         }
         break;
       }
@@ -105,4 +106,16 @@ void CuteIPCInterfaceConnection::errorOccured(QLocalSocket::LocalSocketError)
 void CuteIPCInterfaceConnection::setReturnedObject(QGenericReturnArgument returnedObject)
 {
   m_returnedObject = returnedObject;
+}
+
+
+bool CuteIPCInterfaceConnection::lastCallSuccessful() const
+{
+  return m_lastCallSuccessful;
+}
+
+
+QString CuteIPCInterfaceConnection::lastError() const
+{
+  return m_lastError;
 }
