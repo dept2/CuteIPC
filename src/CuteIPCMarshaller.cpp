@@ -1,5 +1,6 @@
 // Local
 #include "CuteIPCMarshaller_p.h"
+#include "CuteIPCMessage_p.h"
 
 // Qt
 #include <QDataStream>
@@ -74,6 +75,27 @@ QByteArray CuteIPCMarshaller::marshallCall(const QString& method,
   return result;
 }
 
+
+QByteArray CuteIPCMarshaller::marshallCall(const CuteIPCMessageCall &message)
+{
+  QByteArray result;
+  QDataStream stream(&result, QIODevice::WriteOnly);
+  marshallHeaderToStream(message.type(), stream);
+
+  stream << message.method();
+  stream << message.callType();
+  stream << message.returnType();
+
+  bool successfullyMarshalled;
+  foreach (const QGenericArgument& arg, message.arguments())
+  {
+    successfullyMarshalled = marshallArgumentToStream(arg, stream);
+    if (!successfullyMarshalled)
+      return QByteArray();
+  }
+
+  return result;
+}
 
 CuteIPCMarshaller::Call CuteIPCMarshaller::demarshallCall(QByteArray call)
 {

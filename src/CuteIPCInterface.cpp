@@ -2,6 +2,7 @@
 #include "CuteIPCInterface.h"
 #include "CuteIPCMarshaller_p.h"
 #include "CuteIPCInterfaceConnection_p.h"
+#include "CuteIPCMessage_p.h"
 
 // Qt
 #include <QLocalSocket>
@@ -60,8 +61,14 @@ bool CuteIPCInterface::call(const QString& method, QGenericArgument val0, QGener
 {
   qDebug() << "";
   qDebug() << "Before marshalling:" << QTime::currentTime().toString("hh:mm:ss.zzz");
-  QByteArray request = CuteIPCMarshaller::marshallCall(method, val0, val1, val2, val3, val4,
-                                                       val5, val6, val7, val8, val9, QString());
+
+  CuteIPCMessageCall message(method, val0, val1, val2, val3, val4,
+                             val5, val6, val7, val8, val9, QString());
+  QByteArray request = CuteIPCMarshaller::marshallCall(message);
+
+
+//  QByteArray request = CuteIPCMarshaller::marshallCall(method, val0, val1, val2, val3, val4,
+//                                                       val5, val6, val7, val8, val9, QString());
   qDebug() << "Trying to call" << method;
 
   return sendSynchronousRequest(request);

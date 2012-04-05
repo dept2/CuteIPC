@@ -7,6 +7,9 @@
 #include <QPair>
 #include <QGenericArgument>
 
+// local
+#include "CuteIPCMessage_p.h"
+
 enum MessageType
 {
   MESSAGE_CALL,
@@ -46,6 +49,9 @@ class CuteIPCMarshaller
         QGenericArgument val5 = QGenericArgument(), QGenericArgument val6 = QGenericArgument(),
         QGenericArgument val7 = QGenericArgument(), QGenericArgument val8 = QGenericArgument(),
         QGenericArgument val9 = QGenericArgument(), QString retType = QString(), bool withConfirm = true);
+
+    static QByteArray marshallCall(const CuteIPCMessageCall& message);
+
     static Call demarshallCall(QByteArray call);
 
     static QByteArray marshallReturnedValue(QGenericArgument value);
