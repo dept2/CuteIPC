@@ -26,8 +26,11 @@ class CuteIPCServiceConnection : public QObject
     QByteArray m_block;
 
     void makeCall();
+
     void sendReturnedValue(QGenericArgument arg);
     void sendConfirm();
+    void sendErrorMessage(QString error);
+    void sendResponse(QByteArray request);
 };
 
 

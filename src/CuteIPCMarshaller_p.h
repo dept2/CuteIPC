@@ -7,11 +7,18 @@
 #include <QPair>
 #include <QGenericArgument>
 
+enum MessageType
+{
+  MESSAGE_CALL,
+  MESSAGE_RETURN,
+  MESSAGE_STATUS
+};
 
 class CuteIPCMarshaller
 {
   public:
     typedef QList<QGenericArgument> Arguments;
+    typedef QPair<bool, QString> Status;
 
     enum CallType
     {
@@ -30,24 +37,33 @@ class CuteIPCMarshaller
       Call(QString method, Arguments arguments, QString retType, CallType calltype);
     };
 
-    static QByteArray marshallCall(const QString& method,// QString retType,
+    static MessageType demarshallHeader(QByteArray message);
+
+    static QByteArray marshallCall(const QString& method,
         QGenericArgument val0 = QGenericArgument(),
         QGenericArgument val1 = QGenericArgument(), QGenericArgument val2 = QGenericArgument(),
         QGenericArgument val3 = QGenericArgument(), QGenericArgument val4 = QGenericArgument(),
         QGenericArgument val5 = QGenericArgument(), QGenericArgument val6 = QGenericArgument(),
         QGenericArgument val7 = QGenericArgument(), QGenericArgument val8 = QGenericArgument(),
         QGenericArgument val9 = QGenericArgument(), QString retType = QString(), bool withConfirm = true);
+    static Call demarshallCall(QByteArray call);
 
     static QByteArray marshallReturnedValue(QGenericArgument value);
-
-    static Call demarshallCall(QByteArray call);
     static void demarshallReturnedValue(QByteArray value, QGenericReturnArgument arg);
 
+    static QByteArray marshallStatusMessage(Status status);
+    static Status demarshallStatusMessage(QByteArray message);
+
+    static void freeArguments(const Arguments&);
+
+  private:
     //service static methods
+    static void marshallHeaderToStream(MessageType type, QDataStream& stream);
+    static MessageType demarshallHeaderFromStream(QDataStream& stream);
+
     static bool marshallArgumentToStream(QGenericArgument value, QDataStream& stream);
     static QGenericArgument demarshallArgumentFromStream(bool& ok, QDataStream& stream);
 
-    static void freeArguments(const Arguments&);
 };
 
 #endif // CUTEIPCMARSHALLER_P_H

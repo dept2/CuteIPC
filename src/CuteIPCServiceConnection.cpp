@@ -35,6 +35,7 @@ void CuteIPCServiceConnection::readyRead()
   // Fetch next block size
   if (m_nextBlockSize == 0)
   {
+    qDebug() << "";
     qDebug() << "Started fetching request:" << QTime::currentTime().toString("hh:mm:ss.zzz");
     if (m_socket->bytesAvailable() < (int)sizeof(quint32))
       return;
@@ -51,7 +52,8 @@ void CuteIPCServiceConnection::readyRead()
   if (m_block.size() == (int)m_nextBlockSize)
   {
     // Fetched enough, need to parse
-    qDebug() << "Fetching block finished. Got" << m_block.size() << "bytes:" << QTime::currentTime().toString("hh:mm:ss.zzz");
+    qDebug() << "Fetching block finished. Got" << m_block.size() << "bytes:"
+             << QTime::currentTime().toString("hh:mm:ss.zzz");
 
     makeCall();
 
@@ -66,65 +68,99 @@ void CuteIPCServiceConnection::makeCall()
 {
     CuteIPCMarshaller::Call call = CuteIPCMarshaller::demarshallCall(m_block);
 
-    bool invokeWithReturn = false;
-
-    int retType = 0;
-    void* retData;
     if (call.calltype == CuteIPCMarshaller::CALL_WITH_RETURN) //!call.retType.isEmpty())
     {
-      invokeWithReturn = true;
-      retType = QMetaType::type(call.retType.toLatin1());
-      if (retType == 0)
+      int retType = QMetaType::type(call.retType.toLatin1());
+      if (retType > 0)
       {
-        qWarning() << "Unsupported type of expected return value: " << call.retType << "Ignore returned value...";
-        invokeWithReturn = false; // TODO quit (don't forget to clear the already allocated memory
+        // Read argument data from stream
+        void* retData = QMetaType::construct(retType);
+
+        qDebug() << "Before calling:" << QTime::currentTime().toString("hh:mm:ss.zzz");
+
+        bool successfulInvoke = QMetaObject::invokeMethod(parent(), call.first.toLatin1(),
+                                                          QGenericReturnArgument(call.retType.toLatin1(), retData),
+                                                          call.second.at(0), call.second.at(1), call.second.at(2),
+                                                          call.second.at(3), call.second.at(4), call.second.at(5),
+                                                          call.second.at(6), call.second.at(7), call.second.at(8),
+                                                          call.second.at(9));
+
+        if (successfulInvoke)
+        {
+          qDebug() << "Method was successfully invoked";
+          sendReturnedValue(QGenericArgument(call.retType.toLatin1(), retData)); //TODO check the scopes
+        }
+        else
+        {
+          sendErrorMessage("Unsuccessful invoke");
+        }
+
+        QMetaType::destroy(retType, retData);
       }
       else
       {
-        // Read argument data from stream
-        retData = QMetaType::construct(retType);
+        QString error = "Unsupported type of expected return value: " + call.retType;
+        qWarning() << error;
+        sendErrorMessage(error);
       }
     }
-
-    qDebug() << "Before calling:" << QTime::currentTime().toString("hh:mm:ss.zzz");
-
-    if (invokeWithReturn)
+    else // CALL_WITH_CONFIRM or CALL_WITHOUT_CONFIRM
     {
-      bool successfulInvoke = QMetaObject::invokeMethod(parent(), call.first.toLatin1(), QGenericReturnArgument(call.retType.toLatin1(), retData), call.second.at(0),
-                                          call.second.at(1), call.second.at(2), call.second.at(3),
-                                          call.second.at(4), call.second.at(5), call.second.at(6),
-                                          call.second.at(7), call.second.at(8), call.second.at(9));
-      if (successfulInvoke)
-        sendReturnedValue(QGenericArgument(call.retType.toLatin1(), retData)); //TODO check the scopes
-    }
-    else
-    {
-      QMetaObject::invokeMethod(parent(), call.first.toLatin1(), call.second.at(0),
-                                call.second.at(1), call.second.at(2), call.second.at(3),
-                                call.second.at(4), call.second.at(5), call.second.at(6),
-                                call.second.at(7), call.second.at(8), call.second.at(9));
-      if (call.calltype == CuteIPCMarshaller::CALL_WITH_CONFIRM)
-        sendConfirm();
+      bool successfulInvoke = QMetaObject::invokeMethod(parent(), call.first.toLatin1(),
+                                                        call.second.at(0), call.second.at(1), call.second.at(2),
+                                                        call.second.at(3), call.second.at(4), call.second.at(5),
+                                                        call.second.at(6), call.second.at(7), call.second.at(8),
+                                                        call.second.at(9));
+      if (!successfulInvoke)
+      {
+        sendErrorMessage("Unsuccessful invoke");
+      }
+      else
+      {
+        qDebug() << "Method was successfully invoked";
+        if (call.calltype == CuteIPCMarshaller::CALL_WITH_CONFIRM)
+          sendConfirm();
+      }
     }
 
     // Cleanup
     CuteIPCMarshaller::freeArguments(call.second);
-    if (retType)
-      QMetaType::destroy(retType, retData);
 }
 
 
 void CuteIPCServiceConnection::sendConfirm()
 {
-  bool ok = true;
-  sendReturnedValue(Q_RETURN_ARG(bool, ok));
+  CuteIPCMarshaller::Status status;
+  status.first = true;
+
+  QByteArray request = CuteIPCMarshaller::marshallStatusMessage(status);
+  sendResponse(request);
+  qDebug() << "Status was sent";
+}
+
+
+void CuteIPCServiceConnection::sendErrorMessage(QString error)
+{
+  CuteIPCMarshaller::Status status;
+  status.first = false;
+  status.second = error;
+
+  QByteArray request = CuteIPCMarshaller::marshallStatusMessage(status);
+  sendResponse(request);
+  qDebug() << "Error message was sent";
 }
 
 
 void CuteIPCServiceConnection::sendReturnedValue(QGenericArgument arg)
 {
   QByteArray request = CuteIPCMarshaller::marshallReturnedValue(arg);
+  sendResponse(request);
+  qDebug() << "Returned value was sent";
+}
 
+
+void CuteIPCServiceConnection::sendResponse(QByteArray request)
+{
   QDataStream stream(m_socket);
   stream << (quint32)request.size();
   int written = stream.writeRawData(request.constData(), request.size());
@@ -134,10 +170,10 @@ void CuteIPCServiceConnection::sendReturnedValue(QGenericArgument arg)
 
   m_socket->flush();
   m_socket->waitForBytesWritten(5000);
-  qDebug() << "Returned value was sent";
 }
 
 
-void CuteIPCServiceConnection::errorOccured(QLocalSocket::LocalSocketError) {
+void CuteIPCServiceConnection::errorOccured(QLocalSocket::LocalSocketError)
+{
   qDebug() << "Socket error: " << m_socket->errorString();
 }

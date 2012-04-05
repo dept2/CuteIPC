@@ -34,7 +34,6 @@ void CuteIPCInterfaceConnection::sendCallRequest(QByteArray request)
 
   m_socket->flush();
   bool ok = m_socket->waitForBytesWritten(5000);
-  qDebug() << "Method called" << ok;
 }
 
 
@@ -61,18 +60,44 @@ void CuteIPCInterfaceConnection::readyRead()
   if (m_block.size() == (int)m_nextBlockSize)
   {
     // Fetched enough, need to parse
-    qDebug() << "Returned value: Fetching block finished. Got" << m_block.size() << "bytes:" << QTime::currentTime().toString("hh:mm:ss.zzz");
-    CuteIPCMarshaller::demarshallReturnedValue(m_block, m_returnedObject);
+    qDebug() << "Returned value: Fetching block finished. Got" << m_block.size() << "bytes:"
+             << QTime::currentTime().toString("hh:mm:ss.zzz");
+    MessageType type = CuteIPCMarshaller::demarshallHeader(m_block);
+    switch (type)
+    {
+      case MESSAGE_RETURN:
+      {
+        CuteIPCMarshaller::demarshallReturnedValue(m_block, m_returnedObject);
+        break;
+      }
+      case MESSAGE_STATUS:
+      {
+        CuteIPCMarshaller::Status status = CuteIPCMarshaller::demarshallStatusMessage(m_block);
+        qDebug() << "SERVER: Status: " << status.first;
+        if (!status.first)
+        {
+            qDebug() << "SERVER: ERROR: " << status.second;
+            //TODO: alert the CuteIPCInterface about errors.
+        }
+        break;
+      }
+      default:
+      {
+        break;
+      }
+    }
 
     m_nextBlockSize = 0;
     m_block.clear();
+    m_returnedObject = QGenericReturnArgument();
 
     emit callFinished();
   }
 }
 
 
-void CuteIPCInterfaceConnection::errorOccured(QLocalSocket::LocalSocketError) {
+void CuteIPCInterfaceConnection::errorOccured(QLocalSocket::LocalSocketError)
+{
   qDebug() << "Socket error: " << m_socket->errorString();
 }
 

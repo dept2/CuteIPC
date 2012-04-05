@@ -8,6 +8,13 @@
 #include <QDebug>
 
 
+MessageType CuteIPCMarshaller::demarshallHeader(QByteArray message)
+{
+  QDataStream stream(&message, QIODevice::ReadOnly);
+  return demarshallHeaderFromStream(stream);
+}
+
+
 QByteArray CuteIPCMarshaller::marshallCall(const QString& method,
     QGenericArgument val0, QGenericArgument val1,
     QGenericArgument val2, QGenericArgument val3, QGenericArgument val4, QGenericArgument val5, QGenericArgument val6,
@@ -15,11 +22,11 @@ QByteArray CuteIPCMarshaller::marshallCall(const QString& method,
 {
   QByteArray result;
   QDataStream stream(&result, QIODevice::WriteOnly);
+  marshallHeaderToStream(MESSAGE_CALL, stream);
 
   // Method name
   stream << method;
 
-  // "isVoid" boolean value and it's type
   if (retType.isEmpty())
   {
     stream << (withConfirm ? CALL_WITH_CONFIRM : CALL_WITHOUT_CONFIRM);
@@ -68,44 +75,10 @@ QByteArray CuteIPCMarshaller::marshallCall(const QString& method,
 }
 
 
-QByteArray CuteIPCMarshaller::marshallReturnedValue(QGenericArgument returnedValue)
-{
-  QByteArray result;
-  QDataStream stream(&result, QIODevice::WriteOnly);
-
-  bool successfullyMarshalled = marshallArgumentToStream(returnedValue, stream);
-  if (!successfullyMarshalled)
-    return QByteArray();
-  return result;
-}
-
-
-bool CuteIPCMarshaller::marshallArgumentToStream(QGenericArgument returnedValue, QDataStream& stream)
-{
-  // Detect and check type
-  int type = QMetaType::type(returnedValue.name());
-    if (type == 0)
-    {
-      qWarning() << "Type" << returnedValue.name() << "have not been registered in Qt metaobject system";
-      return false;
-    }
-
-    stream << QString::fromLatin1(returnedValue.name());
-    bool ok = QMetaType::save(stream, type, returnedValue.data());
-    if (!ok)
-    {
-      qWarning() << "Failed to serialize" << returnedValue.name() << "to data stream. Call qRegisterMetaTypeStreamOperators to"
-                    " register stream operators for this metatype";
-      return false;
-    }
-
-  return true;
-}
-
-
 CuteIPCMarshaller::Call CuteIPCMarshaller::demarshallCall(QByteArray call)
 {
   QDataStream stream(&call, QIODevice::ReadOnly);
+  demarshallHeaderFromStream(stream);
 
   // Method
   QString method;
@@ -145,13 +118,26 @@ CuteIPCMarshaller::Call CuteIPCMarshaller::demarshallCall(QByteArray call)
     args.append(QGenericArgument());
 
   return Call(method, args, retType, calltype);
-//  return qMakePair(method, args);
+}
+
+
+QByteArray CuteIPCMarshaller::marshallReturnedValue(QGenericArgument returnedValue)
+{
+  QByteArray result;
+  QDataStream stream(&result, QIODevice::WriteOnly);
+  marshallHeaderToStream(MESSAGE_RETURN, stream);
+
+  bool successfullyMarshalled = marshallArgumentToStream(returnedValue, stream);
+  if (!successfullyMarshalled)
+    return QByteArray(); //TODO: send error status
+  return result;
 }
 
 
 void CuteIPCMarshaller::demarshallReturnedValue(QByteArray value, QGenericReturnArgument arg)
 {
   QDataStream stream(&value, QIODevice::ReadOnly);
+  demarshallHeaderFromStream(stream);
 
   // Load type
   QString typeName;
@@ -163,6 +149,10 @@ void CuteIPCMarshaller::demarshallReturnedValue(QByteArray value, QGenericReturn
   {
     qWarning() << "Unsupported type of argument " << ":" << typeName;
   }
+  if (type != QMetaType::type(arg.name()))
+  {
+    qWarning() << "Type doesn't match:" << typeName << "Expected:" << arg.name();
+  }
 
   // Read argument data from stream
 //  void* data = QMetaType::construct(type);
@@ -172,6 +162,66 @@ void CuteIPCMarshaller::demarshallReturnedValue(QByteArray value, QGenericReturn
   {
     qWarning() << "Failed to deserialize argument value" << "of type" << typeName;
   }
+}
+
+
+QByteArray CuteIPCMarshaller::marshallStatusMessage(Status status)
+{
+  QByteArray result;
+  QDataStream stream(&result, QIODevice::WriteOnly);
+  marshallHeaderToStream(MESSAGE_STATUS, stream);
+
+  stream << status.first;
+  stream << status.second;
+  return result;
+}
+
+
+CuteIPCMarshaller::Status CuteIPCMarshaller::demarshallStatusMessage(QByteArray message)
+{
+  QDataStream stream(&message, QIODevice::ReadOnly);
+  demarshallHeaderFromStream(stream);
+
+  Status status;
+  stream >> status.first;
+  stream >> status.second;
+  return status;
+}
+
+
+void CuteIPCMarshaller::marshallHeaderToStream(MessageType type, QDataStream& stream)
+{
+  stream << type;
+}
+
+MessageType CuteIPCMarshaller::demarshallHeaderFromStream(QDataStream& stream)
+{
+  int buffer;
+  stream >> buffer;
+  return MessageType(buffer);
+}
+
+bool CuteIPCMarshaller::marshallArgumentToStream(QGenericArgument returnedValue, QDataStream& stream)
+{
+  // Detect and check type
+  int type = QMetaType::type(returnedValue.name());
+    if (type == 0)
+    {
+      qWarning() << "Type" << returnedValue.name() << "have not been registered in Qt metaobject system";
+      return false;
+    }
+
+    stream << QString::fromLatin1(returnedValue.name());
+    bool ok = QMetaType::save(stream, type, returnedValue.data());
+    if (!ok)
+    {
+      qWarning() << "Failed to serialize" << returnedValue.name()
+                 << "to data stream. Call qRegisterMetaTypeStreamOperators to"
+                    " register stream operators for this metatype";
+      return false;
+    }
+
+  return true;
 }
 
 
