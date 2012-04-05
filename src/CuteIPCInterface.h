@@ -41,7 +41,7 @@ class CuteIPCInterface : public QObject
     QLocalSocket* m_socket;
     CuteIPCInterfaceConnection* m_connection;
 
-    void sendSynchronousRequest(QByteArray request);
+    void sendSynchronousRequest(const QByteArray& request);
 };
 
 #endif // CUTEIPCINTERFACE_H

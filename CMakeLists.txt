@@ -13,6 +13,7 @@ INCLUDE(CompilerFlags)
 FIND_PACKAGE(Qt4 4.4 COMPONENTS QtCore QtNetwork REQUIRED)
 INCLUDE(${QT_USE_FILE})
 
+
 # Include directories
 INCLUDE_DIRECTORIES(
   src
@@ -30,6 +31,8 @@ SET(sources
 
 SET(headers
   src/CuteIPCMarshaller_p.h
+  src/CuteIPCServiceConnection_p.h
+  src/CuteIPCInterfaceConnection_p.h
 )
 
 SET(moc_headers

@@ -23,7 +23,7 @@ CuteIPCInterfaceConnection::CuteIPCInterfaceConnection(QLocalSocket* socket, Cut
 }
 
 
-void CuteIPCInterfaceConnection::sendCallRequest(QByteArray request)
+void CuteIPCInterfaceConnection::sendCallRequest(const QByteArray& request)
 {
   QDataStream stream(m_socket);
   stream << (quint32)request.size();

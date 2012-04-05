@@ -15,7 +15,7 @@ class CuteIPCInterfaceConnection: public QObject
   public:
     CuteIPCInterfaceConnection(QLocalSocket* socket, CuteIPCInterface* parent);
 
-    void sendCallRequest(QByteArray request);
+    void sendCallRequest(const QByteArray& request);
     void setReturnedObject(QGenericReturnArgument returnedObject);
 
   signals:

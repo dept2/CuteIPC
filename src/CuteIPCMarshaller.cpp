@@ -201,6 +201,7 @@ MessageType CuteIPCMarshaller::demarshallHeaderFromStream(QDataStream& stream)
   return MessageType(buffer);
 }
 
+
 bool CuteIPCMarshaller::marshallArgumentToStream(QGenericArgument returnedValue, QDataStream& stream)
 {
   // Detect and check type

@@ -69,7 +69,7 @@ void CuteIPCInterface::call(const QString& method, QGenericArgument val0, QGener
 }
 
 
-void CuteIPCInterface::sendSynchronousRequest(QByteArray request)
+void CuteIPCInterface::sendSynchronousRequest(const QByteArray& request)
 {
   qDebug() << "(Method serialized into" << request.size() << "bytes)";
   m_connection->sendCallRequest(request);
