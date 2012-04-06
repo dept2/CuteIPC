@@ -5,41 +5,8 @@
 #include <QString>
 
 
-CuteIPCMessage::CuteIPCMessage(MessageType type)
-{
-  this->m_type = type;
-}
-
-
-CuteIPCMessage::MessageType CuteIPCMessage::type() const
-{
-  return m_type;
-}
-
-
-CuteIPCMessageStatus::CuteIPCMessageStatus(bool status, QString message)
-    : CuteIPCMessage(MESSAGE_STATUS)
-{
-  m_status = status;
-  m_message = message;
-}
-
-
-bool CuteIPCMessageStatus::status() const
-{
-  return m_status;
-}
-
-
-QString CuteIPCMessageStatus::message() const
-{
-  return m_message;
-}
-
-
-CuteIPCMessageCall::CuteIPCMessageCall(QString method, Arguments arguments,
+CuteIPCMessage::CuteIPCMessage(QString method, Arguments arguments,
                                        QString returnType, CallType callType)
-    : CuteIPCMessage(MESSAGE_CALL)
 {
   m_method = method;
   m_arguments = arguments;
@@ -48,14 +15,13 @@ CuteIPCMessageCall::CuteIPCMessageCall(QString method, Arguments arguments,
 }
 
 
-CuteIPCMessageCall::CuteIPCMessageCall(QString method,
+CuteIPCMessage::CuteIPCMessage(QString method,
                                        QGenericArgument val0, QGenericArgument val1,
                                        QGenericArgument val2, QGenericArgument val3,
                                        QGenericArgument val4, QGenericArgument val5,
                                        QGenericArgument val6, QGenericArgument val7,
                                        QGenericArgument val8, QGenericArgument val9,
                                        QString returnType, bool withConfirm)
-    : CuteIPCMessage(MESSAGE_CALL)
 {
   m_method = method;
   m_returnType = returnType;
@@ -87,38 +53,25 @@ CuteIPCMessageCall::CuteIPCMessageCall(QString method,
     m_arguments.append(val9);
 }
 
-QString CuteIPCMessageCall::method() const
+const QString& CuteIPCMessage::method() const
 {
   return m_method;
 }
 
 
-CuteIPCMessageCall::Arguments CuteIPCMessageCall::arguments() const
+const CuteIPCMessage::Arguments& CuteIPCMessage::arguments() const
 {
   return m_arguments;
 }
 
 
-QString CuteIPCMessageCall::returnType() const
+const QString& CuteIPCMessage::returnType() const
 {
   return m_returnType;
 }
 
 
-CuteIPCMessageCall::CallType CuteIPCMessageCall::callType() const
+const CuteIPCMessage::CallType& CuteIPCMessage::callType() const
 {
   return m_callType;
-}
-
-
-CuteIPCMessageReturn::CuteIPCMessageReturn(QGenericArgument value)
-    : CuteIPCMessage(MESSAGE_RETURN)
-{
-  m_value = value;
-}
-
-
-QGenericArgument CuteIPCMessageReturn::value() const
-{
-  return m_value;
 }

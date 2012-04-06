@@ -66,11 +66,12 @@ void CuteIPCServiceConnection::readyRead()
 
 void CuteIPCServiceConnection::makeCall()
 {
-  CuteIPCMarshaller::Call call = CuteIPCMarshaller::demarshallCall(m_block);
+//  CuteIPCMarshaller::Call call = CuteIPCMarshaller::demarshallCall(m_block);
+  CuteIPCMessage call = CuteIPCMarshaller::demarshallCall(m_block);
 
-  if (call.calltype == CuteIPCMarshaller::CALL_WITH_RETURN) //!call.retType.isEmpty())
+  if (call.callType() == CuteIPCMessage::CALL_WITH_RETURN) //!call.retType.isEmpty())
   {
-    int retType = QMetaType::type(call.retType.toLatin1());
+    int retType = QMetaType::type(call.returnType().toLatin1());
     if (retType > 0)
     {
       // Read argument data from stream
@@ -78,17 +79,17 @@ void CuteIPCServiceConnection::makeCall()
 
       qDebug() << "Before calling:" << QTime::currentTime().toString("hh:mm:ss.zzz");
 
-      bool successfulInvoke = QMetaObject::invokeMethod(parent(), call.first.toLatin1(),
-                                                        QGenericReturnArgument(call.retType.toLatin1(), retData),
-                                                        call.second.at(0), call.second.at(1), call.second.at(2),
-                                                        call.second.at(3), call.second.at(4), call.second.at(5),
-                                                        call.second.at(6), call.second.at(7), call.second.at(8),
-                                                        call.second.at(9));
+      bool successfulInvoke = QMetaObject::invokeMethod(parent(), call.method().toLatin1(),
+                                                        QGenericReturnArgument(call.returnType().toLatin1(), retData),
+                                                        call.arguments().at(0), call.arguments().at(1), call.arguments().at(2),
+                                                        call.arguments().at(3), call.arguments().at(4), call.arguments().at(5),
+                                                        call.arguments().at(6), call.arguments().at(7), call.arguments().at(8),
+                                                        call.arguments().at(9));
 
       if (successfulInvoke)
       {
         qDebug() << "Method was successfully invoked";
-        sendReturnedValue(QGenericArgument(call.retType.toLatin1(), retData)); //TODO check the scopes
+        sendReturnedValue(QGenericArgument(call.returnType().toLatin1(), retData)); //TODO check the scopes
       }
       else
       {
@@ -99,18 +100,18 @@ void CuteIPCServiceConnection::makeCall()
     }
     else
     {
-      QString error = "Unsupported type of expected return value: " + call.retType;
+      QString error = "Unsupported type of expected return value: " + call.returnType();
       qWarning() << error;
       sendErrorMessage(error);
     }
   }
   else // CALL_WITH_CONFIRM or CALL_WITHOUT_CONFIRM
   {
-    bool successfulInvoke = QMetaObject::invokeMethod(parent(), call.first.toLatin1(),
-                                                      call.second.at(0), call.second.at(1), call.second.at(2),
-                                                      call.second.at(3), call.second.at(4), call.second.at(5),
-                                                      call.second.at(6), call.second.at(7), call.second.at(8),
-                                                      call.second.at(9));
+    bool successfulInvoke = QMetaObject::invokeMethod(parent(), call.method().toLatin1(),
+                                                      call.arguments().at(0), call.arguments().at(1), call.arguments().at(2),
+                                                      call.arguments().at(3), call.arguments().at(4), call.arguments().at(5),
+                                                      call.arguments().at(6), call.arguments().at(7), call.arguments().at(8),
+                                                      call.arguments().at(9));
     if (!successfulInvoke)
     {
       sendErrorMessage("Unsuccessful invoke");
@@ -118,13 +119,13 @@ void CuteIPCServiceConnection::makeCall()
     else
     {
       qDebug() << "Method was successfully invoked";
-      if (call.calltype == CuteIPCMarshaller::CALL_WITH_CONFIRM)
+      if (call.callType() == CuteIPCMessage::CALL_WITH_CONFIRM)
         sendConfirm();
     }
   }
 
   // Cleanup
-  CuteIPCMarshaller::freeArguments(call.second);
+  CuteIPCMarshaller::freeArguments(call.arguments());
 }
 
 

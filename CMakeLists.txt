@@ -34,6 +34,7 @@ SET(headers
   src/CuteIPCMarshaller_p.h
   src/CuteIPCServiceConnection_p.h
   src/CuteIPCInterfaceConnection_p.h
+  src/CuteIPCMessage_p.h
 )
 
 SET(moc_headers
@@ -41,7 +42,6 @@ SET(moc_headers
   src/CuteIPCInterface.h
   src/CuteIPCServiceConnection_p.h
   src/CuteIPCInterfaceConnection_p.h
-  src/CuteIPCMessage_p.h
 )
 
 QT4_WRAP_CPP(sources ${moc_headers})

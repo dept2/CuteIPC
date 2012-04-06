@@ -16,75 +16,16 @@ MessageType CuteIPCMarshaller::demarshallHeader(QByteArray message)
 }
 
 
-QByteArray CuteIPCMarshaller::marshallCall(const QString& method,
-    QGenericArgument val0, QGenericArgument val1,
-    QGenericArgument val2, QGenericArgument val3, QGenericArgument val4, QGenericArgument val5, QGenericArgument val6,
-    QGenericArgument val7, QGenericArgument val8, QGenericArgument val9, QString retType, bool withConfirm)
+QByteArray CuteIPCMarshaller::marshallCall(CuteIPCMessage &message)
 {
   QByteArray result;
   QDataStream stream(&result, QIODevice::WriteOnly);
   marshallHeaderToStream(MESSAGE_CALL, stream);
 
-  // Method name
-  stream << method;
-
-  if (retType.isEmpty())
-  {
-    stream << (withConfirm ? CALL_WITH_CONFIRM : CALL_WITHOUT_CONFIRM);
-  }
-  else
-  {
-    stream << CALL_WITH_RETURN;
-    stream << retType;
-  }
-
-  // Parse input args
-  Arguments args;
-  if (val0.data())
-    args.append(val0);
-  if (val1.data())
-    args.append(val1);
-  if (val2.data())
-    args.append(val2);
-  if (val3.data())
-    args.append(val3);
-  if (val4.data())
-    args.append(val4);
-  if (val5.data())
-    args.append(val5);
-  if (val6.data())
-    args.append(val6);
-  if (val7.data())
-    args.append(val7);
-  if (val8.data())
-    args.append(val8);
-  if (val9.data())
-    args.append(val9);
-
-  // Write args to stream
-  stream << args.size(); // Argument count
-
-  bool successfullyMarshalled;
-  foreach (const QGenericArgument& arg, args)
-  {
-    successfullyMarshalled = marshallArgumentToStream(arg, stream);
-    if (!successfullyMarshalled)
-      return QByteArray();
-  }
-
-  return result;
-}
-
-
-QByteArray CuteIPCMarshaller::marshallCall(const CuteIPCMessageCall &message)
-{
-  QByteArray result;
-  QDataStream stream(&result, QIODevice::WriteOnly);
-  marshallHeaderToStream(message.type(), stream);
-
   stream << message.method();
   stream << message.callType();
   stream << message.returnType();
+  stream << message.arguments().size();
 
   bool successfullyMarshalled;
   foreach (const QGenericArgument& arg, message.arguments())
@@ -97,7 +38,7 @@ QByteArray CuteIPCMarshaller::marshallCall(const CuteIPCMessageCall &message)
   return result;
 }
 
-CuteIPCMarshaller::Call CuteIPCMarshaller::demarshallCall(QByteArray call)
+CuteIPCMessage CuteIPCMarshaller::demarshallCall(QByteArray call)
 {
   QDataStream stream(&call, QIODevice::ReadOnly);
   demarshallHeaderFromStream(stream);
@@ -106,22 +47,21 @@ CuteIPCMarshaller::Call CuteIPCMarshaller::demarshallCall(QByteArray call)
   QString method;
   stream >> method;
 
-  CallType calltype;
-  QString retType;
+  CuteIPCMessage::CallType calltype;
 
   int buffer;
   stream >> buffer;
-  calltype = CallType(buffer);
+  calltype = CuteIPCMessage::CallType(buffer);
 
-  if (calltype == CALL_WITH_RETURN)
-    stream >> retType;
+  QString retType;
+  stream >> retType;
 
   // Arguments count
   int argc = 0;
   stream >> argc;
   Q_ASSERT(argc <= 10);
 
-  Arguments args;
+  CuteIPCMessage::Arguments args;
 
   for (int i = 0; i < argc; ++i)
   {
@@ -139,7 +79,7 @@ CuteIPCMarshaller::Call CuteIPCMarshaller::demarshallCall(QByteArray call)
   while (args.size() < 10)
     args.append(QGenericArgument());
 
-  return Call(method, args, retType, calltype);
+  return CuteIPCMessage(method, args, retType, calltype);
 }
 
 
@@ -279,7 +219,7 @@ QGenericArgument CuteIPCMarshaller::demarshallArgumentFromStream(bool& ok, QData
 }
 
 
-void CuteIPCMarshaller::freeArguments(const CuteIPCMarshaller::Arguments& args)
+void CuteIPCMarshaller::freeArguments(const CuteIPCMessage::Arguments& args)
 {
   // Free allocated memory
   for (int i = 0; i < args.size(); ++i)
@@ -291,13 +231,4 @@ void CuteIPCMarshaller::freeArguments(const CuteIPCMarshaller::Arguments& args)
     QMetaType::destroy(QMetaType::type(arg.name()), arg.data());
     delete[] arg.name();
   }
-}
-
-
-CuteIPCMarshaller::Call::Call(QString method, Arguments arguments, QString retType, CallType calltype)
-{
-  this->first = method;
-  this->second = arguments;
-  this->retType = retType;
-  this->calltype = calltype;
 }
