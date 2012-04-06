@@ -62,24 +62,18 @@ void CuteIPCInterfaceConnection::readyRead()
     // Fetched enough, need to parse
     qDebug() << "Returned value: Fetching block finished. Got" << m_block.size() << "bytes:"
              << QTime::currentTime().toString("hh:mm:ss.zzz");
-    MessageType type = CuteIPCMarshaller::demarshallHeader(m_block);
+    CuteIPCMessage::MessageType type = CuteIPCMarshaller::demarshallMessageType(m_block);
     switch (type)
     {
-      case MESSAGE_RETURN:
+      case CuteIPCMessage::MessageResponse:
       {
-        CuteIPCMarshaller::demarshallReturnedValue(m_block, m_returnedObject);
+        CuteIPCMarshaller::demarshallResponse(m_block, m_returnedObject);
+        qDebug() << "SERVER: SUCCESS";
         break;
       }
-      case MESSAGE_STATUS:
+      case CuteIPCMessage::MessageError:
       {
-        CuteIPCMarshaller::Status status = CuteIPCMarshaller::demarshallStatusMessage(m_block);
-        qDebug() << "SERVER: Status: " << status.first;
-        if (!status.first)
-        {
-            qDebug() << "SERVER: ERROR: " << status.second;
-            m_lastError = status.second;
-            m_lastCallSuccessful = false;
-        }
+        qDebug() << "SERVER: ERROR";
         break;
       }
       default:
@@ -91,7 +85,6 @@ void CuteIPCInterfaceConnection::readyRead()
     m_nextBlockSize = 0;
     m_block.clear();
     m_returnedObject = QGenericReturnArgument();
-
     emit callFinished();
   }
 }

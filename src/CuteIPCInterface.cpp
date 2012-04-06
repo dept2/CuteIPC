@@ -45,9 +45,10 @@ bool CuteIPCInterface::call(const QString& method, QGenericReturnArgument ret, Q
   qDebug() << "";
   qDebug() << "Before marshalling:" << QTime::currentTime().toString("hh:mm:ss.zzz");
 
-  CuteIPCMessage message(method, ret, val0, val1, val2, val3, val4,
-                         val5, val6, val7, val8, val9);
-  QByteArray request = CuteIPCMarshaller::marshallCall(message);
+  CuteIPCMessage message(CuteIPCMessage::MessageCallWithReturn,
+                         method, val0, val1, val2, val3, val4,
+                         val5, val6, val7, val8, val9, QString::fromLatin1(ret.name()));
+  QByteArray request = CuteIPCMarshaller::marshallMessage(message);
 
   m_connection->setReturnedObject(ret);
   qDebug() << "Trying to call" << method;
@@ -63,9 +64,10 @@ bool CuteIPCInterface::call(const QString& method, QGenericArgument val0, QGener
   qDebug() << "";
   qDebug() << "Before marshalling:" << QTime::currentTime().toString("hh:mm:ss.zzz");
 
-  CuteIPCMessage message(method, val0, val1, val2, val3, val4,
+  CuteIPCMessage message(CuteIPCMessage::MessageCallWithReturn,
+                         method, val0, val1, val2, val3, val4,
                          val5, val6, val7, val8, val9);
-  QByteArray request = CuteIPCMarshaller::marshallCall(message);
+  QByteArray request = CuteIPCMarshaller::marshallMessage(message);
 
   qDebug() << "Trying to call" << method;
 
@@ -94,9 +96,10 @@ void CuteIPCInterface::callAsynchronous(const QString& method, QGenericArgument 
   qDebug() << "";
   qDebug() << "Before marshalling:" << QTime::currentTime().toString("hh:mm:ss.zzz");
 
-  CuteIPCMessage message(method, val0, val1, val2, val3, val4,
-                         val5, val6, val7, val8, val9, false);
-  QByteArray request = CuteIPCMarshaller::marshallCall(message);
+  CuteIPCMessage message(CuteIPCMessage::MessageCallWithoutReturn,
+                         method, val0, val1, val2, val3, val4,
+                         val5, val6, val7, val8, val9);
+  QByteArray request = CuteIPCMarshaller::marshallMessage(message);
 
   qDebug() << "Call (asynchronously)" << method;
   qDebug() << "(Method serialized into" << request.size() << "bytes)";

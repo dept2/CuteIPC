@@ -9,24 +9,16 @@
 #include <QDebug>
 
 
-MessageType CuteIPCMarshaller::demarshallHeader(QByteArray& message)
-{
-  QDataStream stream(&message, QIODevice::ReadOnly);
-  return demarshallHeaderFromStream(stream);
-}
-
-
-QByteArray CuteIPCMarshaller::marshallCall(const CuteIPCMessage& message)
+QByteArray CuteIPCMarshaller::marshallMessage(const CuteIPCMessage& message)
 {
   QByteArray result;
   QDataStream stream(&result, QIODevice::WriteOnly);
-  marshallHeaderToStream(MESSAGE_CALL, stream);
 
+  stream << message.messageType();
   stream << message.method();
-  stream << message.callType();
   stream << message.returnType();
-
   stream << message.arguments().size();
+
   bool successfullyMarshalled;
   foreach (const QGenericArgument& arg, message.arguments())
   {
@@ -38,22 +30,20 @@ QByteArray CuteIPCMarshaller::marshallCall(const CuteIPCMessage& message)
   return result;
 }
 
-CuteIPCMessage CuteIPCMarshaller::demarshallCall(QByteArray& call)
+CuteIPCMessage CuteIPCMarshaller::demarshallMessage(QByteArray& call)
 {
   QDataStream stream(&call, QIODevice::ReadOnly);
-  demarshallHeaderFromStream(stream);
+
+  // Call type
+  CuteIPCMessage::MessageType type;
+  int buffer;
+  stream >> buffer;
+  type = CuteIPCMessage::MessageType(buffer);
 
   // Method
   QString method;
   stream >> method;
 
-  // Call type
-  CuteIPCMessage::CallType calltype;
-  int buffer;
-  stream >> buffer;
-  calltype = CuteIPCMessage::CallType(buffer);
-
-  // Return argument
   QString returnType;
   stream >> returnType;
 
@@ -75,33 +65,36 @@ CuteIPCMessage CuteIPCMarshaller::demarshallCall(QByteArray& call)
     args.append(argument);
   }
 
-  // Fill empty args
-  while (args.size() < 10)
-    args.append(QGenericArgument());
-
-  return CuteIPCMessage(method, returnType, args, calltype);
+  return CuteIPCMessage(type, method, args, returnType);
 }
 
 
-QByteArray CuteIPCMarshaller::marshallReturnedValue(QGenericArgument returnedValue)
+CuteIPCMessage::MessageType CuteIPCMarshaller::demarshallMessageType(QByteArray& message)
 {
-  QByteArray result;
-  QDataStream stream(&result, QIODevice::WriteOnly);
-  marshallHeaderToStream(MESSAGE_RETURN, stream);
-
-  bool successfullyMarshalled = marshallArgumentToStream(returnedValue, stream);
-  if (!successfullyMarshalled)
-    return QByteArray(); //TODO: send error status
-  return result;
+  QDataStream stream(&message, QIODevice::ReadOnly);
+  // Call type
+  int buffer;
+  stream >> buffer;
+  return CuteIPCMessage::MessageType(buffer);
 }
 
 
-void CuteIPCMarshaller::demarshallReturnedValue(QByteArray& value, QGenericReturnArgument arg)
+void CuteIPCMarshaller::demarshallResponse(QByteArray &call, QGenericReturnArgument arg)
 {
-  QDataStream stream(&value, QIODevice::ReadOnly);
-  demarshallHeaderFromStream(stream);
+  QDataStream stream(&call, QIODevice::ReadOnly);
 
-  // Load type
+  // Read unused values
+  int buffer;
+  QString stringBuffer;
+  stream >> buffer;
+  stream >> stringBuffer;
+  stream >> stringBuffer;
+
+  int argc;
+  stream >> argc;
+  if (argc == 0)  //server doesn't return any value
+    return;
+
   QString typeName;
   stream >> typeName;
 
@@ -117,50 +110,13 @@ void CuteIPCMarshaller::demarshallReturnedValue(QByteArray& value, QGenericRetur
   }
 
   // Read argument data from stream
-//  void* data = QMetaType::construct(type);
+  //  void* data = QMetaType::construct(type);
 
   bool dataLoaded = QMetaType::load(stream, type, arg.data());
   if (!dataLoaded)
   {
     qWarning() << "Failed to deserialize argument value" << "of type" << typeName;
   }
-}
-
-
-QByteArray CuteIPCMarshaller::marshallStatusMessage(Status status)
-{
-  QByteArray result;
-  QDataStream stream(&result, QIODevice::WriteOnly);
-  marshallHeaderToStream(MESSAGE_STATUS, stream);
-
-  stream << status.first;
-  stream << status.second;
-  return result;
-}
-
-
-CuteIPCMarshaller::Status CuteIPCMarshaller::demarshallStatusMessage(QByteArray& message)
-{
-  QDataStream stream(&message, QIODevice::ReadOnly);
-  demarshallHeaderFromStream(stream);
-
-  Status status;
-  stream >> status.first;
-  stream >> status.second;
-  return status;
-}
-
-
-void CuteIPCMarshaller::marshallHeaderToStream(MessageType type, QDataStream& stream)
-{
-  stream << type;
-}
-
-MessageType CuteIPCMarshaller::demarshallHeaderFromStream(QDataStream& stream)
-{
-  int buffer;
-  stream >> buffer;
-  return MessageType(buffer);
 }
 
 

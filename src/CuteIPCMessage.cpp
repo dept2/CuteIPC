@@ -5,36 +5,27 @@
 #include <QString>
 
 
-CuteIPCMessage::CuteIPCMessage(const QString& method, const Arguments& arguments, const CallType& callType)
+CuteIPCMessage::CuteIPCMessage(MessageType type, const QString& method,
+                               const Arguments& arguments, QString returnType)
 {
   m_method = method;
   m_arguments = arguments;
-  m_callType = callType;
-  m_returnType = QString();
-}
-
-
-CuteIPCMessage::CuteIPCMessage(const QString& method, const QString& returnType, const Arguments& arguments, const CallType& callType)
-{
-  m_method = method;
-  m_arguments = arguments;
-  m_callType = callType;
+  m_messageType = type;
   m_returnType = returnType;
 }
 
 
-CuteIPCMessage::CuteIPCMessage(const QString& method,
+CuteIPCMessage::CuteIPCMessage(MessageType type, QString method,
                                QGenericArgument val0, QGenericArgument val1,
                                QGenericArgument val2, QGenericArgument val3,
                                QGenericArgument val4, QGenericArgument val5,
                                QGenericArgument val6, QGenericArgument val7,
                                QGenericArgument val8, QGenericArgument val9,
-                               bool withConfirm)
+                               QString returnType)
 {
-  m_method = method;
-  m_returnType = QString();
+  m_messageType = type;
 
-  m_callType = withConfirm ? CALL_WITH_CONFIRM : CALL_WITHOUT_CONFIRM;
+  m_method = method;
 
   if (val0.data())
     m_arguments.append(val0);
@@ -56,50 +47,10 @@ CuteIPCMessage::CuteIPCMessage(const QString& method,
     m_arguments.append(val8);
   if (val9.data())
     m_arguments.append(val9);
+
+  m_returnType = returnType;
 }
 
-
-CuteIPCMessage::CuteIPCMessage(const QString& method, QGenericReturnArgument ret,
-                               QGenericArgument val0, QGenericArgument val1,
-                               QGenericArgument val2, QGenericArgument val3,
-                               QGenericArgument val4, QGenericArgument val5,
-                               QGenericArgument val6, QGenericArgument val7,
-                               QGenericArgument val8, QGenericArgument val9,
-                               bool withConfirm)
-{
-  m_method = method;
-  m_returnType = QString::fromLatin1(ret.name());
-
-  if (!m_returnType.isEmpty())
-  {
-    m_callType = CALL_WITH_RETURN;
-  }
-  else
-  {
-    m_callType = withConfirm ? CALL_WITH_CONFIRM : CALL_WITHOUT_CONFIRM;
-  }
-
-  if (val0.data())
-    m_arguments.append(val0);
-  if (val1.data())
-    m_arguments.append(val1);
-  if (val2.data())
-    m_arguments.append(val2);
-  if (val3.data())
-    m_arguments.append(val3);
-  if (val4.data())
-    m_arguments.append(val4);
-  if (val5.data())
-    m_arguments.append(val5);
-  if (val6.data())
-    m_arguments.append(val6);
-  if (val7.data())
-    m_arguments.append(val7);
-  if (val8.data())
-    m_arguments.append(val8);
-  if (val9.data())
-    m_arguments.append(val9);
-}
 
 const QString& CuteIPCMessage::method() const
 {
@@ -113,13 +64,13 @@ const CuteIPCMessage::Arguments& CuteIPCMessage::arguments() const
 }
 
 
-const QString& CuteIPCMessage::returnType() const
+const CuteIPCMessage::MessageType& CuteIPCMessage::messageType() const
 {
-  return m_returnType;
+  return m_messageType;
 }
 
 
-const CuteIPCMessage::CallType& CuteIPCMessage::callType() const
+const QString& CuteIPCMessage::returnType() const
 {
-  return m_callType;
+  return m_returnType;
 }

@@ -27,8 +27,7 @@ class CuteIPCServiceConnection : public QObject
 
     void makeCall();
 
-    void sendReturnedValue(QGenericArgument arg);
-    void sendConfirm();
+    void sendResponseMessage(QGenericArgument arg = QGenericArgument());
     void sendErrorMessage(const QString& error);
     void sendResponse(const QByteArray& response);
 };
