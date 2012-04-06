@@ -6,22 +6,12 @@
 
 
 CuteIPCMessage::CuteIPCMessage(MessageType type, const QString& method,
-                               const Arguments& arguments, QString returnType)
-{
-  m_method = method;
-  m_arguments = arguments;
-  m_messageType = type;
-  m_returnType = returnType;
-}
-
-
-CuteIPCMessage::CuteIPCMessage(MessageType type, QString method,
                                QGenericArgument val0, QGenericArgument val1,
                                QGenericArgument val2, QGenericArgument val3,
                                QGenericArgument val4, QGenericArgument val5,
                                QGenericArgument val6, QGenericArgument val7,
                                QGenericArgument val8, QGenericArgument val9,
-                               QString returnType)
+                               const QString& returnType)
 {
   m_messageType = type;
 
@@ -48,6 +38,16 @@ CuteIPCMessage::CuteIPCMessage(MessageType type, QString method,
   if (val9.data())
     m_arguments.append(val9);
 
+  m_returnType = returnType;
+}
+
+
+CuteIPCMessage::CuteIPCMessage(MessageType type, const QString& method,
+                               const Arguments& arguments, const QString& returnType)
+{
+  m_method = method;
+  m_arguments = arguments;
+  m_messageType = type;
   m_returnType = returnType;
 }
 

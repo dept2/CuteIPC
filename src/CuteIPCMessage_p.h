@@ -19,14 +19,15 @@ class CuteIPCMessage
     };
 
     CuteIPCMessage(MessageType type,
-                   QString method = QString(), QGenericArgument val0 = QGenericArgument(),
+                   const QString& method = QString(), QGenericArgument val0 = QGenericArgument(),
                    QGenericArgument val1 = QGenericArgument(), QGenericArgument val2 = QGenericArgument(),
                    QGenericArgument val3 = QGenericArgument(), QGenericArgument val4 = QGenericArgument(),
                    QGenericArgument val5 = QGenericArgument(), QGenericArgument val6 = QGenericArgument(),
                    QGenericArgument val7 = QGenericArgument(), QGenericArgument val8 = QGenericArgument(),
-                   QGenericArgument val9 = QGenericArgument(), QString returnType = QString());
+                   QGenericArgument val9 = QGenericArgument(), const QString& returnType = QString());
 
-    CuteIPCMessage(MessageType type, const QString& method, const Arguments& arguments, QString returnType = QString());
+    CuteIPCMessage(MessageType type, const QString& method, const Arguments& arguments,
+                   const QString& returnType = QString());
 
     const MessageType& messageType() const;
     const QString& method() const;
