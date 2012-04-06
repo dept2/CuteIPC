@@ -17,15 +17,26 @@ class CuteIPCMessage
       CALL_WITHOUT_CONFIRM
     };
 
-    CuteIPCMessage(QString method, Arguments arguments, QString returnType, CallType callType);
-
-    CuteIPCMessage(QString method,
+    CuteIPCMessage(const QString& method,
         QGenericArgument val0 = QGenericArgument(),
         QGenericArgument val1 = QGenericArgument(), QGenericArgument val2 = QGenericArgument(),
         QGenericArgument val3 = QGenericArgument(), QGenericArgument val4 = QGenericArgument(),
         QGenericArgument val5 = QGenericArgument(), QGenericArgument val6 = QGenericArgument(),
         QGenericArgument val7 = QGenericArgument(), QGenericArgument val8 = QGenericArgument(),
-        QGenericArgument val9 = QGenericArgument(), QString returnType = QString(), bool withConfirm = true);
+        QGenericArgument val9 = QGenericArgument(), bool withConfirm = true);
+
+    CuteIPCMessage(const QString& method, QGenericReturnArgument ret,
+        QGenericArgument val0 = QGenericArgument(),
+        QGenericArgument val1 = QGenericArgument(), QGenericArgument val2 = QGenericArgument(),
+        QGenericArgument val3 = QGenericArgument(), QGenericArgument val4 = QGenericArgument(),
+        QGenericArgument val5 = QGenericArgument(), QGenericArgument val6 = QGenericArgument(),
+        QGenericArgument val7 = QGenericArgument(), QGenericArgument val8 = QGenericArgument(),
+        QGenericArgument val9 = QGenericArgument(), bool withConfirm = true);
+
+    CuteIPCMessage(const QString& method, const QString& returnType,
+                   const Arguments& arguments, const CallType& callType);
+
+    CuteIPCMessage(const QString& method, const Arguments& arguments, const CallType& callType);
 
     const QString& method() const;
     const Arguments& arguments() const;

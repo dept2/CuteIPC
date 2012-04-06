@@ -22,16 +22,16 @@ class CuteIPCMarshaller
   public:
     typedef QPair<bool, QString> Status;
 
-    static MessageType demarshallHeader(QByteArray message);
+    static MessageType demarshallHeader(QByteArray& message);
 
-    static QByteArray marshallCall(CuteIPCMessage& message);
-    static CuteIPCMessage demarshallCall(QByteArray call);
+    static QByteArray marshallCall(const CuteIPCMessage& message);
+    static CuteIPCMessage demarshallCall(QByteArray& call);
 
     static QByteArray marshallReturnedValue(QGenericArgument value);
-    static void demarshallReturnedValue(QByteArray value, QGenericReturnArgument arg);
+    static void demarshallReturnedValue(QByteArray& value, QGenericReturnArgument arg);
 
     static QByteArray marshallStatusMessage(Status status);
-    static Status demarshallStatusMessage(QByteArray message);
+    static Status demarshallStatusMessage(QByteArray& message);
 
     static void freeArguments(const CuteIPCMessage::Arguments&);
 

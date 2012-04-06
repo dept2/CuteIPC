@@ -44,12 +44,9 @@ bool CuteIPCInterface::call(const QString& method, QGenericReturnArgument ret, Q
 {
   qDebug() << "";
   qDebug() << "Before marshalling:" << QTime::currentTime().toString("hh:mm:ss.zzz");
-//  QByteArray request = CuteIPCMarshaller::marshallCall(method, val0, val1, val2, val3, val4,
-//                                                       val5, val6, val7, val8, val9,
-//                                                       QString::fromLatin1(ret.name()));
 
-  CuteIPCMessage message(method, val0, val1, val2, val3, val4,
-                             val5, val6, val7, val8, val9, QString::fromLatin1(ret.name()));
+  CuteIPCMessage message(method, ret, val0, val1, val2, val3, val4,
+                         val5, val6, val7, val8, val9);
   QByteArray request = CuteIPCMarshaller::marshallCall(message);
 
   m_connection->setReturnedObject(ret);
@@ -67,12 +64,9 @@ bool CuteIPCInterface::call(const QString& method, QGenericArgument val0, QGener
   qDebug() << "Before marshalling:" << QTime::currentTime().toString("hh:mm:ss.zzz");
 
   CuteIPCMessage message(method, val0, val1, val2, val3, val4,
-                             val5, val6, val7, val8, val9, QString());
+                         val5, val6, val7, val8, val9);
   QByteArray request = CuteIPCMarshaller::marshallCall(message);
 
-
-//  QByteArray request = CuteIPCMarshaller::marshallCall(method, val0, val1, val2, val3, val4,
-//                                                       val5, val6, val7, val8, val9, QString());
   qDebug() << "Trying to call" << method;
 
   return sendSynchronousRequest(request);
@@ -92,18 +86,16 @@ bool CuteIPCInterface::sendSynchronousRequest(const QByteArray& request)
 }
 
 
-void CuteIPCInterface::callAsynchronous(const QString &method, QGenericArgument val0, QGenericArgument val1,
+void CuteIPCInterface::callAsynchronous(const QString& method, QGenericArgument val0, QGenericArgument val1,
                                         QGenericArgument val2, QGenericArgument val3, QGenericArgument val4,
                                         QGenericArgument val5, QGenericArgument val6, QGenericArgument val7,
                                         QGenericArgument val8, QGenericArgument val9)
 {
   qDebug() << "";
   qDebug() << "Before marshalling:" << QTime::currentTime().toString("hh:mm:ss.zzz");
-//  QByteArray request = CuteIPCMarshaller::marshallCall(method, val0, val1, val2, val3, val4,
-//                                                       val5, val6, val7, val8, val9, QString(), false);
 
   CuteIPCMessage message(method, val0, val1, val2, val3, val4,
-                             val5, val6, val7, val8, val9, QString(), false);
+                         val5, val6, val7, val8, val9, false);
   QByteArray request = CuteIPCMarshaller::marshallCall(message);
 
   qDebug() << "Call (asynchronously)" << method;

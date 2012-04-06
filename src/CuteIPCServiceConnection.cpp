@@ -80,11 +80,11 @@ void CuteIPCServiceConnection::makeCall()
       qDebug() << "Before calling:" << QTime::currentTime().toString("hh:mm:ss.zzz");
 
       bool successfulInvoke = QMetaObject::invokeMethod(parent(), call.method().toLatin1(),
-                                                        QGenericReturnArgument(call.returnType().toLatin1(), retData),
-                                                        call.arguments().at(0), call.arguments().at(1), call.arguments().at(2),
-                                                        call.arguments().at(3), call.arguments().at(4), call.arguments().at(5),
-                                                        call.arguments().at(6), call.arguments().at(7), call.arguments().at(8),
-                                                        call.arguments().at(9));
+          QGenericReturnArgument(call.returnType().toLatin1(), retData),
+          call.arguments().at(0), call.arguments().at(1), call.arguments().at(2),
+          call.arguments().at(3), call.arguments().at(4), call.arguments().at(5),
+          call.arguments().at(6), call.arguments().at(7), call.arguments().at(8),
+          call.arguments().at(9));
 
       if (successfulInvoke)
       {
@@ -108,10 +108,10 @@ void CuteIPCServiceConnection::makeCall()
   else // CALL_WITH_CONFIRM or CALL_WITHOUT_CONFIRM
   {
     bool successfulInvoke = QMetaObject::invokeMethod(parent(), call.method().toLatin1(),
-                                                      call.arguments().at(0), call.arguments().at(1), call.arguments().at(2),
-                                                      call.arguments().at(3), call.arguments().at(4), call.arguments().at(5),
-                                                      call.arguments().at(6), call.arguments().at(7), call.arguments().at(8),
-                                                      call.arguments().at(9));
+        call.arguments().at(0), call.arguments().at(1), call.arguments().at(2),
+        call.arguments().at(3), call.arguments().at(4), call.arguments().at(5),
+        call.arguments().at(6), call.arguments().at(7), call.arguments().at(8),
+        call.arguments().at(9));
     if (!successfulInvoke)
     {
       sendErrorMessage("Unsuccessful invoke");
@@ -140,7 +140,7 @@ void CuteIPCServiceConnection::sendConfirm()
 }
 
 
-void CuteIPCServiceConnection::sendErrorMessage(QString error)
+void CuteIPCServiceConnection::sendErrorMessage(const QString& error)
 {
   CuteIPCMarshaller::Status status;
   status.first = false;
@@ -160,13 +160,13 @@ void CuteIPCServiceConnection::sendReturnedValue(QGenericArgument arg)
 }
 
 
-void CuteIPCServiceConnection::sendResponse(QByteArray request)
+void CuteIPCServiceConnection::sendResponse(const QByteArray& response)
 {
   QDataStream stream(m_socket);
-  stream << (quint32)request.size();
-  int written = stream.writeRawData(request.constData(), request.size());
+  stream << (quint32)response.size();
+  int written = stream.writeRawData(response.constData(), response.size());
 
-  if (written != request.size())
+  if (written != response.size())
     qDebug() << "Written bytes and request size doesn't match";
 
   m_socket->flush();

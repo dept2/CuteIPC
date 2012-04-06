@@ -9,14 +9,14 @@
 #include <QDebug>
 
 
-MessageType CuteIPCMarshaller::demarshallHeader(QByteArray message)
+MessageType CuteIPCMarshaller::demarshallHeader(QByteArray& message)
 {
   QDataStream stream(&message, QIODevice::ReadOnly);
   return demarshallHeaderFromStream(stream);
 }
 
 
-QByteArray CuteIPCMarshaller::marshallCall(CuteIPCMessage &message)
+QByteArray CuteIPCMarshaller::marshallCall(const CuteIPCMessage& message)
 {
   QByteArray result;
   QDataStream stream(&result, QIODevice::WriteOnly);
@@ -25,8 +25,8 @@ QByteArray CuteIPCMarshaller::marshallCall(CuteIPCMessage &message)
   stream << message.method();
   stream << message.callType();
   stream << message.returnType();
-  stream << message.arguments().size();
 
+  stream << message.arguments().size();
   bool successfullyMarshalled;
   foreach (const QGenericArgument& arg, message.arguments())
   {
@@ -38,7 +38,7 @@ QByteArray CuteIPCMarshaller::marshallCall(CuteIPCMessage &message)
   return result;
 }
 
-CuteIPCMessage CuteIPCMarshaller::demarshallCall(QByteArray call)
+CuteIPCMessage CuteIPCMarshaller::demarshallCall(QByteArray& call)
 {
   QDataStream stream(&call, QIODevice::ReadOnly);
   demarshallHeaderFromStream(stream);
@@ -47,22 +47,22 @@ CuteIPCMessage CuteIPCMarshaller::demarshallCall(QByteArray call)
   QString method;
   stream >> method;
 
+  // Call type
   CuteIPCMessage::CallType calltype;
-
   int buffer;
   stream >> buffer;
   calltype = CuteIPCMessage::CallType(buffer);
 
-  QString retType;
-  stream >> retType;
+  // Return argument
+  QString returnType;
+  stream >> returnType;
 
-  // Arguments count
+  // Arguments
   int argc = 0;
   stream >> argc;
   Q_ASSERT(argc <= 10);
 
   CuteIPCMessage::Arguments args;
-
   for (int i = 0; i < argc; ++i)
   {
     bool ok;
@@ -79,7 +79,7 @@ CuteIPCMessage CuteIPCMarshaller::demarshallCall(QByteArray call)
   while (args.size() < 10)
     args.append(QGenericArgument());
 
-  return CuteIPCMessage(method, args, retType, calltype);
+  return CuteIPCMessage(method, returnType, args, calltype);
 }
 
 
@@ -96,7 +96,7 @@ QByteArray CuteIPCMarshaller::marshallReturnedValue(QGenericArgument returnedVal
 }
 
 
-void CuteIPCMarshaller::demarshallReturnedValue(QByteArray value, QGenericReturnArgument arg)
+void CuteIPCMarshaller::demarshallReturnedValue(QByteArray& value, QGenericReturnArgument arg)
 {
   QDataStream stream(&value, QIODevice::ReadOnly);
   demarshallHeaderFromStream(stream);
@@ -139,7 +139,7 @@ QByteArray CuteIPCMarshaller::marshallStatusMessage(Status status)
 }
 
 
-CuteIPCMarshaller::Status CuteIPCMarshaller::demarshallStatusMessage(QByteArray message)
+CuteIPCMarshaller::Status CuteIPCMarshaller::demarshallStatusMessage(QByteArray& message)
 {
   QDataStream stream(&message, QIODevice::ReadOnly);
   demarshallHeaderFromStream(stream);
@@ -186,7 +186,6 @@ bool CuteIPCMarshaller::marshallArgumentToStream(QGenericArgument returnedValue,
 
   return true;
 }
-
 
 QGenericArgument CuteIPCMarshaller::demarshallArgumentFromStream(bool& ok, QDataStream& stream)
 {
