@@ -1,8 +1,5 @@
-//local
+// Local
 #include "CuteIPCMessage_p.h"
-
-//Qt
-#include <QString>
 
 
 CuteIPCMessage::CuteIPCMessage(MessageType type, const QString& method,

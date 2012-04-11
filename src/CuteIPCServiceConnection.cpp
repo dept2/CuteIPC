@@ -28,6 +28,12 @@ CuteIPCServiceConnection::CuteIPCServiceConnection(QLocalSocket* socket, CuteIPC
 }
 
 
+CuteIPCServiceConnection::~CuteIPCServiceConnection()
+{
+  m_socket->deleteLater();
+}
+
+
 void CuteIPCServiceConnection::readyRead()
 {
   QDataStream in(m_socket);
@@ -55,7 +61,7 @@ void CuteIPCServiceConnection::readyRead()
     qDebug() << "Fetching block finished. Got" << m_block.size() << "bytes:"
              << QTime::currentTime().toString("hh:mm:ss.zzz");
 
-    makeCall();
+    processMessage();
 
     // Cleanup
     m_nextBlockSize = 0;
@@ -64,15 +70,19 @@ void CuteIPCServiceConnection::readyRead()
 }
 
 
-void CuteIPCServiceConnection::makeCall()
+void CuteIPCServiceConnection::processMessage()
 {
-//  CuteIPCMarshaller::Call call = CuteIPCMarshaller::demarshallCall(m_block);
   CuteIPCMessage call = CuteIPCMarshaller::demarshallMessage(m_block);
 
   // Fill empty args
   CuteIPCMessage::Arguments args = call.arguments();
-  while (args.size() < 10)
-    args.append(QGenericArgument());
+
+  if (call.messageType() == CuteIPCMessage::MessageCallWithReturn
+      || call.messageType() == CuteIPCMessage::MessageCallWithoutReturn)
+  {
+    while (args.size() < 10)
+      args.append(QGenericArgument());
+  }
 
   if (call.messageType() == CuteIPCMessage::MessageCallWithReturn && !call.returnType().isEmpty())
   {
@@ -110,7 +120,7 @@ void CuteIPCServiceConnection::makeCall()
       sendErrorMessage(error);
     }
   }
-  else // CALL_WITH_CONFIRM or CALL_WITHOUT_CONFIRM
+  else if (call.messageType() == CuteIPCMessage::MessageCallWithoutReturn)
   {
     bool successfulInvoke = QMetaObject::invokeMethod(parent(), call.method().toLatin1(),
         args.at(0), args.at(1), args.at(2),
@@ -127,6 +137,11 @@ void CuteIPCServiceConnection::makeCall()
       if (call.messageType() == CuteIPCMessage::MessageCallWithReturn)
         sendResponseMessage();
     }
+  }
+  else if (call.messageType() == CuteIPCMessage::SignalConnectionRequest)
+  {
+    qDebug() << call.method();
+    qDebug() << parent()->metaObject()->indexOfSignal(QMetaObject::normalizedSignature(call.method().toAscii()));
   }
 
   // Cleanup
@@ -168,4 +183,5 @@ void CuteIPCServiceConnection::sendResponse(const QByteArray& response)
 void CuteIPCServiceConnection::errorOccured(QLocalSocket::LocalSocketError)
 {
   qDebug() << "Socket error: " << m_socket->errorString();
+  deleteLater();
 }

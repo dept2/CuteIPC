@@ -30,6 +30,7 @@ QByteArray CuteIPCMarshaller::marshallMessage(const CuteIPCMessage& message)
   return result;
 }
 
+
 CuteIPCMessage CuteIPCMarshaller::demarshallMessage(QByteArray& call)
 {
   QDataStream stream(&call, QIODevice::ReadOnly);

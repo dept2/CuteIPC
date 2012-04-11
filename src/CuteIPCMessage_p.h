@@ -2,7 +2,9 @@
 #define CUTEIPCMESSAGE_P_H
 
 // Qt
-#include <QObject>
+#include <QString>
+#include <QGenericArgument>
+#include <QList>
 
 
 class CuteIPCMessage
@@ -15,7 +17,8 @@ class CuteIPCMessage
       MessageCallWithReturn,
       MessageCallWithoutReturn,
       MessageResponse,
-      MessageError
+      MessageError,
+      SignalConnectionRequest
     };
 
     CuteIPCMessage(MessageType type,

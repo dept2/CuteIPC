@@ -35,6 +35,19 @@ bool CuteIPCInterface::connectToServer(const QString& name)
 }
 
 
+bool CuteIPCInterface::connectRemoteSignal(const char* signal)
+{
+  qDebug() << "";
+  qDebug() << "Requesting connection to signal" << signal;
+
+  CuteIPCMessage message(CuteIPCMessage::SignalConnectionRequest, QString::fromAscii(signal));
+  QByteArray request = CuteIPCMarshaller::marshallMessage(message);
+
+  m_connection->sendCallRequest(request);
+  return false;
+}
+
+
 bool CuteIPCInterface::call(const QString& method, QGenericReturnArgument ret, QGenericArgument val0,
                             QGenericArgument val1, QGenericArgument val2,
                             QGenericArgument val3, QGenericArgument val4,

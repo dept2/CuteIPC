@@ -15,6 +15,7 @@ class CuteIPCServiceConnection : public QObject
 
   public:
     CuteIPCServiceConnection(QLocalSocket* socket, CuteIPCService* parent);
+    ~CuteIPCServiceConnection();
 
   public slots:
     void readyRead();
@@ -25,7 +26,7 @@ class CuteIPCServiceConnection : public QObject
     quint32 m_nextBlockSize;
     QByteArray m_block;
 
-    void makeCall();
+    void processMessage();
 
     void sendResponseMessage(QGenericArgument arg = QGenericArgument());
     void sendErrorMessage(const QString& error);

@@ -28,13 +28,13 @@ SET(sources
   src/CuteIPCServiceConnection.cpp
   src/CuteIPCInterfaceConnection.cpp
   src/CuteIPCMessage.cpp
+  src/CuteIPCSignalHandler.cpp
 )
 
 SET(headers
   src/CuteIPCMarshaller_p.h
-  src/CuteIPCServiceConnection_p.h
-  src/CuteIPCInterfaceConnection_p.h
   src/CuteIPCMessage_p.h
+  src/CuteIPCSignalHandler_p.h
 )
 
 SET(moc_headers
@@ -47,7 +47,7 @@ SET(moc_headers
 QT4_WRAP_CPP(sources ${moc_headers})
 
 SET(lib_target CuteIPC)
-ADD_LIBRARY(${lib_target} SHARED ${sources} ${headers})
+ADD_LIBRARY(${lib_target} SHARED ${sources} ${headers} ${moc_headers})
 TARGET_LINK_LIBRARIES(${lib_target} ${QT_LIBRARIES})
 
 

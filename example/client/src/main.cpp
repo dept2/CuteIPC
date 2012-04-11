@@ -14,6 +14,8 @@ int main(int argc, char* argv[])
   CuteIPCInterface interface;
   if (interface.connectToServer("TestObject"))
   {
+    interface.connectRemoteSignal("testSignal(QString)");
+
     QByteArray ba(10 * 1024 * 1024, 'H');
     int intval;
 

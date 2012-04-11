@@ -5,8 +5,9 @@
 #include <QObject>
 class QLocalSocket;
 
-// local
+// Local
 class CuteIPCInterfaceConnection;
+
 
 class CuteIPCInterface : public QObject
 {
@@ -15,6 +16,9 @@ class CuteIPCInterface : public QObject
   public:
     CuteIPCInterface(QObject* parent = 0);
     bool connectToServer(const QString& name);
+
+    // FIXME: temporary, will be properly done later
+    bool connectRemoteSignal(const char* signal);
 
     bool call(const QString& method, QGenericReturnArgument ret, QGenericArgument val0 = QGenericArgument(),
               QGenericArgument val1 = QGenericArgument(), QGenericArgument val2 = QGenericArgument(),

@@ -16,6 +16,9 @@ class TestObject : public CuteIPCService
 
   public slots:
     void foo(const QString& msg);
+
+  signals:
+    void testSignal(const QString& message);
 };
 
 #endif // TESTOBJECT_H
