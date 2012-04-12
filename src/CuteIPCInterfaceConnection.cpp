@@ -91,6 +91,7 @@ bool CuteIPCInterfaceConnection::readMessageFromSocket()
       case CuteIPCMessage::MessageError:
       {
         qDebug() << "SERVER: ERROR";
+        callWasFinished = true;
         break;
       }
       case CuteIPCMessage::MessageSignal:
@@ -112,6 +113,7 @@ bool CuteIPCInterfaceConnection::readMessageFromSocket()
       default:
       {
         break;
+        callWasFinished = true;
       }
     }
 
