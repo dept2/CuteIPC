@@ -25,6 +25,9 @@ class CuteIPCServiceConnection : public QObject
     void errorOccured(QLocalSocket::LocalSocketError);
     void sendSignal(const QByteArray& data);
 
+    void sendErrorMessage(const QString& error);
+    void sendResponseMessage(QGenericArgument arg = QGenericArgument());
+
   private:
     QLocalSocket* m_socket;
     quint32 m_nextBlockSize;
@@ -32,8 +35,6 @@ class CuteIPCServiceConnection : public QObject
 
     void processMessage();
 
-    void sendResponseMessage(QGenericArgument arg = QGenericArgument());
-    void sendErrorMessage(const QString& error);
     void sendResponse(const QByteArray& response);
 };
 

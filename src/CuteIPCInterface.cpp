@@ -43,8 +43,9 @@ bool CuteIPCInterface::connectRemoteSignal(const char* signal)
   CuteIPCMessage message(CuteIPCMessage::SignalConnectionRequest, QString::fromAscii(signal));
   QByteArray request = CuteIPCMarshaller::marshallMessage(message);
 
-  m_connection->sendCallRequest(request);
-  return false;
+//  m_connection->sendCallRequest(request);
+  return sendSynchronousRequest(request);
+//  return false;
 }
 
 

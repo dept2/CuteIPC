@@ -8,7 +8,6 @@
 #include <QTime>
 #include <QMetaType>
 
-
 CuteIPCInterfaceConnection::CuteIPCInterfaceConnection(QLocalSocket* socket, CuteIPCInterface* parent)
   : QObject(parent),
     m_socket(socket),
@@ -90,8 +89,11 @@ bool CuteIPCInterfaceConnection::readMessageFromSocket()
       }
       case CuteIPCMessage::MessageError:
       {
-        qDebug() << "SERVER: ERROR";
+        m_lastCallSuccessful = false;
         callWasFinished = true;
+        CuteIPCMessage message = CuteIPCMarshaller::demarshallMessage(m_block);
+        m_lastError = message.method();
+        qDebug() << "SERVER: ERROR:" << m_lastError;
         break;
       }
       case CuteIPCMessage::MessageSignal:

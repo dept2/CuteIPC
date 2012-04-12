@@ -67,6 +67,18 @@ void CuteIPCService::newConnection()
 void CuteIPCService::handleSignalRequest(QString signalSignature)
 {
   qDebug() << Q_FUNC_INFO;
+
+  CuteIPCServiceConnection* senderConnection = qobject_cast<CuteIPCServiceConnection*> (QObject::sender());
+
+  int signalIndex = this->metaObject()->indexOfSignal(QMetaObject::normalizedSignature(signalSignature.toAscii()));
+  qDebug() << "SIGNAL INDEX: " << signalIndex;
+  if (signalIndex == -1)
+  {
+    senderConnection->sendErrorMessage("Signal doesn't exist:" + signalSignature);
+    return;
+  }
+
+
   CuteIPCSignalHandler* handler = m_signalHandlers.value(signalSignature);
   if (!handler)
   {
@@ -75,6 +87,7 @@ void CuteIPCService::handleSignalRequest(QString signalSignature)
     handler = new CuteIPCSignalHandler(signalSignature, this);
     m_signalHandlers.insert(signalSignature, handler);
 
+
     bool ok = QMetaObject::connect(this,
                                    this->metaObject()->indexOfSignal(
                                        QMetaObject::normalizedSignature(signalSignature.toAscii())),
@@ -82,8 +95,8 @@ void CuteIPCService::handleSignalRequest(QString signalSignature)
                                    handler->metaObject()->indexOfSlot("relaySlot()"));
   }
 
-  CuteIPCServiceConnection* senderConnection = qobject_cast<CuteIPCServiceConnection*> (QObject::sender());
   handler->addListener(senderConnection);
+  senderConnection->sendResponseMessage();
 }
 
 
