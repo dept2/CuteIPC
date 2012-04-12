@@ -18,7 +18,8 @@ class CuteIPCMessage
       MessageCallWithoutReturn,
       MessageResponse,
       MessageError,
-      SignalConnectionRequest
+      SignalConnectionRequest,
+      MessageSignal
     };
 
     CuteIPCMessage(MessageType type,

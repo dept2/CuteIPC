@@ -18,13 +18,14 @@ class CuteIPCSignalHandler : public QObject
     ~CuteIPCSignalHandler();
 
 //  public slots:
-    void relaySlot(void** args);
+    void relaySlot(void**);
     void addListener(CuteIPCServiceConnection* listener);
     void listenerDestroyed(QObject* listener);
 
   protected:
 //  signals:
     void signalCaptured(const QByteArray& data);
+    void destroyed(QString signature);
 
   private:
     QString m_signature;

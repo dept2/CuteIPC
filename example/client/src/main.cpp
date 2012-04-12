@@ -15,6 +15,7 @@ int main(int argc, char* argv[])
   if (interface.connectToServer("TestObject"))
   {
     interface.connectRemoteSignal("testSignal(QString)");
+    interface.connectRemoteSignal("testSignal2(QString,int)");
 
     QByteArray ba(10 * 1024 * 1024, 'H');
     int intval;
@@ -22,10 +23,10 @@ int main(int argc, char* argv[])
     interface.call("bar", Q_RETURN_ARG(int,intval), Q_ARG(QByteArray, ba));
     qDebug() << "FINALLY:" << intval;
 
-    interface.call("bar", Q_ARG(QByteArray, ba));
-    qDebug() << "FINALLY:" << intval;
+//    interface.call("bar", Q_ARG(QByteArray, ba));
+//    qDebug() << "FINALLY:" << intval;
 
-    interface.callAsynchronous("bar", Q_ARG(QByteArray, ba));
+//    interface.callAsynchronous("bar", Q_ARG(QByteArray, ba));
   }
 
   return a.exec();

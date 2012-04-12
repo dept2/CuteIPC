@@ -19,6 +19,7 @@ class TestObject : public CuteIPCService
 
   signals:
     void testSignal(const QString& message);
+    void testSignal2(const QString& message, int value);
 };
 
 #endif // TESTOBJECT_H

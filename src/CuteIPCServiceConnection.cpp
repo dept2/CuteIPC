@@ -18,6 +18,7 @@ CuteIPCServiceConnection::CuteIPCServiceConnection(QLocalSocket* socket, CuteIPC
   connect(socket, SIGNAL(disconnected()), socket, SLOT(deleteLater()));
   connect(socket, SIGNAL(disconnected()), SLOT(deleteLater()));
   connect(socket, SIGNAL(error(QLocalSocket::LocalSocketError)), SLOT(errorOccured(QLocalSocket::LocalSocketError)));
+  connect(this, SIGNAL(signalRequest(QString)), parent, SLOT(handleSignalRequest(QString)));
 
   connect(socket, SIGNAL(readyRead()), SLOT(readyRead()));
   if (!socket->open(QIODevice::ReadWrite))
@@ -141,7 +142,7 @@ void CuteIPCServiceConnection::processMessage()
   else if (call.messageType() == CuteIPCMessage::SignalConnectionRequest)
   {
     qDebug() << call.method();
-    qDebug() << parent()->metaObject()->indexOfSignal(QMetaObject::normalizedSignature(call.method().toAscii()));
+    emit signalRequest(call.method());
   }
 
   // Cleanup
@@ -162,8 +163,9 @@ void CuteIPCServiceConnection::sendResponseMessage(QGenericArgument arg)
 {
   CuteIPCMessage message(CuteIPCMessage::MessageResponse, "", arg);
   QByteArray request = CuteIPCMarshaller::marshallMessage(message);
+
   sendResponse(request);
-  qDebug() << "Returned value was sent";
+//  qDebug() << "Returned value was sent";
 }
 
 
@@ -184,4 +186,11 @@ void CuteIPCServiceConnection::errorOccured(QLocalSocket::LocalSocketError)
 {
   qDebug() << "Socket error: " << m_socket->errorString();
   deleteLater();
+}
+
+
+void CuteIPCServiceConnection::sendSignal(const QByteArray &data)
+{
+  sendResponse(data);
+  qDebug() << "Signal was sent";
 }

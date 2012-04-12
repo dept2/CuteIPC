@@ -17,9 +17,13 @@ class CuteIPCServiceConnection : public QObject
     CuteIPCServiceConnection(QLocalSocket* socket, CuteIPCService* parent);
     ~CuteIPCServiceConnection();
 
+  signals:
+    void signalRequest(QString signalSignature);
+
   public slots:
     void readyRead();
     void errorOccured(QLocalSocket::LocalSocketError);
+    void sendSignal(const QByteArray& data);
 
   private:
     QLocalSocket* m_socket;

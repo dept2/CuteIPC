@@ -32,8 +32,6 @@ class CuteIPCInterfaceConnection: public QObject
     quint32 m_nextBlockSize;
     QByteArray m_block;
 
-    static const int TIMEOUT_SECS = 60 * 1000;
-
     QString m_lastError;
     bool m_lastCallSuccessful;
     QGenericReturnArgument m_returnedObject;

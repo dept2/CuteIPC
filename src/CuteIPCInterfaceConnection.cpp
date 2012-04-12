@@ -76,6 +76,23 @@ void CuteIPCInterfaceConnection::readyRead()
         qDebug() << "SERVER: ERROR";
         break;
       }
+      case CuteIPCMessage::MessageSignal:
+      {
+        qDebug() << "SERVER: SIGNAL";
+        qDebug() << "----------";
+        CuteIPCMessage message = CuteIPCMarshaller::demarshallMessage(m_block);
+
+        qDebug() << message.arguments().size();
+        foreach (const QGenericArgument& arg, message.arguments())
+          qDebug() << arg.name();
+        qDebug() << "----------";
+        qDebug() << "";
+
+        m_nextBlockSize = 0;
+        m_block.clear();
+
+        return; //FIXME: temporary
+      }
       default:
       {
         break;
@@ -84,6 +101,7 @@ void CuteIPCInterfaceConnection::readyRead()
 
     m_nextBlockSize = 0;
     m_block.clear();
+
     m_returnedObject = QGenericReturnArgument();
     emit callFinished();
   }

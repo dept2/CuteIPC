@@ -2,6 +2,7 @@
 #include "CuteIPCService.h"
 #include "CuteIPCMarshaller_p.h"
 #include "CuteIPCServiceConnection_p.h"
+#include "CuteIPCSignalHandler_p.h"
 
 // Qt
 #include <QLocalServer>
@@ -60,4 +61,33 @@ void CuteIPCService::newConnection()
   Q_ASSERT(socket != 0);
 
   new CuteIPCServiceConnection(socket, this);
+}
+
+
+void CuteIPCService::handleSignalRequest(QString signalSignature)
+{
+  qDebug() << Q_FUNC_INFO;
+  CuteIPCSignalHandler* handler = m_signalHandlers.value(signalSignature);
+  if (!handler)
+  {
+    //create a new signal handler
+    qDebug() << "Create a new signal handler for the signature: " << signalSignature;
+    handler = new CuteIPCSignalHandler(signalSignature, this);
+    m_signalHandlers.insert(signalSignature, handler);
+
+    bool ok = QMetaObject::connect(this,
+                                   this->metaObject()->indexOfSignal(
+                                       QMetaObject::normalizedSignature(signalSignature.toAscii())),
+                                   handler,
+                                   handler->metaObject()->indexOfSlot("relaySlot()"));
+  }
+
+  CuteIPCServiceConnection* senderConnection = qobject_cast<CuteIPCServiceConnection*> (QObject::sender());
+  handler->addListener(senderConnection);
+}
+
+
+void CuteIPCService::removeSignalHandler(QString key)
+{
+  m_signalHandlers.remove(key);
 }

@@ -3,8 +3,12 @@
 
 // Qt
 #include <QObject>
+#include <QHash>
+#include <QMap>
 class QLocalServer;
 
+// local
+class CuteIPCSignalHandler;
 
 class CuteIPCService : public QObject
 {
@@ -18,11 +22,16 @@ class CuteIPCService : public QObject
 
     QString serverName() const;
 
+  public slots:
+    void handleSignalRequest(QString signalSignature);
+    void removeSignalHandler(QString);
+
   private slots:
     void newConnection();
 
   private:
     QLocalServer* m_server;
+    QHash<QString, CuteIPCSignalHandler* > m_signalHandlers;
 };
 
 #endif // CUTEIPCSERVICE_H
