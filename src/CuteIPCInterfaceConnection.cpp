@@ -99,9 +99,11 @@ bool CuteIPCInterfaceConnection::readMessageFromSocket()
       case CuteIPCMessage::MessageSignal:
       {
         qDebug() << "SERVER: SIGNAL";
-        qDebug() << "----------";
-        CuteIPCMessage message = CuteIPCMarshaller::demarshallMessage(m_block);
 
+        CuteIPCMessage message = CuteIPCMarshaller::demarshallMessage(m_block);
+        emit invokeRemoteSignal(message.method(), message.arguments());
+
+        qDebug() << "----------";
         qDebug() << message.arguments().size();
         foreach (const QGenericArgument& arg, message.arguments())
           qDebug() << arg.name();

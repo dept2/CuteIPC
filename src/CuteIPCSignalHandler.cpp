@@ -54,6 +54,7 @@ void CuteIPCSignalHandler::relaySlot(void** args)
   CuteIPCMessage message(CuteIPCMessage::MessageSignal, m_signature, messageArguments);
   QByteArray serializedMessage = CuteIPCMarshaller::marshallMessage(message);
 
+  //cleanup memory
   foreach (const QGenericArgument& arg, messageArguments)
     delete[] arg.name();
 

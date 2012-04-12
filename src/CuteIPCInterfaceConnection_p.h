@@ -7,6 +7,7 @@
 
 // Local
 #include "CuteIPCInterface.h"
+#include "CuteIPCMessage_p.h"
 
 class CuteIPCInterfaceConnection: public QObject
 {
@@ -22,6 +23,7 @@ class CuteIPCInterfaceConnection: public QObject
 
   signals:
     void callFinished();
+    void invokeRemoteSignal(const QString& signalSignature, const CuteIPCMessage::Arguments& arguments);
 
   public slots:
     void readyRead();

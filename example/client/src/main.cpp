@@ -17,6 +17,9 @@ int main(int argc, char* argv[])
     interface.connectRemoteSignal("testSignal(QString)");
     interface.connectRemoteSignal("testSignal2(QString,int)");
 
+//    interface.remoteConnect(SIGNAL(testSignal2(QString,int)), &interface, SLOT(debugSlot(QString,int)));
+//    interface.remoteConnect(SIGNAL(testSignal(QString)), &interface, SLOT(debugSlot(QString)));
+
     QByteArray ba(10 * 1024 * 1024, 'H');
     int intval;
 
