@@ -35,6 +35,8 @@ class CuteIPCInterfaceConnection: public QObject
     QString m_lastError;
     bool m_lastCallSuccessful;
     QGenericReturnArgument m_returnedObject;
+
+    bool readMessageFromSocket();
 };
 
 #endif // CUTEIPCINTERFACECONNECTION_P_H

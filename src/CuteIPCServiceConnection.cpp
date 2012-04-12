@@ -165,7 +165,7 @@ void CuteIPCServiceConnection::sendResponseMessage(QGenericArgument arg)
   QByteArray request = CuteIPCMarshaller::marshallMessage(message);
 
   sendResponse(request);
-//  qDebug() << "Returned value was sent";
+  qDebug() << "Returned value was sent";
 }
 
 

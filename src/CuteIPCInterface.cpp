@@ -97,6 +97,8 @@ bool CuteIPCInterface::sendSynchronousRequest(const QByteArray& request)
   connect(m_connection, SIGNAL(callFinished()), &loop, SLOT(quit()));
   loop.exec();
 
+  qDebug() << "call was finished. stop local event loop...";
+
   return m_connection->lastCallSuccessful();
 }
 

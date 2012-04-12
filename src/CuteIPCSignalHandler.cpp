@@ -43,7 +43,7 @@ void CuteIPCSignalHandler::relaySlot(void** args)
 
   CuteIPCMessage::Arguments messageArguments;
 
-  for (int i=0; i<types.size(); ++i)
+  for (int i = 0; i < types.size(); ++i)
   {
     const QByteArray& type = types[i];
 

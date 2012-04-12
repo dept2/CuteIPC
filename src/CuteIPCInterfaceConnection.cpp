@@ -39,20 +39,36 @@ void CuteIPCInterfaceConnection::sendCallRequest(const QByteArray& request)
 
 void CuteIPCInterfaceConnection::readyRead()
 {
+  bool messageStreamFinished;
+
+  do
+  {
+    messageStreamFinished = readMessageFromSocket();
+  } while (!messageStreamFinished);
+
+  qDebug() << "end ready read";
+}
+
+
+bool CuteIPCInterfaceConnection::readMessageFromSocket()
+{
   QDataStream in(m_socket);
+
+  bool callWasFinished = false;
 
   // Fetch next block size
   if (m_nextBlockSize == 0)
   {
+    qDebug() << "";
     qDebug() << "Started fetching request for returned value:" << QTime::currentTime().toString("hh:mm:ss.zzz");
     if (m_socket->bytesAvailable() < (int)sizeof(quint32))
-      return;
+      return true;
 
     in >> m_nextBlockSize;
   }
 
   if (in.atEnd())
-    return;
+    return true;
 
   qint64 bytesToFetch = m_nextBlockSize - m_block.size();
   m_block.append(m_socket->read(bytesToFetch));
@@ -69,6 +85,7 @@ void CuteIPCInterfaceConnection::readyRead()
       {
         CuteIPCMarshaller::demarshallResponse(m_block, m_returnedObject);
         qDebug() << "SERVER: SUCCESS";
+        callWasFinished = true;
         break;
       }
       case CuteIPCMessage::MessageError:
@@ -86,12 +103,11 @@ void CuteIPCInterfaceConnection::readyRead()
         foreach (const QGenericArgument& arg, message.arguments())
           qDebug() << arg.name();
         qDebug() << "----------";
-        qDebug() << "";
 
         m_nextBlockSize = 0;
         m_block.clear();
 
-        return; //FIXME: temporary
+        break;
       }
       default:
       {
@@ -102,9 +118,17 @@ void CuteIPCInterfaceConnection::readyRead()
     m_nextBlockSize = 0;
     m_block.clear();
 
-    m_returnedObject = QGenericReturnArgument();
-    emit callFinished();
+    if (callWasFinished)
+    {
+      m_returnedObject = QGenericReturnArgument();
+      emit callFinished();
+      return true;
+    }
+
+    if (m_socket->bytesAvailable())
+      return false;
   }
+  return true;
 }
 
 
