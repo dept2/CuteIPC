@@ -11,7 +11,7 @@
 #include <QMetaMethod>
 
 
-CuteIPCSignalHandler::CuteIPCSignalHandler(const QString& signature, CuteIPCService* parent)
+CuteIPCSignalHandler::CuteIPCSignalHandler(const QString& signature, QObject* parent)
   : QObject(parent),
     m_signature(signature)
 {
@@ -21,7 +21,7 @@ CuteIPCSignalHandler::CuteIPCSignalHandler(const QString& signature, CuteIPCServ
                        this->metaObject()->indexOfSignal("destroyed(QString)"),
                        parent,
                        parent->metaObject()->indexOfSlot(
-                          QMetaObject::normalizedSignature("removeSignalHandler(QString)"))
+                          QMetaObject::normalizedSignature("_q_removeSignalHandler(QString)"))
                        );
 }
 

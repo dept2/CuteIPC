@@ -18,7 +18,7 @@ class CuteIPCServiceConnection : public QObject
     ~CuteIPCServiceConnection();
 
   signals:
-    void signalRequest(QString signalSignature);
+    void signalRequest(QString signalSignature, QObject* sender);
 
   public slots:
     void readyRead();

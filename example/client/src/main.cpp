@@ -6,6 +6,8 @@
 // CuteIPC
 #include <CuteIPCInterface.h>
 
+// Local
+#include "TestObjectSlot.h"
 
 int main(int argc, char* argv[])
 {
@@ -14,8 +16,9 @@ int main(int argc, char* argv[])
   CuteIPCInterface interface;
   if (interface.connectToServer("TestObject"))
   {
-    interface.remoteConnect(SIGNAL(testSignal2(QString,int)), &interface, SLOT(debugSlot(QString,int)));
-    interface.remoteConnect(SIGNAL(testSignal(QString)), &interface, SLOT(debugSlot(QString)));
+    TestObjectSlot* test = new TestObjectSlot();
+    interface.remoteConnect(SIGNAL(testSignal2(QString,int)), test, SLOT(debugSlot(QString,int)));
+    interface.remoteConnect(SIGNAL(testSignal(QString)), test, SLOT(debugSlot(QString)));
 
     QByteArray ba(10 * 1024 * 1024, 'H');
     int intval;

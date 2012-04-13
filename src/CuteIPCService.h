@@ -3,35 +3,31 @@
 
 // Qt
 #include <QObject>
-#include <QHash>
-#include <QMap>
-class QLocalServer;
 
 // Local
-class CuteIPCSignalHandler;
+class CuteIPCServicePrivate;
 
 class CuteIPCService : public QObject
 {
   Q_OBJECT
 
   public:
-    CuteIPCService(QObject* parent = 0);
+    explicit CuteIPCService(QObject* parent = 0);
     ~CuteIPCService();
 
     bool listen(const QString& name = QString());
     QString serverName() const;
 
-  public slots:
-    void handleSignalRequest(QString signalSignature);
-    void removeSignalHandler(QString);
-
-  private slots:
-    void newConnection();
+  protected:
+    CuteIPCServicePrivate* const d_ptr;
+    CuteIPCService(CuteIPCServicePrivate& dd, QObject* parent);
 
   private:
+    Q_DECLARE_PRIVATE(CuteIPCService)
 
-    QLocalServer* m_server;
-    QHash<QString, CuteIPCSignalHandler* > m_signalHandlers;
+    Q_PRIVATE_SLOT(d_func(),void _q_newConnection())
+    Q_PRIVATE_SLOT(d_func(),void _q_handleSignalRequest(QString, QObject*))
+    Q_PRIVATE_SLOT(d_func(),void _q_removeSignalHandler(QString))
 };
 
 #endif // CUTEIPCSERVICE_H

@@ -9,7 +9,14 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
 
 SET(sources
   src/main.cpp
+  src/TestObjectSlot.cpp
 )
+
+SET(moc_headers
+  src/TestObjectSlot.h
+)
+
+QT4_WRAP_CPP(sources ${moc_headers})
 
 SET(bin_target CuteIPCClient)
 ADD_EXECUTABLE(${bin_target} ${sources})

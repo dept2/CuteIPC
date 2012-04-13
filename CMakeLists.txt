@@ -29,23 +29,23 @@ SET(sources
   src/CuteIPCInterfaceConnection.cpp
   src/CuteIPCMessage.cpp
   src/CuteIPCSignalHandler.cpp
-  src/CuteIPCSlotHandler.cpp
 )
 
 SET(headers
+  src/CuteIPCService_p.h
+  src/CuteIPCInterface_p.h
   src/CuteIPCMarshaller_p.h
   src/CuteIPCMessage_p.h
   src/CuteIPCSignalHandler_p.h
 )
 
 SET(moc_headers
-  src/CuteIPCService.h
-  src/CuteIPCInterface.h
   src/CuteIPCServiceConnection_p.h
   src/CuteIPCInterfaceConnection_p.h
-  src/CuteIPCSlotHandler_p.h
 )
 
+QT4_WRAP_CPP(sources src/CuteIPCService.h OPTIONS -f${CMAKE_CURRENT_SOURCE_DIR}/src/CuteIPCService_p.h)
+QT4_WRAP_CPP(sources src/CuteIPCInterface.h OPTIONS -f${CMAKE_CURRENT_SOURCE_DIR}/src/CuteIPCInterface_p.h)
 QT4_WRAP_CPP(sources ${moc_headers})
 
 SET(lib_target CuteIPC)

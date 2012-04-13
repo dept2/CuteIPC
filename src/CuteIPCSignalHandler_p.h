@@ -14,7 +14,7 @@ class CuteIPCSignalHandler : public QObject
   Q_OBJECT_FAKE
 
   public:
-    explicit CuteIPCSignalHandler(const QString& signature, CuteIPCService* parent = 0);
+    explicit CuteIPCSignalHandler(const QString& signature, QObject* parent = 0);
     ~CuteIPCSignalHandler();
 
 //  public slots:
