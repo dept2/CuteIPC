@@ -104,7 +104,7 @@ bool CuteIPCInterface::sendSynchronousRequest(const QByteArray& request)
 }
 
 
-void CuteIPCInterface::callAsynchronous(const QString& method, QGenericArgument val0, QGenericArgument val1,
+void CuteIPCInterface::callNoReply(const QString& method, QGenericArgument val0, QGenericArgument val1,
                                         QGenericArgument val2, QGenericArgument val3, QGenericArgument val4,
                                         QGenericArgument val5, QGenericArgument val6, QGenericArgument val7,
                                         QGenericArgument val8, QGenericArgument val9)

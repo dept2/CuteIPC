@@ -34,7 +34,7 @@ class CuteIPCInterface : public QObject
               QGenericArgument val7 = QGenericArgument(), QGenericArgument val8 = QGenericArgument(),
               QGenericArgument val9 = QGenericArgument());
 
-    void callAsynchronous(const QString& method, QGenericArgument val0 = QGenericArgument(),
+    void callNoReply(const QString& method, QGenericArgument val0 = QGenericArgument(),
               QGenericArgument val1 = QGenericArgument(), QGenericArgument val2 = QGenericArgument(),
               QGenericArgument val3 = QGenericArgument(), QGenericArgument val4 = QGenericArgument(),
               QGenericArgument val5 = QGenericArgument(), QGenericArgument val6 = QGenericArgument(),

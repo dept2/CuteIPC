@@ -7,8 +7,9 @@
 #include <QMap>
 class QLocalServer;
 
-// local
+// Local
 class CuteIPCSignalHandler;
+
 
 class CuteIPCService : public QObject
 {
