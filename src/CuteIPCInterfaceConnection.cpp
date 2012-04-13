@@ -1,6 +1,7 @@
 // Local
 #include "CuteIPCInterfaceConnection_p.h"
 #include "CuteIPCMarshaller_p.h"
+#include "CuteIPCMessage_p.h"
 
 // Qt
 #include <QLocalSocket>
@@ -103,11 +104,12 @@ bool CuteIPCInterfaceConnection::readMessageFromSocket()
         CuteIPCMessage message = CuteIPCMarshaller::demarshallMessage(m_block);
         emit invokeRemoteSignal(message.method(), message.arguments());
 
-        qDebug() << "----------";
-        qDebug() << message.arguments().size();
-        foreach (const QGenericArgument& arg, message.arguments())
-          qDebug() << arg.name();
-        qDebug() << "----------";
+//        qDebug() << "----------";
+//        qDebug() << message.arguments().size();
+//        foreach (const QGenericArgument& arg, message.arguments())
+//          qDebug() << arg.name();
+//        qDebug() << "----------";
+        qDebug() << message;
 
         m_nextBlockSize = 0;
         m_block.clear();

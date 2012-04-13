@@ -63,6 +63,9 @@ bool CuteIPCInterface::connectRemoteSignal(const char* signal)
 
 bool CuteIPCInterface::remoteConnect(const char* signal, QObject* object, const char* slot)
 {
+  if (signal[0] != '2' || slot[0] != '1')
+    return false;
+
   QString signalSignature = QString::fromAscii(signal).mid(1);
   QString slotSignature = QString::fromAscii(slot).mid(1);
 

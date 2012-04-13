@@ -1,6 +1,9 @@
 // Local
 #include "CuteIPCMessage_p.h"
 
+// Qt
+#include <QDebug>
+
 
 CuteIPCMessage::CuteIPCMessage(MessageType type, const QString& method,
                                QGenericArgument val0, QGenericArgument val1,
@@ -70,4 +73,50 @@ const CuteIPCMessage::MessageType& CuteIPCMessage::messageType() const
 const QString& CuteIPCMessage::returnType() const
 {
   return m_returnType;
+}
+
+
+QDebug operator<<(QDebug dbg, const CuteIPCMessage &message)
+{
+  QString type;
+  switch (message.messageType())
+  {
+    case CuteIPCMessage::MessageCallWithReturn:
+      type = "CallWithReturn";
+      break;
+    case CuteIPCMessage::MessageCallWithoutReturn:
+      type = "CallWithoutReturn";
+      break;
+    case CuteIPCMessage::MessageResponse:
+      type = "Response";
+      break;
+    case CuteIPCMessage::MessageError:
+      type = "Error";
+      break;
+    case CuteIPCMessage::SignalConnectionRequest:
+      type = "SignalConnectionRequest";
+      break;
+    case CuteIPCMessage::MessageSignal:
+      type = "Signal";
+      break;
+    default: break;
+  }
+
+  dbg.nospace() << "MESSAGE of type: " << type << "\n";
+  dbg.nospace() << "-- " << "Method: " << message.method() << "\n";
+
+  if (message.arguments().length())
+  {
+    dbg.nospace() << "-- " << "Arguments of type:";
+    foreach (const QGenericArgument& arg, message.arguments())
+    {
+      dbg.space() << arg.name();
+    }
+    dbg.space() << "\n";
+  }
+
+  if (!message.returnType().isEmpty())
+    dbg.space() << "--" << "Return type:" << message.returnType();
+
+  return dbg.space();
 }

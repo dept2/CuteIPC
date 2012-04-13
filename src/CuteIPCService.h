@@ -10,7 +10,6 @@ class QLocalServer;
 // Local
 class CuteIPCSignalHandler;
 
-
 class CuteIPCService : public QObject
 {
   Q_OBJECT
@@ -20,7 +19,6 @@ class CuteIPCService : public QObject
     ~CuteIPCService();
 
     bool listen(const QString& name = QString());
-
     QString serverName() const;
 
   public slots:
@@ -31,6 +29,7 @@ class CuteIPCService : public QObject
     void newConnection();
 
   private:
+
     QLocalServer* m_server;
     QHash<QString, CuteIPCSignalHandler* > m_signalHandlers;
 };

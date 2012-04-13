@@ -45,5 +45,7 @@ class CuteIPCMessage
     QString m_returnType;
 };
 
+QDebug operator<<(QDebug dbg, const CuteIPCMessage &message);
+
 
 #endif // CUTEIPCMESSAGE_P_H
