@@ -26,6 +26,14 @@ CuteIPCSignalHandler::CuteIPCSignalHandler(const QString& signature, QObject* pa
 }
 
 
+void CuteIPCSignalHandler::setSignalParametersInfo(QObject *owner, const QString& signature)
+{
+  QMetaMethod method = owner->metaObject()->method(
+        owner->metaObject()->indexOfMethod(QMetaObject::normalizedSignature(signature.toAscii())));
+  m_signalParametersInfo = method.parameterTypes();
+}
+
+
 CuteIPCSignalHandler::~CuteIPCSignalHandler()
 {
   qDebug() << Q_FUNC_INFO << ":" << this;
@@ -36,16 +44,14 @@ void CuteIPCSignalHandler::relaySlot(void** args)
 {
   qDebug() << Q_FUNC_INFO;
 
-  QMetaMethod method = parent()->metaObject()->method(
-        parent()->metaObject()->indexOfMethod(QMetaObject::normalizedSignature(m_signature.toAscii())));
-  QList<QByteArray> types = method.parameterTypes();
-  qDebug() << types;
+  if (m_signalParametersInfo.isEmpty())
+    setSignalParametersInfo(parent(), m_signature);
 
   CuteIPCMessage::Arguments messageArguments;
 
-  for (int i = 0; i < types.size(); ++i)
+  for (int i = 0; i < m_signalParametersInfo.size(); ++i)
   {
-    const QByteArray& type = types[i];
+    const QByteArray& type = m_signalParametersInfo[i];
 
     //call arguments are started from index 1
     messageArguments.push_back(QGenericArgument(qstrdup(QString(type).toLatin1()),args[i+1]));

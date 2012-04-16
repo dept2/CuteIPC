@@ -4,6 +4,7 @@
 #include "CuteIPCMarshaller_p.h"
 #include "CuteIPCInterfaceConnection_p.h"
 #include "CuteIPCMessage_p.h"
+#include "CuteIPCSignalHandler_p.h"
 
 // Qt
 #include <QLocalSocket>
@@ -30,21 +31,25 @@ void CuteIPCInterfacePrivate::registerSocket()
 }
 
 
-bool CuteIPCInterfacePrivate::checkConnectCorrection(const QString& signal, const QObject* object, const QString& slot)
+bool CuteIPCInterfacePrivate::checkConnectCorrection(const QString& signal, const QString& slot)
 {
-  //check signal and slot existing
-  if (!object || object->metaObject()->indexOfSlot(slot.toAscii()) == -1)
+  if (signal[0] != '2' || slot[0] != '1')
+    return false;
+
+  QString signalSignature = signal.mid(1);
+  QString slotSignature = slot.mid(1);
+
+  if (!QMetaObject::checkConnectArgs(signalSignature.toAscii(), slotSignature.toAscii()))
   {
-    qDebug() << "incorrect connect reciever";
+    qDebug() << "incompatible signatures" << signalSignature << slotSignature;
     return false;
   }
+  return true;
+}
 
-  if (!QMetaObject::checkConnectArgs(signal.toAscii(), slot.toAscii()))
-  {
-    qDebug() << "incompatible signatures" << signal << slot;
-    return false;
-  }
 
+bool CuteIPCInterfacePrivate::sendRemoteConnectionRequest(const QString &signal)
+{
   qDebug() << "Requesting connection to signal" << signal;
   CuteIPCMessage message(CuteIPCMessage::SignalConnectionRequest, signal);
   QByteArray request = CuteIPCMarshaller::marshallMessage(message);
@@ -69,23 +74,33 @@ bool CuteIPCInterfacePrivate::sendSynchronousRequest(const QByteArray& request)
 
 
 void CuteIPCInterfacePrivate::registerConnection(const QString& signalSignature,
-                                                    QObject *reciever,
-                                                    const QString& slotSignature)
+                                                 QObject *reciever,
+                                                 const QString& slotSignature)
 {
-  m_connections.insert(signalSignature, SlotData(reciever, slotSignature));
+  Q_Q(CuteIPCInterface);
+  m_connections.insert(signalSignature, MethodData(reciever, slotSignature));
+  QObject::connect(reciever, SIGNAL(destroyed(QObject*)), q, SLOT(_q_removeRemoteConnectionsOfObject(QObject*)));
 }
 
 
-void CuteIPCInterfacePrivate::removeConnection(const QString& signalSignature)
+void CuteIPCInterfacePrivate::_q_removeRemoteConnectionsOfObject(QObject* destroyedObject)
 {
-  m_connections.remove(signalSignature);
+  qDebug() << "!REMOVE! remove remote signal connections of object:" << destroyedObject;
+
+  QMutableHashIterator<QString, MethodData> i(m_connections);
+  while (i.hasNext()) {
+      i.next();
+      MethodData data = i.value();
+      if (data.first == destroyedObject)
+        i.remove();
+  }
 }
 
 
 void CuteIPCInterfacePrivate::_q_invokeRemoteSignal(const QString& signalSignature,
                                                     const CuteIPCMessage::Arguments& arguments)
 {
-  SlotData data = m_connections.value(signalSignature);
+  MethodData data = m_connections.value(signalSignature);
   if (!data.first)
     return;
 
@@ -106,6 +121,70 @@ void CuteIPCInterfacePrivate::_q_invokeRemoteSignal(const QString& signalSignatu
 
   //TODO: need to cleanup memory!
   qDebug() << "SIGNAL: invoke slot:" << successfulInvoke;
+}
+
+
+void CuteIPCInterfacePrivate::handleLocalSignalRequest(QObject* localObject,
+                                                       const QString& signalSignature,
+                                                       const QString& slotSignature)
+{
+  Q_Q(CuteIPCInterface);
+  qDebug() << Q_FUNC_INFO;
+
+  MethodData data(localObject, signalSignature);
+
+  CuteIPCSignalHandler* handler = m_localSignalHandlers.value(data);
+  if (!handler)
+  {
+    //create a new signal handler
+    qDebug() << "Create a new local signal handler for the signature: " << signalSignature;
+    handler = new CuteIPCSignalHandler(slotSignature, q);
+    handler->setSignalParametersInfo(localObject, signalSignature);
+
+    m_localSignalHandlers.insert(data, handler);
+
+    QMetaObject::connect(localObject,
+                         localObject->metaObject()->indexOfSignal("destroyed(QObject*)"),
+                         q,
+                         q->metaObject()->indexOfSlot(
+                            QMetaObject::normalizedSignature("_q_removeSignalHandlersOfObject(QObject*)"))
+                         );
+
+    QMetaObject::connect(localObject,
+                         localObject->metaObject()->indexOfSignal(
+                             QMetaObject::normalizedSignature(signalSignature.toAscii())),
+                         handler,
+                             handler->metaObject()->indexOfSlot("relaySlot()"));
+
+    QMetaObject::connect(handler,
+                         handler->metaObject()->indexOfSignal(
+                             QMetaObject::normalizedSignature("signalCaptured(QByteArray)")),
+                         q,
+                         q->metaObject()->indexOfSlot(
+                             QMetaObject::normalizedSignature("_q_sendSignal(QByteArray)"))
+                         );
+  }
+}
+
+
+void CuteIPCInterfacePrivate::_q_removeSignalHandlersOfObject(QObject* destroyedObject)
+{
+  qDebug() << "!REMOVE! remove signal handlers of object:" << destroyedObject;
+
+  QMutableHashIterator<MethodData, CuteIPCSignalHandler*> i(m_localSignalHandlers);
+  while (i.hasNext()) {
+      i.next();
+      MethodData data = i.key();
+      if (data.first == destroyedObject)
+        i.remove();
+  }
+}
+
+
+void CuteIPCInterfacePrivate::_q_sendSignal(const QByteArray &request)
+{
+  qDebug() << "Send signal...";
+  m_connection->sendCallRequest(request);
 }
 
 
@@ -156,13 +235,16 @@ bool CuteIPCInterface::connectToServer(const QString& name)
 bool CuteIPCInterface::remoteConnect(const char* signal, QObject* object, const char* slot)
 {
   Q_D(CuteIPCInterface);
-  if (signal[0] != '2' || slot[0] != '1')
+  QString signalSignature = QString::fromAscii(signal);
+  QString slotSignature = QString::fromAscii(slot);
+
+  if (!d->checkConnectCorrection(signalSignature, slotSignature))
     return false;
 
-  QString signalSignature = QString::fromAscii(signal).mid(1);
-  QString slotSignature = QString::fromAscii(slot).mid(1);
+  signalSignature = signalSignature.mid(1);
+  slotSignature = slotSignature.mid(1);
 
-  if (!d->checkConnectCorrection(signalSignature, object, slotSignature))
+  if (!d->sendRemoteConnectionRequest(signalSignature))
     return false;
 
   d->registerConnection(signalSignature, object, slotSignature);
@@ -170,6 +252,30 @@ bool CuteIPCInterface::remoteConnect(const char* signal, QObject* object, const 
 }
 
 
+bool CuteIPCInterface::remoteConnect(QObject *localObject, const char *signal, const char *remoteSlot)
+{
+  Q_D(CuteIPCInterface);
+
+  QString signalSignature = QString::fromAscii(signal);
+  QString slotSignature = QString::fromAscii(remoteSlot);
+
+  if (!d->checkConnectCorrection(signalSignature, slotSignature))
+    return false;
+
+  signalSignature = signalSignature.mid(1);
+  slotSignature = slotSignature.mid(1);
+
+  int signalIndex = localObject->metaObject()->indexOfSignal(
+        QMetaObject::normalizedSignature(signalSignature.toAscii()));
+  if (signalIndex == -1)
+  {
+    qDebug() << "Signal doesn't exist:" + signalSignature << "object:" << localObject;
+    return false;
+  }
+
+  d->handleLocalSignalRequest(localObject, signalSignature, slotSignature);
+  return true;
+}
 
 
 bool CuteIPCInterface::call(const QString& method, QGenericReturnArgument ret, QGenericArgument val0,

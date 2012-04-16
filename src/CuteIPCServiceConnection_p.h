@@ -26,7 +26,7 @@ class CuteIPCServiceConnection : public QObject
     void sendSignal(const QByteArray& data);
 
     void sendErrorMessage(const QString& error);
-    void sendResponseMessage(QGenericArgument arg = QGenericArgument());
+    void sendResponseMessage(const QString& method, QGenericArgument arg = QGenericArgument());
 
   private:
     QLocalSocket* m_socket;

@@ -3,6 +3,7 @@
 
 // Qt
 #include <QObject>
+class QMetaMethod;
 
 // Local
 class CuteIPCService;
@@ -16,6 +17,7 @@ class CuteIPCSignalHandler : public QObject
   public:
     explicit CuteIPCSignalHandler(const QString& signature, QObject* parent = 0);
     ~CuteIPCSignalHandler();
+    void setSignalParametersInfo(QObject* owner, const QString& signature);
 
 //  public slots:
     void relaySlot(void**);
@@ -29,6 +31,7 @@ class CuteIPCSignalHandler : public QObject
 
   private:
     QString m_signature;
+    QList<QByteArray> m_signalParametersInfo;
     QList<CuteIPCServiceConnection*> m_listeners;
 };
 

@@ -83,8 +83,9 @@ bool CuteIPCInterfaceConnection::readMessageFromSocket()
     {
       case CuteIPCMessage::MessageResponse:
       {
-        CuteIPCMarshaller::demarshallResponse(m_block, m_returnedObject);
+        CuteIPCMessage message = CuteIPCMarshaller::demarshallResponse(m_block, m_returnedObject);
         qDebug() << "SERVER: SUCCESS";
+        qDebug() << message;
         callWasFinished = true;
         break;
       }
@@ -100,20 +101,13 @@ bool CuteIPCInterfaceConnection::readMessageFromSocket()
       case CuteIPCMessage::MessageSignal:
       {
         qDebug() << "SERVER: SIGNAL";
-
         CuteIPCMessage message = CuteIPCMarshaller::demarshallMessage(m_block);
-        emit invokeRemoteSignal(message.method(), message.arguments());
-
-//        qDebug() << "----------";
-//        qDebug() << message.arguments().size();
-//        foreach (const QGenericArgument& arg, message.arguments())
-//          qDebug() << arg.name();
-//        qDebug() << "----------";
         qDebug() << message;
+
+        emit invokeRemoteSignal(message.method(), message.arguments());
 
         m_nextBlockSize = 0;
         m_block.clear();
-
         break;
       }
       default:

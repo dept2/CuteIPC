@@ -19,6 +19,7 @@ class CuteIPCInterface : public QObject
     bool connectToServer(const QString& name);
 
     bool remoteConnect(const char* signal, QObject* object, const char* slot);
+    bool remoteConnect(QObject* localObject, const char* signal, const char* remoteSlot);
 
     bool call(const QString& method, QGenericReturnArgument ret, QGenericArgument val0 = QGenericArgument(),
               QGenericArgument val1 = QGenericArgument(), QGenericArgument val2 = QGenericArgument(),
@@ -50,6 +51,9 @@ class CuteIPCInterface : public QObject
   private:
     Q_DECLARE_PRIVATE(CuteIPCInterface)
     Q_PRIVATE_SLOT(d_func(),void _q_invokeRemoteSignal(QString, CuteIPCMessage::Arguments))
+    Q_PRIVATE_SLOT(d_func(),void _q_sendSignal(QByteArray))
+    Q_PRIVATE_SLOT(d_func(),void _q_removeSignalHandlersOfObject(QObject*))
+    Q_PRIVATE_SLOT(d_func(),void _q_removeRemoteConnectionsOfObject(QObject*))
 };
 
 #endif // CUTEIPCINTERFACE_H

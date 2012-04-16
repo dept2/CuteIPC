@@ -80,44 +80,49 @@ CuteIPCMessage::MessageType CuteIPCMarshaller::demarshallMessageType(QByteArray&
 }
 
 
-void CuteIPCMarshaller::demarshallResponse(QByteArray &call, QGenericReturnArgument arg)
+CuteIPCMessage CuteIPCMarshaller::demarshallResponse(QByteArray &call, QGenericReturnArgument arg)
 {
   QDataStream stream(&call, QIODevice::ReadOnly);
 
-  // Read unused values
+  CuteIPCMessage::MessageType type;
   int buffer;
-  QString stringBuffer;
   stream >> buffer;
-  stream >> stringBuffer;
-  stream >> stringBuffer;
+  type = CuteIPCMessage::MessageType(buffer);
+
+  QString method;
+  stream >> method;
+
+  QString returnType;
+  stream >> returnType;
+
+  CuteIPCMessage::Arguments args; //construct message with empty arguments
 
   int argc;
   stream >> argc;
-  if (argc == 0)  //server doesn't return any value
-    return;
-
-  QString typeName;
-  stream >> typeName;
-
-  // Check type
-  int type = QMetaType::type(typeName.toLatin1());
-  if (type == 0)
+  if (argc != 0) //load returned value to the arg (not to the message)
   {
-    qWarning() << "Unsupported type of argument " << ":" << typeName;
-  }
-  if (type != QMetaType::type(arg.name()))
-  {
-    qWarning() << "Type doesn't match:" << typeName << "Expected:" << arg.name();
+    QString typeName;
+    stream >> typeName;
+
+    // Check type
+    int type = QMetaType::type(typeName.toLatin1());
+    if (type == 0)
+    {
+      qWarning() << "Unsupported type of argument " << ":" << typeName;
+    }
+    if (type != QMetaType::type(arg.name()))
+    {
+      qWarning() << "Type doesn't match:" << typeName << "Expected:" << arg.name();
+    }
+
+    bool dataLoaded = QMetaType::load(stream, type, arg.data());
+    if (!dataLoaded)
+    {
+      qWarning() << "Failed to deserialize argument value" << "of type" << typeName;
+    }
   }
 
-  // Read argument data from stream
-  //  void* data = QMetaType::construct(type);
-
-  bool dataLoaded = QMetaType::load(stream, type, arg.data());
-  if (!dataLoaded)
-  {
-    qWarning() << "Failed to deserialize argument value" << "of type" << typeName;
-  }
+  return CuteIPCMessage(type, method, args, returnType);
 }
 
 

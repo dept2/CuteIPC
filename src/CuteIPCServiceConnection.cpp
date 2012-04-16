@@ -74,18 +74,15 @@ void CuteIPCServiceConnection::readyRead()
 void CuteIPCServiceConnection::processMessage()
 {
   CuteIPCMessage call = CuteIPCMarshaller::demarshallMessage(m_block);
+  CuteIPCMessage::MessageType messageType = call.messageType();
+  qDebug() << call;
 
   // Fill empty args
   CuteIPCMessage::Arguments args = call.arguments();
+  while (args.size() < 10)
+    args.append(QGenericArgument());
 
-  if (call.messageType() == CuteIPCMessage::MessageCallWithReturn
-      || call.messageType() == CuteIPCMessage::MessageCallWithoutReturn)
-  {
-    while (args.size() < 10)
-      args.append(QGenericArgument());
-  }
-
-  if (call.messageType() == CuteIPCMessage::MessageCallWithReturn && !call.returnType().isEmpty())
+  if (messageType == CuteIPCMessage::MessageCallWithReturn && !call.returnType().isEmpty())
   {
     int retType = QMetaType::type(call.returnType().toLatin1());
     if (retType > 0)
@@ -105,7 +102,7 @@ void CuteIPCServiceConnection::processMessage()
       if (successfulInvoke)
       {
         qDebug() << "Method was successfully invoked";
-        sendResponseMessage(QGenericArgument(call.returnType().toLatin1(), retData)); //TODO check the scopes
+        sendResponseMessage(call.method(), QGenericArgument(call.returnType().toLatin1(), retData));
       }
       else
       {
@@ -121,7 +118,8 @@ void CuteIPCServiceConnection::processMessage()
       sendErrorMessage(error);
     }
   }
-  else if (call.messageType() == CuteIPCMessage::MessageCallWithoutReturn)
+  else if ((messageType == CuteIPCMessage::MessageCallWithReturn && call.returnType().isEmpty())
+           || messageType == CuteIPCMessage::MessageCallWithoutReturn)
   {
     bool successfulInvoke = QMetaObject::invokeMethod(parent(), call.method().toLatin1(),
         args.at(0), args.at(1), args.at(2),
@@ -135,13 +133,25 @@ void CuteIPCServiceConnection::processMessage()
     else
     {
       qDebug() << "Method was successfully invoked";
-      if (call.messageType() == CuteIPCMessage::MessageCallWithReturn)
-        sendResponseMessage();
+      if (messageType == CuteIPCMessage::MessageCallWithReturn)
+        sendResponseMessage(call.method());
     }
   }
-  else if (call.messageType() == CuteIPCMessage::SignalConnectionRequest)
+  else if (messageType == CuteIPCMessage::MessageSignal)
   {
-    qDebug() << call.method();
+    bool successfulInvoke = QMetaObject::invokeMethod(parent(),
+        call.method().left(call.method().indexOf("(")).toLatin1(),
+        args.at(0), args.at(1), args.at(2),
+        args.at(3), args.at(4), args.at(5),
+        args.at(6), args.at(7), args.at(8),
+        args.at(9));
+    if (!successfulInvoke)
+      sendErrorMessage("Unsuccessful invoke");
+    else
+      qDebug() << "Method was successfully invoked";
+  }
+  else if (messageType == CuteIPCMessage::SignalConnectionRequest)
+  {
     emit signalRequest(call.method(), this);
   }
 
@@ -159,9 +169,9 @@ void CuteIPCServiceConnection::sendErrorMessage(const QString& error)
 }
 
 
-void CuteIPCServiceConnection::sendResponseMessage(QGenericArgument arg)
+void CuteIPCServiceConnection::sendResponseMessage(const QString& method, QGenericArgument arg)
 {
-  CuteIPCMessage message(CuteIPCMessage::MessageResponse, "", arg);
+  CuteIPCMessage message(CuteIPCMessage::MessageResponse, method, arg);
   QByteArray request = CuteIPCMarshaller::marshallMessage(message);
 
   sendResponse(request);

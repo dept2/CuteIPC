@@ -72,7 +72,7 @@ void CuteIPCServicePrivate::_q_handleSignalRequest(QString signalSignature, QObj
   }
 
   handler->addListener(senderConnection);
-  senderConnection->sendResponseMessage();
+  senderConnection->sendResponseMessage(signalSignature);
 }
 
 

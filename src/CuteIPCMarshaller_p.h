@@ -15,9 +15,9 @@ class CuteIPCMarshaller
   public:
     static QByteArray marshallMessage(const CuteIPCMessage& message);
     static CuteIPCMessage demarshallMessage(QByteArray& call);
+    static CuteIPCMessage demarshallResponse(QByteArray& call, QGenericReturnArgument arg);
 
     static CuteIPCMessage::MessageType demarshallMessageType(QByteArray& message);
-    static void demarshallResponse(QByteArray& call, QGenericReturnArgument arg);
 
     static void freeArguments(const CuteIPCMessage::Arguments&);
 
