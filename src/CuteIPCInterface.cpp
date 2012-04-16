@@ -41,7 +41,7 @@ bool CuteIPCInterfacePrivate::checkConnectCorrection(const QString& signal, cons
 
   if (!QMetaObject::checkConnectArgs(signalSignature.toAscii(), slotSignature.toAscii()))
   {
-    qDebug() << "incompatible signatures" << signalSignature << slotSignature;
+    qDebug() << "ERROR: incompatible signatures" << signalSignature << slotSignature;
     return false;
   }
   return true;
@@ -50,7 +50,7 @@ bool CuteIPCInterfacePrivate::checkConnectCorrection(const QString& signal, cons
 
 bool CuteIPCInterfacePrivate::sendRemoteConnectionRequest(const QString &signal)
 {
-  qDebug() << "Requesting connection to signal" << signal;
+  qDebug() << "REMOTE ACTION: Requesting connection to signal" << signal;
   CuteIPCMessage message(CuteIPCMessage::SignalConnectionRequest, signal);
   QByteArray request = CuteIPCMarshaller::marshallMessage(message);
   bool ok = sendSynchronousRequest(request);
@@ -60,14 +60,14 @@ bool CuteIPCInterfacePrivate::sendRemoteConnectionRequest(const QString &signal)
 
 bool CuteIPCInterfacePrivate::sendSynchronousRequest(const QByteArray& request)
 {
-  qDebug() << "(Method serialized into" << request.size() << "bytes)";
+//  qDebug() << "(Method serialized into" << request.size() << "bytes)";
   m_connection->sendCallRequest(request);
 
   QEventLoop loop;
   QObject::connect(m_connection, SIGNAL(callFinished()), &loop, SLOT(quit()));
   loop.exec();
 
-  qDebug() << "call was finished. stop local event loop...";
+  qDebug() << "ACTION: call was finished. stop local event loop...";
 
   return m_connection->lastCallSuccessful();
 }
@@ -85,7 +85,7 @@ void CuteIPCInterfacePrivate::registerConnection(const QString& signalSignature,
 
 void CuteIPCInterfacePrivate::_q_removeRemoteConnectionsOfObject(QObject* destroyedObject)
 {
-  qDebug() << "!REMOVE! remove remote signal connections of object:" << destroyedObject;
+  qDebug() << "ACTION remove remote signal connections of object:" << destroyedObject;
 
   QMutableHashIterator<QString, MethodData> i(m_connections);
   while (i.hasNext()) {
@@ -104,7 +104,7 @@ void CuteIPCInterfacePrivate::_q_invokeRemoteSignal(const QString& signalSignatu
   if (!data.first)
     return;
 
-  qDebug() << "SIGNAL: Trying to invoke slot";
+  qDebug() << "ACTION SIGNAL Trying to invoke slot";
 
   QString methodName = data.second;
   methodName = methodName.left(methodName.indexOf("("));
@@ -120,7 +120,7 @@ void CuteIPCInterfacePrivate::_q_invokeRemoteSignal(const QString& signalSignatu
           args.at(9));
 
   //TODO: need to cleanup memory!
-  qDebug() << "SIGNAL: invoke slot:" << successfulInvoke;
+  qDebug() << "ACTION SIGNAL: invoke slot:" << successfulInvoke;
 }
 
 
@@ -137,7 +137,7 @@ void CuteIPCInterfacePrivate::handleLocalSignalRequest(QObject* localObject,
   if (!handler)
   {
     //create a new signal handler
-    qDebug() << "Create a new local signal handler for the signature: " << signalSignature;
+//    qDebug() << "Create a new local signal handler for the signature: " << signalSignature;
     handler = new CuteIPCSignalHandler(slotSignature, q);
     handler->setSignalParametersInfo(localObject, signalSignature);
 
@@ -169,7 +169,7 @@ void CuteIPCInterfacePrivate::handleLocalSignalRequest(QObject* localObject,
 
 void CuteIPCInterfacePrivate::_q_removeSignalHandlersOfObject(QObject* destroyedObject)
 {
-  qDebug() << "!REMOVE! remove signal handlers of object:" << destroyedObject;
+  qDebug() << "ACTION remove signal handlers of object:" << destroyedObject;
 
   QMutableHashIterator<MethodData, CuteIPCSignalHandler*> i(m_localSignalHandlers);
   while (i.hasNext()) {
@@ -183,7 +183,7 @@ void CuteIPCInterfacePrivate::_q_removeSignalHandlersOfObject(QObject* destroyed
 
 void CuteIPCInterfacePrivate::_q_sendSignal(const QByteArray &request)
 {
-  qDebug() << "Send signal...";
+  qDebug() << "REMOTE ACTION: Send signal...";
   m_connection->sendCallRequest(request);
 }
 
@@ -269,7 +269,7 @@ bool CuteIPCInterface::remoteConnect(QObject *localObject, const char *signal, c
         QMetaObject::normalizedSignature(signalSignature.toAscii()));
   if (signalIndex == -1)
   {
-    qDebug() << "Signal doesn't exist:" + signalSignature << "object:" << localObject;
+    qDebug() << "ERROR: Signal doesn't exist:" + signalSignature << "object:" << localObject;
     return false;
   }
 
@@ -286,8 +286,8 @@ bool CuteIPCInterface::call(const QString& method, QGenericReturnArgument ret, Q
                             QGenericArgument val9)
 {
   Q_D(CuteIPCInterface);
-  qDebug() << "";
-  qDebug() << "Before marshalling:" << QTime::currentTime().toString("hh:mm:ss.zzz");
+//  qDebug() << "";
+//  qDebug() << "Before marshalling:" << QTime::currentTime().toString("hh:mm:ss.zzz");
 
   CuteIPCMessage message(CuteIPCMessage::MessageCallWithReturn,
                          method, val0, val1, val2, val3, val4,
@@ -295,7 +295,7 @@ bool CuteIPCInterface::call(const QString& method, QGenericReturnArgument ret, Q
   QByteArray request = CuteIPCMarshaller::marshallMessage(message);
 
   d->m_connection->setReturnedObject(ret);
-  qDebug() << "Trying to call" << method;
+  qDebug() << "REMOTE ACTION: Trying to call" << method;
 
   return d->sendSynchronousRequest(request);
 }
@@ -306,15 +306,15 @@ bool CuteIPCInterface::call(const QString& method, QGenericArgument val0, QGener
                             QGenericArgument val7, QGenericArgument val8, QGenericArgument val9)
 {
   Q_D(CuteIPCInterface);
-  qDebug() << "";
-  qDebug() << "Before marshalling:" << QTime::currentTime().toString("hh:mm:ss.zzz");
+//  qDebug() << "";
+//  qDebug() << "Before marshalling:" << QTime::currentTime().toString("hh:mm:ss.zzz");
 
   CuteIPCMessage message(CuteIPCMessage::MessageCallWithReturn,
                          method, val0, val1, val2, val3, val4,
                          val5, val6, val7, val8, val9);
   QByteArray request = CuteIPCMarshaller::marshallMessage(message);
 
-  qDebug() << "Trying to call" << method;
+  qDebug() << "REMOTE ACTION: Trying to call" << method;
 
   return d->sendSynchronousRequest(request);
 }
@@ -327,16 +327,16 @@ void CuteIPCInterface::callNoReply(const QString& method, QGenericArgument val0,
                                         QGenericArgument val8, QGenericArgument val9)
 {
   Q_D(CuteIPCInterface);
-  qDebug() << "";
-  qDebug() << "Before marshalling:" << QTime::currentTime().toString("hh:mm:ss.zzz");
+//  qDebug() << "";
+//  qDebug() << "Before marshalling:" << QTime::currentTime().toString("hh:mm:ss.zzz");
 
   CuteIPCMessage message(CuteIPCMessage::MessageCallWithoutReturn,
                          method, val0, val1, val2, val3, val4,
                          val5, val6, val7, val8, val9);
   QByteArray request = CuteIPCMarshaller::marshallMessage(message);
 
-  qDebug() << "Call (asynchronously)" << method;
-  qDebug() << "(Method serialized into" << request.size() << "bytes)";
+  qDebug() << "REMOTE ACTION: Call (asynchronously)" << method;
+//  qDebug() << "(Method serialized into" << request.size() << "bytes)";
   d->m_connection->sendCallRequest(request);
 }
 

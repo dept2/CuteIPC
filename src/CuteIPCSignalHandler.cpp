@@ -15,7 +15,7 @@ CuteIPCSignalHandler::CuteIPCSignalHandler(const QString& signature, QObject* pa
   : QObject(parent),
     m_signature(signature)
 {
-  qDebug() << Q_FUNC_INFO;
+//  qDebug() << Q_FUNC_INFO;
 
   QMetaObject::connect(this,
                        this->metaObject()->indexOfSignal("destroyed(QString)"),
@@ -42,7 +42,7 @@ CuteIPCSignalHandler::~CuteIPCSignalHandler()
 
 void CuteIPCSignalHandler::relaySlot(void** args)
 {
-  qDebug() << Q_FUNC_INFO;
+//  qDebug() << Q_FUNC_INFO;
 
   if (m_signalParametersInfo.isEmpty())
     setSignalParametersInfo(parent(), m_signature);
@@ -96,7 +96,7 @@ void CuteIPCSignalHandler::listenerDestroyed(QObject* listener)
     if (qobject_cast<QObject*>(m_listeners[i])== listener)
     {
       m_listeners.removeAt(i);
-      qDebug() << "Remove listener:" << listener;
+      qDebug() << "ACTION: Remove listener:" << listener;
       break;
     }
   }

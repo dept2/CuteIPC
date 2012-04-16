@@ -45,8 +45,6 @@ void CuteIPCInterfaceConnection::readyRead()
   {
     messageStreamFinished = readMessageFromSocket();
   } while (!messageStreamFinished);
-
-  qDebug() << "end ready read";
 }
 
 
@@ -59,8 +57,8 @@ bool CuteIPCInterfaceConnection::readMessageFromSocket()
   // Fetch next block size
   if (m_nextBlockSize == 0)
   {
-    qDebug() << "";
-    qDebug() << "Started fetching request for returned value:" << QTime::currentTime().toString("hh:mm:ss.zzz");
+//    qDebug() << "";
+//    qDebug() << "Started fetching request for returned value:" << QTime::currentTime().toString("hh:mm:ss.zzz");
     if (m_socket->bytesAvailable() < (int)sizeof(quint32))
       return true;
 
@@ -76,8 +74,9 @@ bool CuteIPCInterfaceConnection::readMessageFromSocket()
   if (m_block.size() == (int)m_nextBlockSize)
   {
     // Fetched enough, need to parse
-    qDebug() << "Returned value: Fetching block finished. Got" << m_block.size() << "bytes:"
-             << QTime::currentTime().toString("hh:mm:ss.zzz");
+//    qDebug() << "Returned value: Fetching block finished. Got" << m_block.size() << "bytes:"
+//             << QTime::currentTime().toString("hh:mm:ss.zzz");
+    qDebug() << "";
     CuteIPCMessage::MessageType type = CuteIPCMarshaller::demarshallMessageType(m_block);
     switch (type)
     {

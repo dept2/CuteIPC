@@ -42,8 +42,8 @@ void CuteIPCServiceConnection::readyRead()
   // Fetch next block size
   if (m_nextBlockSize == 0)
   {
-    qDebug() << "";
-    qDebug() << "Started fetching request:" << QTime::currentTime().toString("hh:mm:ss.zzz");
+//    qDebug() << "";
+//    qDebug() << "Started fetching request:" << QTime::currentTime().toString("hh:mm:ss.zzz");
     if (m_socket->bytesAvailable() < (int)sizeof(quint32))
       return;
 
@@ -59,8 +59,8 @@ void CuteIPCServiceConnection::readyRead()
   if (m_block.size() == (int)m_nextBlockSize)
   {
     // Fetched enough, need to parse
-    qDebug() << "Fetching block finished. Got" << m_block.size() << "bytes:"
-             << QTime::currentTime().toString("hh:mm:ss.zzz");
+//    qDebug() << "Fetching block finished. Got" << m_block.size() << "bytes:"
+//             << QTime::currentTime().toString("hh:mm:ss.zzz");
 
     processMessage();
 
@@ -75,6 +75,7 @@ void CuteIPCServiceConnection::processMessage()
 {
   CuteIPCMessage call = CuteIPCMarshaller::demarshallMessage(m_block);
   CuteIPCMessage::MessageType messageType = call.messageType();
+  qDebug() << "";
   qDebug() << call;
 
   // Fill empty args
@@ -90,7 +91,7 @@ void CuteIPCServiceConnection::processMessage()
       // Read argument data from stream
       void* retData = QMetaType::construct(retType);
 
-      qDebug() << "Before calling:" << QTime::currentTime().toString("hh:mm:ss.zzz");
+//      qDebug() << "Before calling:" << QTime::currentTime().toString("hh:mm:ss.zzz");
 
       bool successfulInvoke = QMetaObject::invokeMethod(parent(), call.method().toLatin1(),
           QGenericReturnArgument(call.returnType().toLatin1(), retData),
@@ -101,7 +102,7 @@ void CuteIPCServiceConnection::processMessage()
 
       if (successfulInvoke)
       {
-        qDebug() << "Method was successfully invoked";
+        qDebug() << "ACTION: Method was successfully invoked";
         sendResponseMessage(call.method(), QGenericArgument(call.returnType().toLatin1(), retData));
       }
       else
@@ -132,7 +133,7 @@ void CuteIPCServiceConnection::processMessage()
     }
     else
     {
-      qDebug() << "Method was successfully invoked";
+      qDebug() << "ACTION: Method was successfully invoked";
       if (messageType == CuteIPCMessage::MessageCallWithReturn)
         sendResponseMessage(call.method());
     }
@@ -148,7 +149,7 @@ void CuteIPCServiceConnection::processMessage()
     if (!successfulInvoke)
       sendErrorMessage("Unsuccessful invoke");
     else
-      qDebug() << "Method was successfully invoked";
+      qDebug() << "ACTION: Method was successfully invoked";
   }
   else if (messageType == CuteIPCMessage::SignalConnectionRequest)
   {
@@ -165,7 +166,7 @@ void CuteIPCServiceConnection::sendErrorMessage(const QString& error)
   CuteIPCMessage message(CuteIPCMessage::MessageError, error);
   QByteArray request = CuteIPCMarshaller::marshallMessage(message);
   sendResponse(request);
-  qDebug() << "Error message was sent";
+  qDebug() << "REMOTE ACTION: Error message was sent";
 }
 
 
@@ -175,7 +176,7 @@ void CuteIPCServiceConnection::sendResponseMessage(const QString& method, QGener
   QByteArray request = CuteIPCMarshaller::marshallMessage(message);
 
   sendResponse(request);
-  qDebug() << "Returned value was sent";
+  qDebug() << "REMOTE ACTION: Returned value was sent";
 }
 
 
@@ -186,7 +187,7 @@ void CuteIPCServiceConnection::sendResponse(const QByteArray& response)
   int written = stream.writeRawData(response.constData(), response.size());
 
   if (written != response.size())
-    qDebug() << "Written bytes and request size doesn't match";
+    qDebug() << "ERROR: Written bytes and request size doesn't match";
 
   m_socket->flush();
 }
@@ -202,5 +203,5 @@ void CuteIPCServiceConnection::errorOccured(QLocalSocket::LocalSocketError)
 void CuteIPCServiceConnection::sendSignal(const QByteArray &data)
 {
   sendResponse(data);
-  qDebug() << "Signal was sent";
+  qDebug() << "REMOTE ACTION: Signal was sent";
 }

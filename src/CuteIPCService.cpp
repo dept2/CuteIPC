@@ -42,12 +42,12 @@ void CuteIPCServicePrivate::_q_newConnection()
 void CuteIPCServicePrivate::_q_handleSignalRequest(QString signalSignature, QObject* sender)
 {
   Q_Q(CuteIPCService);
-  qDebug() << Q_FUNC_INFO;
+//  qDebug() << Q_FUNC_INFO;
 
   CuteIPCServiceConnection* senderConnection = qobject_cast<CuteIPCServiceConnection*>(sender);
 
   int signalIndex = q->metaObject()->indexOfSignal(QMetaObject::normalizedSignature(signalSignature.toAscii()));
-  qDebug() << "SIGNAL INDEX: " << signalIndex;
+//  qDebug() << "SIGNAL INDEX: " << signalIndex;
   if (signalIndex == -1)
   {
     senderConnection->sendErrorMessage("Signal doesn't exist:" + signalSignature);
@@ -59,7 +59,7 @@ void CuteIPCServicePrivate::_q_handleSignalRequest(QString signalSignature, QObj
   if (!handler)
   {
     //create a new signal handler
-    qDebug() << "Create a new signal handler for the signature: " << signalSignature;
+    qDebug() << "ACTION: Create a new signal handler for the signature: " << signalSignature;
     handler = new CuteIPCSignalHandler(signalSignature, q);
     m_signalHandlers.insert(signalSignature, handler);
 
