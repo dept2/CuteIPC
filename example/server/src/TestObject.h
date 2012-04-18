@@ -4,6 +4,7 @@
 // Local
 #include "CuteIPCService.h"
 
+class QImage;
 
 class TestObject : public CuteIPCService
 {
@@ -13,6 +14,7 @@ class TestObject : public CuteIPCService
     TestObject(QObject* parent = 0);
 
     Q_INVOKABLE int bar(const QByteArray&);
+    Q_INVOKABLE void imagetest(const QImage& image);
 
   public slots:
     void foo(const QString& msg);

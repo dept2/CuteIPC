@@ -25,6 +25,9 @@ class CuteIPCMarshaller
     static bool marshallArgumentToStream(QGenericArgument value, QDataStream& stream);
     static QGenericArgument demarshallArgumentFromStream(bool& ok, QDataStream& stream);
 
+    static bool marshallQImageToStream(QGenericArgument value, QDataStream& stream);
+    static QGenericArgument demarshallQImageFromStream(bool& ok, QDataStream& stream);
+
 };
 
 #endif // CUTEIPCMARSHALLER_P_H

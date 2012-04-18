@@ -7,6 +7,8 @@
 #include <QPair>
 #include <QMetaType>
 #include <QDebug>
+#include <QtGui/QImage>
+#include <QBuffer>
 
 
 QByteArray CuteIPCMarshaller::marshallMessage(const CuteIPCMessage& message)
@@ -126,28 +128,31 @@ CuteIPCMessage CuteIPCMarshaller::demarshallResponse(QByteArray &call, QGenericR
 }
 
 
-bool CuteIPCMarshaller::marshallArgumentToStream(QGenericArgument returnedValue, QDataStream& stream)
+bool CuteIPCMarshaller::marshallArgumentToStream(QGenericArgument value, QDataStream& stream)
 {
   // Detect and check type
-  int type = QMetaType::type(returnedValue.name());
-    if (type == 0)
-    {
-      qWarning() << "Type" << returnedValue.name() << "have not been registered in Qt metaobject system";
-      return false;
-    }
+  int type = QMetaType::type(value.name());
+  if (type == 0)
+  {
+    qWarning() << "Type" << value.name() << "have not been registered in Qt metaobject system";
+    return false;
+  }
+  if (type == QMetaType::type("QImage"))
+    return marshallQImageToStream(value, stream);
 
-    stream << QString::fromLatin1(returnedValue.name());
-    bool ok = QMetaType::save(stream, type, returnedValue.data());
-    if (!ok)
-    {
-      qWarning() << "Failed to serialize" << returnedValue.name()
-                 << "to data stream. Call qRegisterMetaTypeStreamOperators to"
-                    " register stream operators for this metatype";
-      return false;
-    }
+  stream << QString::fromLatin1(value.name());
+  bool ok = QMetaType::save(stream, type, value.data());
+  if (!ok)
+  {
+    qWarning() << "Failed to serialize" << value.name()
+               << "to data stream. Call qRegisterMetaTypeStreamOperators to"
+                  " register stream operators for this metatype";
+    return false;
+  }
 
   return true;
 }
+
 
 QGenericArgument CuteIPCMarshaller::demarshallArgumentFromStream(bool& ok, QDataStream& stream)
 {
@@ -163,6 +168,8 @@ QGenericArgument CuteIPCMarshaller::demarshallArgumentFromStream(bool& ok, QData
     ok = false;
     return QGenericArgument();
   }
+  if (type == QMetaType::type("QImage"))
+    return demarshallQImageFromStream(ok, stream);
 
   // Read argument data from stream
   void* data = QMetaType::construct(type);
@@ -177,6 +184,60 @@ QGenericArgument CuteIPCMarshaller::demarshallArgumentFromStream(bool& ok, QData
 
   ok = true;
   return QGenericArgument(qstrdup(typeName.toLatin1()), data);
+}
+
+
+bool CuteIPCMarshaller::marshallQImageToStream(QGenericArgument value, QDataStream &stream)
+{
+  qDebug() << "MARSHALL QImage to stream";
+  int typeId = QMetaType::type(value.name());
+  QImage* image = (QImage*) QMetaType::construct(typeId, value.data());
+
+  stream << QString::fromLatin1(value.name());
+
+  QString format("BMP");
+  stream << format;
+
+  QByteArray imageArray;
+  QBuffer buffer(&imageArray);
+  buffer.open(QIODevice::WriteOnly);
+  image->save(&buffer, format.toAscii(), 100);
+
+  stream << imageArray;
+  return true;
+}
+
+
+QGenericArgument CuteIPCMarshaller::demarshallQImageFromStream(bool &ok, QDataStream &stream)
+{
+  qDebug() << "DEMARSHALL QImage from stream";
+  QString format;
+  stream >> format;
+  int type = QMetaType::type("QByteArray");
+
+  void* data = QMetaType::construct(type);
+  bool dataLoaded = QMetaType::load(stream, type, data);
+  if (!dataLoaded)
+  {
+    qWarning() << "Failed to deserialize argument value" << "of type" << "QImage";
+    QMetaType::destroy(type, data);
+    ok = false;
+    return QGenericArgument();
+  }
+
+  QImage* image = new QImage;
+  bool imageLoaded = image->loadFromData(*(static_cast<QByteArray*>(data)), format.toAscii());
+  if (!imageLoaded)
+  {
+    qWarning() << "Failed to deserialize argument value" << "of type" << "QImage";
+    QMetaType::destroy(type, data);
+    ok = false;
+    return QGenericArgument();
+  }
+
+  ok = true;
+  QMetaType::destroy(type, data);
+  return QGenericArgument(qstrdup("QImage"), image); //need for compatibility with freeArguments() method
 }
 
 

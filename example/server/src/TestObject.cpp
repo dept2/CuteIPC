@@ -3,6 +3,7 @@
 
 // Qt
 #include <QDebug>
+#include <QtGui/QImage>
 
 
 TestObject::TestObject(QObject* parent)
@@ -16,6 +17,12 @@ int TestObject::bar(const QByteArray& ba)
   emit testSignal(QString("Byte array size: %1").arg(ba.size()));
   emit testSignal2("Another string", 5);
   return ba.size();
+}
+
+
+void TestObject::imagetest(const QImage &image)
+{
+  image.save("saved","PNG",100);
 }
 
 
