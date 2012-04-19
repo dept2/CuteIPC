@@ -19,7 +19,7 @@ class CuteIPCInterface : public QObject
     bool connectToServer(const QString& name);
 
     bool remoteConnect(const char* signal, QObject* object, const char* slot);
-    bool remoteConnect(QObject* localObject, const char* signal, const char* remoteSlot);
+    bool remoteSlotConnect(QObject* localObject, const char* signal, const char* remoteSlot);
 
     bool call(const QString& method, QGenericReturnArgument ret, QGenericArgument val0 = QGenericArgument(),
               QGenericArgument val1 = QGenericArgument(), QGenericArgument val2 = QGenericArgument(),

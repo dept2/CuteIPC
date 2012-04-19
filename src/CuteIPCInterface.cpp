@@ -15,8 +15,31 @@
 #include <QTimer>
 
 
+/*!
+    \class CuteIPCInterface
+
+    \brief The CuteIPCInterface class provides an IPC-client,
+    intended for sending remote call requests and Qt signals
+    to the server through the QLocalSocket connection.
+
+    To connect to the server, call connectToServer() method.
+
+    Use call() and callNoReply() methods to send method invoke requests to the server
+    (which are synchronous and asynchronous respectively).
+    The signature of these methods concurs with QMetaObject::invokeMethod() method signature.
+    Thus, you can invoke remote methods the same way as you did it locally through the QMetaObject.
+
+    You can also use a remoteConnect() to connect the remote signal to the slot
+    of some local object.
+
+    Contrarily, you can connect the local signal to the remote slot, by using
+    remoteSlotConnect().
+
+    \sa CuteIPCService
+*/
+
 CuteIPCInterfacePrivate::CuteIPCInterfacePrivate()
-    : m_socket(0)
+    : m_socket(0), m_connection(0)
 {}
 
 
@@ -188,6 +211,11 @@ void CuteIPCInterfacePrivate::_q_sendSignal(const QByteArray &request)
 }
 
 
+/*!
+    Creates a new CuteIPCInterface object with the given \a parent.
+
+    \sa connectToServer()
+ */
 CuteIPCInterface::CuteIPCInterface(QObject* parent)
   : QObject(parent),
     d_ptr(new CuteIPCInterfacePrivate())
@@ -208,10 +236,16 @@ CuteIPCInterface::CuteIPCInterface(CuteIPCInterfacePrivate& dd, QObject* parent)
 }
 
 
+/*!
+    Destroyes the object.
+ */
 CuteIPCInterface::~CuteIPCInterface()
 {}
 
 
+/*!
+    Attempts to make a connection to the server with given name.
+ */
 bool CuteIPCInterface::connectToServer(const QString& name)
 {
   Q_D(CuteIPCInterface);
@@ -232,6 +266,23 @@ bool CuteIPCInterface::connectToServer(const QString& name)
 }
 
 
+/*!
+    The method is used to connect the remote signal (on the server-side) to the slot
+    of some local object.
+    It returns true on success. False otherwise (the slot doesn't exist,
+    of signatures are incompatible, or if the server replies with an error).
+
+    \note It is recommend to use this method the same way as you call QObject::connect() method
+    (by using SIGNAL() and SLOT() macro).
+    \par
+    For example, to connect the remote \a exampleSignal() signal to the \a exampleSlot() of some local \a object,
+    you can type:
+    \code remoteConnect(SIGNAL(exampleSignal()), object, SLOT(exampleSlot())); \endcode
+
+    \note This method doesn't establish the connection to the server, you must use connectToServer() before.
+
+    \sa remoteSlotConnect()
+ */
 bool CuteIPCInterface::remoteConnect(const char* signal, QObject* object, const char* slot)
 {
   Q_D(CuteIPCInterface);
@@ -244,6 +295,14 @@ bool CuteIPCInterface::remoteConnect(const char* signal, QObject* object, const 
   signalSignature = signalSignature.mid(1);
   slotSignature = slotSignature.mid(1);
 
+  int slotIndex = object->metaObject()->indexOfSlot(
+        QMetaObject::normalizedSignature(slotSignature.toAscii()));
+  if (slotIndex == -1)
+  {
+    qDebug() << "ERROR: Slot doesn't exist:" + slotSignature << "object:" << object;
+    return false;
+  }
+
   if (!d->sendRemoteConnectionRequest(signalSignature))
     return false;
 
@@ -252,7 +311,24 @@ bool CuteIPCInterface::remoteConnect(const char* signal, QObject* object, const 
 }
 
 
-bool CuteIPCInterface::remoteConnect(QObject *localObject, const char *signal, const char *remoteSlot)
+/*!
+    The method is used to connect the signal of some local object (on the client-side) to the remote slot
+    of the server.
+
+    It returns true on success. False otherwise (If the local signal doesn't exist, or signatures are incompatible).
+
+    \note It is recommend to use this method the same way as you call QObject::connect() method
+    (by using SIGNAL() and SLOT() macro).
+    \par
+    For example, to connect the exampleSignal() signal of some local \a object to the remote \a exampleSlot() slot,
+    you can type:
+    \code remoteSlotConnect(object, SIGNAL(exampleSignal()), SLOT(exampleSlot())); \endcode
+
+    \warning The method doesn't check the existance of the remote slot on the server-side.
+
+    \sa remoteConnect(), call()
+ */
+bool CuteIPCInterface::remoteSlotConnect(QObject *localObject, const char *signal, const char *remoteSlot)
 {
   Q_D(CuteIPCInterface);
 
@@ -278,6 +354,20 @@ bool CuteIPCInterface::remoteConnect(QObject *localObject, const char *signal, c
 }
 
 
+/*!
+    Invokes the remote \a method (of the server). Returns true if the invokation was successful, false otherwise.
+    The invokation is synchronous (which means that client will be waiting for the response).
+    See callNoReply() method for asynchronous invokation.
+
+    The signature of this method is completely concurs with QMetaObject::invokeMethod() Qt method signature.
+    Thus, you can use it the same way as you did it locally, with invokeMethod().
+
+    The return value of the member function call is placed in \a ret.
+    You can pass up to ten arguments (val0, val1, val2, val3, val4, val5, val6, val7, val8, and val9) to the member function.
+
+    \note This method doesn't establish the connection to the server, you must use connectToServer() before.
+    \sa callNoReply()
+ */
 bool CuteIPCInterface::call(const QString& method, QGenericReturnArgument ret, QGenericArgument val0,
                             QGenericArgument val1, QGenericArgument val2,
                             QGenericArgument val3, QGenericArgument val4,
@@ -301,6 +391,13 @@ bool CuteIPCInterface::call(const QString& method, QGenericReturnArgument ret, Q
 }
 
 
+/*!
+    This function overloads call() method.
+    This overload can be used if the return value of the member is of no interest.
+
+    \note This method doesn't establish the connection to the server, you must use connectToServer() before.
+    \sa callNoReply()
+ */
 bool CuteIPCInterface::call(const QString& method, QGenericArgument val0, QGenericArgument val1, QGenericArgument val2,
                             QGenericArgument val3, QGenericArgument val4, QGenericArgument val5, QGenericArgument val6,
                             QGenericArgument val7, QGenericArgument val8, QGenericArgument val9)
@@ -321,6 +418,20 @@ bool CuteIPCInterface::call(const QString& method, QGenericArgument val0, QGener
 
 
 
+/*!
+    Invokes the remote \a method (of the server). Returns true if the invokation was successful, false otherwise.
+    Unlike the process of call() method, the invokation is asynchronous
+    (which means that the client will not waiting for the response).
+
+    The signature of this method is completely concurs with QMetaObject::invokeMethod() Qt method signature
+    (without return value).
+    Thus, you can use it the same way as you did it locally, with invokeMethod().
+
+    You can pass up to ten arguments (val0, val1, val2, val3, val4, val5, val6, val7, val8, and val9) to the member function.
+
+    \note This method doesn't establish the connection to the server, you must use connectToServer() before.
+    \sa call(), connectToServer()
+ */
 void CuteIPCInterface::callNoReply(const QString& method, QGenericArgument val0, QGenericArgument val1,
                                         QGenericArgument val2, QGenericArgument val3, QGenericArgument val4,
                                         QGenericArgument val5, QGenericArgument val6, QGenericArgument val7,
@@ -341,6 +452,9 @@ void CuteIPCInterface::callNoReply(const QString& method, QGenericArgument val0,
 }
 
 
+/*!
+    Returns the error that last occured.
+ */
 QString CuteIPCInterface::lastError() const
 {
   Q_D(const CuteIPCInterface);
