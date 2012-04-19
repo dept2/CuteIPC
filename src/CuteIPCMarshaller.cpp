@@ -189,7 +189,6 @@ QGenericArgument CuteIPCMarshaller::demarshallArgumentFromStream(bool& ok, QData
 
 bool CuteIPCMarshaller::marshallQImageToStream(QGenericArgument value, QDataStream &stream)
 {
-  qDebug() << "MARSHALL QImage to stream";
   int typeId = QMetaType::type(value.name());
   QImage* image = (QImage*) QMetaType::construct(typeId, value.data());
 
@@ -210,7 +209,6 @@ bool CuteIPCMarshaller::marshallQImageToStream(QGenericArgument value, QDataStre
 
 QGenericArgument CuteIPCMarshaller::demarshallQImageFromStream(bool &ok, QDataStream &stream)
 {
-  qDebug() << "DEMARSHALL QImage from stream";
   QString format;
   stream >> format;
   int type = QMetaType::type("QByteArray");

@@ -37,6 +37,16 @@ CuteIPCServiceConnection::~CuteIPCServiceConnection()
 
 void CuteIPCServiceConnection::readyRead()
 {
+  bool messageStreamFinished;
+
+  do
+  {
+    messageStreamFinished = readMessageFromSocket();
+  } while (!messageStreamFinished);
+}
+
+bool CuteIPCServiceConnection::readMessageFromSocket()
+{
   QDataStream in(m_socket);
 
   // Fetch next block size
@@ -45,13 +55,13 @@ void CuteIPCServiceConnection::readyRead()
 //    qDebug() << "";
 //    qDebug() << "Started fetching request:" << QTime::currentTime().toString("hh:mm:ss.zzz");
     if (m_socket->bytesAvailable() < (int)sizeof(quint32))
-      return;
+      return true;
 
     in >> m_nextBlockSize;
   }
 
   if (in.atEnd())
-    return;
+    return true;
 
   qint64 bytesToFetch = m_nextBlockSize - m_block.size();
   m_block.append(m_socket->read(bytesToFetch));
@@ -68,6 +78,10 @@ void CuteIPCServiceConnection::readyRead()
     m_nextBlockSize = 0;
     m_block.clear();
   }
+
+  if (m_socket->bytesAvailable())
+    return false;
+  return true;
 }
 
 

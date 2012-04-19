@@ -34,6 +34,7 @@ class CuteIPCServiceConnection : public QObject
     QByteArray m_block;
 
     void processMessage();
+    bool readMessageFromSocket();
 
     void sendResponse(const QByteArray& response);
 };
