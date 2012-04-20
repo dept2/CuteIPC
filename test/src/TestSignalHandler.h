@@ -20,7 +20,7 @@ class TestSignalHandler: public QObject
     void testSignalHandlingWithoutArgs();
     void testSignalHandlingWithArgs();
     void testSettingSignalParametersInfo();
-    void testListenersHandling();
+    void testListenersManaging();
 
   private:
     CuteIPCSignalHandler* m_handler;

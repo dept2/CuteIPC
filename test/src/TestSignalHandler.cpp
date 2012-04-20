@@ -127,7 +127,7 @@ void TestSignalHandler::testSettingSignalParametersInfo()
 }
 
 
-void TestSignalHandler::testListenersHandling()
+void TestSignalHandler::testListenersManaging()
 {
   //TODO: need to spy for a slot (CuteIPCServiceConnection::sendSignal(QByteArray)).
   QLocalSocket* socket1 = new QLocalSocket(this);
