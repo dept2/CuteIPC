@@ -16,10 +16,14 @@ class TestSocketCommunication: public QObject
   Q_OBJECT
 
   private slots:
+
+    // basic communications tests
     void init();
     void cleanup();
+    void testServerStop();
+    void testClientDisconnect();
 
-    // basic communication tests (for all types)
+    // basic data transfer tests
     void testDirectCalls();
     void testRemoteSignals();
     void testLocalSignals();

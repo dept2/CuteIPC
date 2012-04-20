@@ -17,6 +17,7 @@ class CuteIPCInterface : public QObject
     ~CuteIPCInterface();
 
     bool connectToServer(const QString& name);
+    void disconnectFromServer();
 
     bool remoteConnect(const char* signal, QObject* object, const char* slot);
     bool remoteSlotConnect(QObject* localObject, const char* signal, const char* remoteSlot);

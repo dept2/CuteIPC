@@ -269,6 +269,16 @@ bool CuteIPCInterface::connectToServer(const QString& name)
 
 
 /*!
+    Disconnects from server by closing the socket.
+ */
+void CuteIPCInterface::disconnectFromServer()
+{
+  Q_D(CuteIPCInterface);
+  d->m_socket->disconnectFromServer();
+}
+
+
+/*!
     The method is used to connect the remote signal (on the server-side) to the slot
     of some local object.
     It returns true on success. False otherwise (the slot doesn't exist,

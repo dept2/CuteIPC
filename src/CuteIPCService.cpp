@@ -165,6 +165,18 @@ bool CuteIPCService::listen(const QString& serverName)
   return ok;
 }
 
+
+/*!
+    Stop listening for incoming connections.
+    Existing connections are not effected, but any new connections will be refused.
+ */
+void CuteIPCService::close()
+{
+  Q_D(CuteIPCService);
+  d->m_server->close();
+}
+
+
 /*!
     Returns the server name if the server is listening for connections;
     otherwise returns QString()

@@ -16,8 +16,8 @@ void TestSocketCommunication::init()
 {
   m_service = new ServiceTestObject(this);
   m_interface = new CuteIPCInterface(this);
-  QVERIFY(m_service->listen("TestSocket") == true);
-  QVERIFY(m_interface->connectToServer("TestSocket") == true);
+  QVERIFY(m_service->listen("TestSocket"));
+  QVERIFY(m_interface->connectToServer("TestSocket"));
 }
 
 
@@ -25,6 +25,28 @@ void TestSocketCommunication::cleanup()
 {
   delete m_interface;
   delete m_service;
+}
+
+
+void TestSocketCommunication::testServerStop()
+{
+  m_service->close();
+
+  // new connections is not available
+  CuteIPCInterface* newInterface = new CuteIPCInterface(this);
+  QVERIFY(!newInterface->connectToServer("TestSocket"));
+
+  // new listening
+  QVERIFY(m_service->listen("NewSocket"));
+  QVERIFY(newInterface->connectToServer("NewSocket"));
+
+  delete newInterface;
+}
+
+
+void TestSocketCommunication::testClientDisconnect()
+{
+  m_interface->disconnectFromServer();
 }
 
 

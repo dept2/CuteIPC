@@ -16,6 +16,7 @@ class CuteIPCService : public QObject
     ~CuteIPCService();
 
     bool listen(const QString& name = QString());
+    void close();
     QString serverName() const;
 
   protected:
