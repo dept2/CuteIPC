@@ -12,24 +12,19 @@
 #include <QObject>
 
 
-void TestSocketCommunication::initTestCase()
+void TestSocketCommunication::init()
 {
   m_service = new ServiceTestObject(this);
   m_interface = new CuteIPCInterface(this);
+  QVERIFY(m_service->listen("TestSocket") == true);
+  QVERIFY(m_interface->connectToServer("TestSocket") == true);
 }
 
 
-void TestSocketCommunication::cleanupTestCase()
+void TestSocketCommunication::cleanup()
 {
   delete m_interface;
   delete m_service;
-}
-
-
-void TestSocketCommunication::testConnection()
-{
-  QVERIFY(m_service->listen("TestSocket") == true);
-  QVERIFY(m_interface->connectToServer("TestSocket") == true);
 }
 
 
@@ -60,7 +55,7 @@ void TestSocketCommunication::testDirectCalls()
   QCOMPARE(testImage.pixel(50,50), m_service->getImage().pixel(50,50));
 
   //test QString transfer
-  QString testString("testString");
+  QString testString("testCallString");
   QVERIFY(m_interface->call("testQStringTransfer",
                             Q_RETURN_ARG(int, intval),
                             Q_ARG(QString, testString)) == true);
@@ -116,12 +111,7 @@ void TestSocketCommunication::testRemoteSignals()
   m_service->emitQByteArraySignal(testByteArray);
   m_service->emitQImageSignal(testImage);
   m_service->emitQStringIntSignal(testString,testInt);
-
-  QEventLoop loop;
-  QTimer timer;
-  connect(&timer, SIGNAL(timeout()), &loop, SLOT(quit()));
-  timer.start(3000);
-  loop.exec();
+  sleep(1000);
 
   //TODO: set timer for recieving
   QCOMPARE(spyForFirstObject.count(), 2);
@@ -177,12 +167,7 @@ void TestSocketCommunication::testLocalSignals()
   firstTestObject->emitQByteArraySignal(testByteArray);
   firstTestObject->emitQImageSignal(testImage);
   secondTestObject->emitQStringIntSignal(testString,testInt);
-
-  QEventLoop loop;
-  QTimer timer;
-  connect(&timer, SIGNAL(timeout()), &loop, SLOT(quit()));
-  timer.start(3000);
-  loop.exec();
+  sleep(3000);
 
   //TODO: set timer for recieving
   QCOMPARE(spyForService.count(), 3);
@@ -201,24 +186,150 @@ void TestSocketCommunication::testLocalSignals()
 }
 
 
-void TestSocketCommunication::testMultipleClientConnections()
+void TestSocketCommunication::benchmarkQByteArrayTransfer()
 {
+  QByteArray testByteArray(QBYTEARRAY_SIZE_FOR_BENCHMARK, 'H');
+  int intval;
+  qDebug() << "Test QByteArray size:" << testByteArray.size();
+
+  QBENCHMARK_ONCE {
+     if (!m_interface->call("testQByteArrayTransfer",
+                           Q_RETURN_ARG(int, intval),
+                           Q_ARG(QByteArray, testByteArray)))
+       QSKIP("Remote call fail. Maybe you need to run TestSocketCommunication tests", SkipAll);
+  }
 }
 
 
-void TestSocketCommunication::testNestedSignals()
+void TestSocketCommunication::benchmarkQImageTransfer()
 {
+  //test QImage transfer
+  int intval;
+  QImage testImage(QIMAGE_HEIGHT_WIDTH_FOR_BENCHMARK,
+                   QIMAGE_HEIGHT_WIDTH_FOR_BENCHMARK,QImage::Format_RGB888);
+  qDebug() << "Test QImage size:" << testImage.byteCount();
+
+  QBENCHMARK_ONCE {
+     if (!m_interface->call("testQImageTransfer",
+                           Q_RETURN_ARG(int, intval),
+                           Q_ARG(QImage, testImage)))
+       QSKIP("Remote call fail. Maybe you need to run TestSocketCommunication tests", SkipAll);
+  }
 }
 
 
-void TestSocketCommunication::testRemoteSignalsDisconnect()
+void TestSocketCommunication::testMultipleObjectsConnection()
 {
+  //two objects are managed by one CuteIPCClient
+  InterfaceTestObject* firstTestObject = new InterfaceTestObject(this);
+  InterfaceTestObject* secondTestObject = new InterfaceTestObject(this);
+
+  //one signal is connected to both clients
+  QVERIFY(m_interface->remoteConnect(SIGNAL(serviceIntSignal(int)),
+                             firstTestObject,
+                             SLOT(interfaceIntSlot(int))));
+  QVERIFY(m_interface->remoteConnect(SIGNAL(serviceIntSignal(int)),
+                             secondTestObject,
+                             SLOT(interfaceIntSlot(int))));
+
+  //every client has another (own) connection
+  QVERIFY(m_interface->remoteConnect(SIGNAL(serviceQStringSignal(QString)),
+                             firstTestObject,
+                             SLOT(interfaceQStringSlot(QString))));
+  QVERIFY(m_interface->remoteConnect(SIGNAL(serviceQStringIntSignal(QString,int)),
+                             secondTestObject,
+                             SLOT(interfaceQStringIntSlot(QString,int))));
+
+  QSignalSpy spyForFirstObject(firstTestObject, SIGNAL(slotWasCalled(QString)));
+  QSignalSpy spyForSecondObject(secondTestObject, SIGNAL(slotWasCalled(QString)));
+
+  QString testString("testMultipleClientString");
+  int testInt = 10;
+
+  m_service->emitQStringSignal(testString);
+  m_service->emitIntSignal(testInt);
+  m_service->emitQStringIntSignal(testString,testInt);
+  sleep(1000);
+
+  QCOMPARE(spyForFirstObject.count(), 2);
+  QCOMPARE(spyForSecondObject.count(), 2);
+
+  // delete the one object. The second object must still get 2 signals
+  delete firstTestObject;
+  spyForSecondObject.clear();
+
+  m_service->emitQStringSignal(testString);
+  m_service->emitIntSignal(testInt);
+  m_service->emitQStringIntSignal(testString,testInt);
+  sleep(1000);
+
+  QCOMPARE(spyForSecondObject.count(), 2);
+  delete secondTestObject;
 }
 
 
-void TestSocketCommunication::testLocalSignalsDisconnect()
+void TestSocketCommunication::testMultipleClients()
 {
+  // The same test as testMultipleObjectsConnection(), except:
+  // FirstTestObject is managed by m_interface,
+  // while secondTestObject is managed by anotherInterface
+  InterfaceTestObject* firstTestObject = new InterfaceTestObject(this);
+  InterfaceTestObject* secondTestObject = new InterfaceTestObject(this);
+  CuteIPCInterface* anotherInterface = new CuteIPCInterface(this);
+  if (!anotherInterface->connectToServer("TestSocket"))
+    QSKIP("Can't connect another interface to the server. Skip test", SkipSingle);
+
+
+  QVERIFY(m_interface->remoteConnect(SIGNAL(serviceIntSignal(int)),
+                             firstTestObject,
+                             SLOT(interfaceIntSlot(int))));
+  QVERIFY(anotherInterface->remoteConnect(SIGNAL(serviceIntSignal(int)),
+                             secondTestObject,
+                             SLOT(interfaceIntSlot(int))));
+
+  QVERIFY(m_interface->remoteConnect(SIGNAL(serviceQStringSignal(QString)),
+                             firstTestObject,
+                             SLOT(interfaceQStringSlot(QString))));
+  QVERIFY(anotherInterface->remoteConnect(SIGNAL(serviceQStringIntSignal(QString,int)),
+                             secondTestObject,
+                             SLOT(interfaceQStringIntSlot(QString,int))));
+
+  QSignalSpy spyForFirstObject(firstTestObject, SIGNAL(slotWasCalled(QString)));
+  QSignalSpy spyForSecondObject(secondTestObject, SIGNAL(slotWasCalled(QString)));
+
+  QString testString("testMultipleClientsString");
+  int testInt = 10;
+
+  m_service->emitQStringSignal(testString);
+  m_service->emitIntSignal(testInt);
+  m_service->emitQStringIntSignal(testString,testInt);
+  sleep(1000);
+
+  QCOMPARE(spyForFirstObject.count(), 2);
+  QCOMPARE(spyForSecondObject.count(), 2);
+
+  // delete the one object. The second object must still get 2 signals
+  delete firstTestObject;
+  spyForSecondObject.clear();
+
+  m_service->emitQStringSignal(testString);
+  m_service->emitIntSignal(testInt);
+  m_service->emitQStringIntSignal(testString,testInt);
+  sleep(1000);
+
+  QCOMPARE(spyForSecondObject.count(), 2);
+  delete secondTestObject;
+  delete anotherInterface;
 }
 
+
+void TestSocketCommunication::sleep(int msecs)
+{
+  QEventLoop loop;
+  QTimer timer;
+  connect(&timer, SIGNAL(timeout()), &loop, SLOT(quit()));
+  timer.start(msecs);
+  loop.exec();
+}
 
 QTEST_MAIN(TestSocketCommunication)

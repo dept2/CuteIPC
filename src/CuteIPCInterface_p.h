@@ -3,7 +3,7 @@
 
 // Qt
 #include <QObject>
-#include <QHash>
+#include <QMultiHash>
 class QLocalSocket;
 
 // Local
@@ -43,7 +43,7 @@ class CuteIPCInterfacePrivate
     void _q_removeRemoteConnectionsOfObject(QObject*);
 
     CuteIPCInterface* q_ptr;
-    QHash<QString,MethodData> m_connections;
+    QMultiHash<QString,MethodData> m_connections;
     QHash<MethodData, CuteIPCSignalHandler*> m_localSignalHandlers;
 };
 

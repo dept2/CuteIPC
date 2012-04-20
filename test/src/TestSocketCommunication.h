@@ -10,26 +10,33 @@ class CuteIPCInterface;
 
 class TestSocketCommunication: public QObject
 {
+  static const int QBYTEARRAY_SIZE_FOR_BENCHMARK = 200 * 1024 * 1024;
+  static const int QIMAGE_HEIGHT_WIDTH_FOR_BENCHMARK = 8000;
+
   Q_OBJECT
 
   private slots:
-    void initTestCase();
-    void cleanupTestCase();
+    void init();
+    void cleanup();
 
-    void testConnection();
+    // basic communication tests (for all types)
     void testDirectCalls();
     void testRemoteSignals();
     void testLocalSignals();
 
+    // benchmark tests
+    void benchmarkQByteArrayTransfer();
+    void benchmarkQImageTransfer();
+
     //TODO: need to write these tests:
-    void testMultipleClientConnections();
-    void testNestedSignals();
-    void testRemoteSignalsDisconnect();
-    void testLocalSignalsDisconnect();
+    void testMultipleObjectsConnection();
+    void testMultipleClients();
 
   private:
     ServiceTestObject* m_service;
     CuteIPCInterface* m_interface;
+
+    void sleep(int);
 };
 
 #endif //TESTSOCKETCOMMUNICATION_H
