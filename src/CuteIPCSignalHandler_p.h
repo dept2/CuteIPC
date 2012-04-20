@@ -17,6 +17,8 @@ class CuteIPCSignalHandler : public QObject
   public:
     explicit CuteIPCSignalHandler(const QString& signature, QObject* parent = 0);
     ~CuteIPCSignalHandler();
+
+    //used on the client-side only, to catch the signal from any local object
     void setSignalParametersInfo(QObject* owner, const QString& signature);
 
 //  public slots:
@@ -32,6 +34,7 @@ class CuteIPCSignalHandler : public QObject
   private:
     QString m_signature;
     QList<QByteArray> m_signalParametersInfo;
+    bool m_signalParametersInfoWasSet;
     QList<CuteIPCServiceConnection*> m_listeners;
 };
 
