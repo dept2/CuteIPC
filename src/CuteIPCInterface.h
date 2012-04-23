@@ -55,6 +55,7 @@ class CuteIPCInterface : public QObject
     Q_PRIVATE_SLOT(d_func(),void _q_sendSignal(QByteArray))
     Q_PRIVATE_SLOT(d_func(),void _q_removeSignalHandlersOfObject(QObject*))
     Q_PRIVATE_SLOT(d_func(),void _q_removeRemoteConnectionsOfObject(QObject*))
+    Q_PRIVATE_SLOT(d_func(), void _q_setLastError(QString))
 };
 
 #endif // CUTEIPCINTERFACE_H

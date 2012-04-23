@@ -21,7 +21,6 @@ class TestSocketCommunication: public QObject
     void init();
     void cleanup();
     void testServerStop();
-    void testClientDisconnect();
 
     // basic data transfer tests
     void testDirectCalls();

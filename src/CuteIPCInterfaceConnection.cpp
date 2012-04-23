@@ -20,6 +20,7 @@ CuteIPCInterfaceConnection::CuteIPCInterfaceConnection(QLocalSocket* socket, Cut
 
   connect(socket, SIGNAL(error(QLocalSocket::LocalSocketError)), SLOT(errorOccured(QLocalSocket::LocalSocketError)));
   connect(socket, SIGNAL(readyRead()), SLOT(readyRead()));
+  connect(this, SIGNAL(errorOccured(QString)), parent, SLOT(_q_setLastError(QString)));
 }
 
 
@@ -95,8 +96,8 @@ bool CuteIPCInterfaceConnection::readMessageFromSocket()
         m_lastCallSuccessful = false;
         callWasFinished = true;
         CuteIPCMessage message = CuteIPCMarshaller::demarshallMessage(m_block);
-        m_lastError = message.method();
-        qDebug() << "SERVER: ERROR:" << m_lastError;
+        qDebug() << "SERVER: ERROR:" << message.method();
+        emit errorOccured(message.method());
         CuteIPCMarshaller::freeArguments(message.arguments());
         break;
       }
@@ -138,6 +139,7 @@ bool CuteIPCInterfaceConnection::readMessageFromSocket()
 void CuteIPCInterfaceConnection::errorOccured(QLocalSocket::LocalSocketError)
 {
   qDebug() << "Socket error: " << m_socket->errorString();
+  emit errorOccured(m_socket->errorString());
 }
 
 
@@ -150,10 +152,4 @@ void CuteIPCInterfaceConnection::setReturnedObject(QGenericReturnArgument return
 bool CuteIPCInterfaceConnection::lastCallSuccessful() const
 {
   return m_lastCallSuccessful;
-}
-
-
-QString CuteIPCInterfaceConnection::lastError() const
-{
-  return m_lastError;
 }

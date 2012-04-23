@@ -18,12 +18,12 @@ class CuteIPCInterfaceConnection: public QObject
 
     void sendCallRequest(const QByteArray& request);
     void setReturnedObject(QGenericReturnArgument returnedObject);
-    QString lastError() const;
     bool lastCallSuccessful() const;
 
   signals:
     void callFinished();
     void invokeRemoteSignal(const QString& signalSignature, const CuteIPCMessage::Arguments& arguments);
+    void errorOccured(const QString&);
 
   public slots:
     void readyRead();
@@ -34,7 +34,6 @@ class CuteIPCInterfaceConnection: public QObject
     quint32 m_nextBlockSize;
     QByteArray m_block;
 
-    QString m_lastError;
     bool m_lastCallSuccessful;
     QGenericReturnArgument m_returnedObject;
 

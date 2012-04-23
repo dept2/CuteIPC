@@ -65,6 +65,7 @@ bool CuteIPCInterfacePrivate::checkConnectCorrection(const QString& signal, cons
   if (!QMetaObject::checkConnectArgs(signalSignature.toAscii(), slotSignature.toAscii()))
   {
     qDebug() << "ERROR: incompatible signatures" << signalSignature << slotSignature;
+    m_lastError = "Incompatible signatures: " + signalSignature + "," + slotSignature;
     return false;
   }
   return true;
@@ -146,6 +147,12 @@ void CuteIPCInterfacePrivate::_q_invokeRemoteSignal(const QString& signalSignatu
     //TODO: need to cleanup memory!
     qDebug() << "ACTION SIGNAL: invoke slot:" << successfulInvoke;
   }
+}
+
+
+void CuteIPCInterfacePrivate::_q_setLastError(QString lastError)
+{
+  this->m_lastError = lastError;
 }
 
 
@@ -311,7 +318,8 @@ bool CuteIPCInterface::remoteConnect(const char* signal, QObject* object, const 
         QMetaObject::normalizedSignature(slotSignature.toAscii()));
   if (slotIndex == -1)
   {
-    qDebug() << "ERROR: Slot doesn't exist:" + slotSignature << "object:" << object;
+    d->m_lastError = "Slot doesn't exist:" + slotSignature;
+    qDebug() << "ERROR: " + d->m_lastError + "; object:" << object;
     return false;
   }
 
@@ -360,7 +368,8 @@ bool CuteIPCInterface::remoteSlotConnect(QObject *localObject, const char *signa
         QMetaObject::normalizedSignature(signalSignature.toAscii()));
   if (signalIndex == -1)
   {
-    qDebug() << "ERROR: Signal doesn't exist:" + signalSignature << "object:" << localObject;
+    d->m_lastError = "Signal doesn't exist:" + signalSignature;
+    qDebug() << "ERROR: " + d->m_lastError + "; object:" << localObject;
     return false;
   }
 
@@ -476,5 +485,6 @@ void CuteIPCInterface::callNoReply(const QString& method, QGenericArgument val0,
 QString CuteIPCInterface::lastError() const
 {
   Q_D(const CuteIPCInterface);
-  return d->m_connection->lastError();
+//  return d->m_connection->lastError();
+  return d->m_lastError;
 }

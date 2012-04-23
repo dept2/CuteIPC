@@ -44,12 +44,6 @@ void TestSocketCommunication::testServerStop()
 }
 
 
-void TestSocketCommunication::testClientDisconnect()
-{
-  m_interface->disconnectFromServer();
-}
-
-
 void TestSocketCommunication::testDirectCalls()
 {
   int intval;
