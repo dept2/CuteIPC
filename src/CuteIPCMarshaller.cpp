@@ -189,53 +189,52 @@ QGenericArgument CuteIPCMarshaller::demarshallArgumentFromStream(bool& ok, QData
 
 bool CuteIPCMarshaller::marshallQImageToStream(QGenericArgument value, QDataStream &stream)
 {
-  int typeId = QMetaType::type(value.name());
   QImage* image = (QImage*) value.data();
+  const uchar* imageData = image->constBits();
 
   stream << QString::fromLatin1(value.name());
 
-  QString format("BMP");
-  stream << format;
+  stream << image->width();
+  stream << image->height();
+  stream << image->format();
 
-  QByteArray imageArray;
-  QBuffer buffer(&imageArray);
-  buffer.open(QIODevice::WriteOnly);
-  image->save(&buffer, format.toAscii(), 100);
-
-  stream << imageArray;
+  QByteArray array((const char*)imageData, image->byteCount());
+  bool ok = QMetaType::save(stream, QMetaType::QByteArray, &array);
   return true;
 }
 
 
 QGenericArgument CuteIPCMarshaller::demarshallQImageFromStream(bool &ok, QDataStream &stream)
 {
-  QString format;
-  stream >> format;
-  int type = QMetaType::type("QByteArray");
+  int width,height,formatBuffer;
+  QImage::Format format;
+  const char* imageData;
 
-  void* data = QMetaType::construct(type);
-  bool dataLoaded = QMetaType::load(stream, type, data);
+  stream >> width;
+  stream >> height;
+  stream >> formatBuffer;
+  format = QImage::Format(formatBuffer);
+
+  void* data = QMetaType::construct(QMetaType::QByteArray);
+  bool dataLoaded = QMetaType::load(stream, QMetaType::QByteArray, data);
   if (!dataLoaded)
   {
     qWarning() << "Failed to deserialize argument value" << "of type" << "QImage";
-    QMetaType::destroy(type, data);
+    QMetaType::destroy(QMetaType::QByteArray, data);
     ok = false;
     return QGenericArgument();
   }
+  imageData = ((QByteArray*)data)->constData();
 
-  QImage* image = new QImage;
-  bool imageLoaded = image->loadFromData(*(static_cast<QByteArray*>(data)), format.toAscii());
-  if (!imageLoaded)
-  {
-    qWarning() << "Failed to deserialize argument value" << "of type" << "QImage";
-    QMetaType::destroy(type, data);
-    ok = false;
-    return QGenericArgument();
-  }
+  QImage* image = new QImage((const uchar*)(imageData), width, height, format);
+  QImage* newImage = new QImage(*image);
 
+  newImage->setPixel(0,0,image->pixel(0,0)); //force deep copy of QImage
+
+  delete image;
+  QMetaType::destroy(QMetaType::QByteArray, data);
   ok = true;
-  QMetaType::destroy(type, data);
-  return QGenericArgument(qstrdup("QImage"), image); //need for compatibility with freeArguments() method
+  return QGenericArgument(qstrdup("QImage"), newImage); //need for compatibility with freeArguments() method
 }
 
 

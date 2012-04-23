@@ -198,6 +198,7 @@ void TestMessageMarshalling::marshallQImages()
   QCOMPARE(deserializedImage->size(), testImage.size());
   QCOMPARE(deserializedImage->pixel(0,0), testImage.pixel(0,0));
   QCOMPARE(deserializedImage->pixel(50,50), testImage.pixel(50,50));
+  QCOMPARE(deserializedImage->format(), testImage.format());
 }
 
 QTEST_MAIN(TestMessageMarshalling)
