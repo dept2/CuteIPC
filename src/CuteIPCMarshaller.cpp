@@ -198,8 +198,8 @@ bool CuteIPCMarshaller::marshallQImageToStream(QGenericArgument value, QDataStre
   stream << image->height();
   stream << image->format();
 
-  QByteArray array((const char*)imageData, image->byteCount());
-  bool ok = QMetaType::save(stream, QMetaType::QByteArray, &array);
+  stream << image->byteCount();
+  stream.writeRawData((const char*)imageData, image->byteCount());
   return true;
 }
 
@@ -208,23 +208,25 @@ QGenericArgument CuteIPCMarshaller::demarshallQImageFromStream(bool &ok, QDataSt
 {
   int width,height,formatBuffer;
   QImage::Format format;
-  const char* imageData;
+  char* imageData;
 
   stream >> width;
   stream >> height;
   stream >> formatBuffer;
   format = QImage::Format(formatBuffer);
 
-  void* data = QMetaType::construct(QMetaType::QByteArray);
-  bool dataLoaded = QMetaType::load(stream, QMetaType::QByteArray, data);
-  if (!dataLoaded)
+  int byteCount;
+  stream >> byteCount;
+  imageData = new char[byteCount];
+
+  if (stream.readRawData(imageData, byteCount) != byteCount)
   {
     qWarning() << "Failed to deserialize argument value" << "of type" << "QImage";
-    QMetaType::destroy(QMetaType::QByteArray, data);
+    delete[] imageData;
     ok = false;
     return QGenericArgument();
   }
-  imageData = ((QByteArray*)data)->constData();
+
 
   QImage* image = new QImage((const uchar*)(imageData), width, height, format);
   QImage* newImage = new QImage(*image);
@@ -232,7 +234,7 @@ QGenericArgument CuteIPCMarshaller::demarshallQImageFromStream(bool &ok, QDataSt
   newImage->setPixel(0,0,image->pixel(0,0)); //force deep copy of QImage
 
   delete image;
-  QMetaType::destroy(QMetaType::QByteArray, data);
+  delete[] imageData;
   ok = true;
   return QGenericArgument(qstrdup("QImage"), newImage); //need for compatibility with freeArguments() method
 }
