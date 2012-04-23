@@ -30,9 +30,7 @@ CuteIPCServiceConnection::CuteIPCServiceConnection(QLocalSocket* socket, CuteIPC
 
 
 CuteIPCServiceConnection::~CuteIPCServiceConnection()
-{
-//  m_socket->deleteLater(); //TODO check this out
-}
+{}
 
 
 void CuteIPCServiceConnection::readyRead()

@@ -78,6 +78,7 @@ bool CuteIPCInterfaceConnection::readMessageFromSocket()
 //             << QTime::currentTime().toString("hh:mm:ss.zzz");
     qDebug() << "";
     CuteIPCMessage::MessageType type = CuteIPCMarshaller::demarshallMessageType(m_block);
+
     switch (type)
     {
       case CuteIPCMessage::MessageResponse:
@@ -86,6 +87,7 @@ bool CuteIPCInterfaceConnection::readMessageFromSocket()
         qDebug() << "SERVER: SUCCESS";
         qDebug() << message;
         callWasFinished = true;
+        CuteIPCMarshaller::freeArguments(message.arguments());
         break;
       }
       case CuteIPCMessage::MessageError:
@@ -95,6 +97,7 @@ bool CuteIPCInterfaceConnection::readMessageFromSocket()
         CuteIPCMessage message = CuteIPCMarshaller::demarshallMessage(m_block);
         m_lastError = message.method();
         qDebug() << "SERVER: ERROR:" << m_lastError;
+        CuteIPCMarshaller::freeArguments(message.arguments());
         break;
       }
       case CuteIPCMessage::MessageSignal:
@@ -105,8 +108,7 @@ bool CuteIPCInterfaceConnection::readMessageFromSocket()
 
         emit invokeRemoteSignal(message.method(), message.arguments());
 
-        m_nextBlockSize = 0;
-        m_block.clear();
+        CuteIPCMarshaller::freeArguments(message.arguments());
         break;
       }
       default:
