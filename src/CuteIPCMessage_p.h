@@ -19,6 +19,7 @@ class CuteIPCMessage
       MessageResponse,
       MessageError,
       SignalConnectionRequest,
+      SlotConnectionRequest,
       MessageSignal
     };
 

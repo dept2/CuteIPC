@@ -167,6 +167,13 @@ void CuteIPCServiceConnection::processMessage()
   {
     emit signalRequest(call.method(), this);
   }
+  else if (messageType == CuteIPCMessage::SlotConnectionRequest)
+  {
+    if (parent()->metaObject()->indexOfSlot(QMetaObject::normalizedSignature(call.method().toAscii())) == -1)
+      sendErrorMessage("Remote slot doesn't exist:" + call.method());
+    else
+      sendResponseMessage(call.method());
+  }
 
   // Cleanup
   CuteIPCMarshaller::freeArguments(call.arguments());

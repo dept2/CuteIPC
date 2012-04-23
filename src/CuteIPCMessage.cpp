@@ -99,6 +99,9 @@ QDebug operator<<(QDebug dbg, const CuteIPCMessage &message)
     case CuteIPCMessage::MessageSignal:
       type = "Signal";
       break;
+    case CuteIPCMessage::SlotConnectionRequest:
+      type = "SlotConnectionRequest";
+      break;
     default: break;
   }
 

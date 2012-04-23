@@ -82,6 +82,16 @@ bool CuteIPCInterfacePrivate::sendRemoteConnectionRequest(const QString &signal)
 }
 
 
+bool CuteIPCInterfacePrivate::checkRemoteSlotExistance(const QString& slot)
+{
+  qDebug() << "REMOTE ACTION: Check remote slot existance" << slot;
+  CuteIPCMessage message(CuteIPCMessage::SlotConnectionRequest, slot);
+  QByteArray request = CuteIPCMarshaller::marshallMessage(message);
+  bool ok = sendSynchronousRequest(request);
+  return ok;
+}
+
+
 bool CuteIPCInterfacePrivate::sendSynchronousRequest(const QByteArray& request)
 {
 //  qDebug() << "(Method serialized into" << request.size() << "bytes)";
@@ -370,6 +380,12 @@ bool CuteIPCInterface::remoteSlotConnect(QObject *localObject, const char *signa
   {
     d->m_lastError = "Signal doesn't exist:" + signalSignature;
     qDebug() << "ERROR: " + d->m_lastError + "; object:" << localObject;
+    return false;
+  }
+
+  if (!d->checkRemoteSlotExistance(slotSignature))
+  {
+    d->m_lastError = "Remote slot doesn't exist:" + slotSignature;
     return false;
   }
 

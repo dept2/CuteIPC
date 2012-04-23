@@ -30,6 +30,7 @@ class CuteIPCInterfacePrivate
 
     bool checkConnectCorrection(const QString& signal, const QString& slot);
     bool sendRemoteConnectionRequest(const QString& signal);
+    bool checkRemoteSlotExistance(const QString& slot);
     bool sendSynchronousRequest(const QByteArray& request);
 
     void registerConnection(const QString& signalSignature, QObject* reciever, const QString& slotSignature);
