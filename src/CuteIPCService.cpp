@@ -193,9 +193,9 @@ QString CuteIPCService::serverName() const
  *
  * \section intro_sec Introduction
  *
- * The CuteIPC is a Qt library that provides a possibility to
+ * The CuteIPC is a Qt library which is intended to
  * make remote method calls and to transmit Qt signals
- * through the network connection.
+ * through the local socket connection.
  *
  * It's based on QLocalSocket and QLocalServer Qt classes, thus adopts Qt
  * platform independency.
