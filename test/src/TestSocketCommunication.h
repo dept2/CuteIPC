@@ -31,9 +31,11 @@ class TestSocketCommunication: public QObject
     void benchmarkQByteArrayTransfer();
     void benchmarkQImageTransfer();
 
-    //TODO: need to write these tests:
+    // 'difficult' connection cases
     void testMultipleObjectsConnection();
     void testMultipleClients();
+    void testRemoteSignalToMultipleSlots();
+    void testLocalSignalToMultipleSlots();
 
   private:
     ServiceTestObject* m_service;

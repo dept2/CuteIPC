@@ -36,6 +36,12 @@ void CuteIPCSignalHandler::setSignalParametersInfo(QObject *owner, const QString
 }
 
 
+QString CuteIPCSignalHandler::signature() const
+{
+  return m_signature;
+}
+
+
 CuteIPCSignalHandler::~CuteIPCSignalHandler()
 {
   qDebug() << Q_FUNC_INFO << ":" << this;
@@ -91,6 +97,17 @@ void CuteIPCSignalHandler::addListener(CuteIPCServiceConnection* listener)
                        listener->metaObject()->indexOfSlot(
                            QMetaObject::normalizedSignature("sendSignal(QByteArray)"))
                        );
+}
+
+
+void CuteIPCSignalHandler::removeListener(CuteIPCServiceConnection *listener)
+{
+  m_listeners.removeOne(listener);
+  if (m_listeners.length() == 0)
+  {
+    emit destroyed(m_signature);
+    this->deleteLater();
+  }
 }
 
 

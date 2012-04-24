@@ -19,6 +19,7 @@ CuteIPCServiceConnection::CuteIPCServiceConnection(QLocalSocket* socket, CuteIPC
   connect(socket, SIGNAL(disconnected()), SLOT(deleteLater()));
   connect(socket, SIGNAL(error(QLocalSocket::LocalSocketError)), SLOT(errorOccured(QLocalSocket::LocalSocketError)));
   connect(this, SIGNAL(signalRequest(QString, QObject*)), parent, SLOT(_q_handleSignalRequest(QString, QObject*)));
+  connect(this, SIGNAL(signalDisconnectRequest(QString,QObject*)), parent, SLOT(_q_handleSignalDisconnect(QString,QObject*)));
 
   connect(socket, SIGNAL(readyRead()), SLOT(readyRead()));
   if (!socket->open(QIODevice::ReadWrite))
@@ -165,7 +166,10 @@ void CuteIPCServiceConnection::processMessage()
   }
   else if (messageType == CuteIPCMessage::SignalConnectionRequest)
   {
-    emit signalRequest(call.method(), this);
+    if (call.returnType() != QString("disconnect"))
+      emit signalRequest(call.method(), this);
+    else
+      emit signalDisconnectRequest(call.method(), this);
   }
   else if (messageType == CuteIPCMessage::SlotConnectionRequest)
   {

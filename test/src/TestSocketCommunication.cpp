@@ -61,8 +61,6 @@ void TestSocketCommunication::testDirectCalls()
 
   //test QImage transfer
   QImage testImage(800,600,QImage::Format_RGB888);
-  testImage.fill(0);
-  testImage.setPixel(50,50,qRgb(255,0,0));
   QVERIFY(m_interface->call("testQImageTransfer",
                             Q_RETURN_ARG(int, intval),
                             Q_ARG(QImage, testImage)) == true);
@@ -118,9 +116,6 @@ void TestSocketCommunication::testRemoteSignals()
   QByteArray testByteArray(1 * 1024 * 1024, 'A');
 
   QImage testImage(800,600,QImage::Format_RGB888);
-  testImage.fill(0);
-  testImage.setPixel(50,50,qRgb(0,255,0));
-
   QString testString("testRemoteSignalsString");
   int testInt = 25;
 
@@ -129,7 +124,6 @@ void TestSocketCommunication::testRemoteSignals()
   m_service->emitQStringIntSignal(testString,testInt);
   sleep(1000);
 
-  //TODO: set timer for recieving
   QCOMPARE(spyForFirstObject.count(), 2);
   QCOMPARE(spyForSecondObject.count(), 1);
 
@@ -174,9 +168,6 @@ void TestSocketCommunication::testLocalSignals()
   QByteArray testByteArray(1 * 1024 * 1024, 'B');
 
   QImage testImage(800,600,QImage::Format_RGB888);
-  testImage.fill(0);
-  testImage.setPixel(50,50,qRgb(0,0,255));
-
   QString testString("testLocalSignalsString");
   int testInt = 30;
 
@@ -185,7 +176,6 @@ void TestSocketCommunication::testLocalSignals()
   secondTestObject->emitQStringIntSignal(testString,testInt);
   sleep(3000);
 
-  //TODO: set timer for recieving
   QCOMPARE(spyForService.count(), 3);
 
   //Compare result values
@@ -336,6 +326,84 @@ void TestSocketCommunication::testMultipleClients()
   QCOMPARE(spyForSecondObject.count(), 2);
   delete secondTestObject;
   delete anotherInterface;
+}
+
+
+void TestSocketCommunication::testRemoteSignalToMultipleSlots()
+{
+  //one remote signal is connected to multiple slots of the same object
+  InterfaceTestObject* testObject = new InterfaceTestObject(this);
+
+  QVERIFY(m_interface->remoteConnect(SIGNAL(serviceIntSignal(int)),
+                             testObject,
+                             SLOT(interfaceIntSlot(int))));
+
+  QVERIFY(m_interface->remoteConnect(SIGNAL(serviceIntSignal(int)),
+                             testObject,
+                             SLOT(interfaceAnotherIntSlot(int))));
+
+  QSignalSpy spyForTestObject(testObject, SIGNAL(slotWasCalled(QString)));
+  QSignalSpy anotherSpyForTestObject(testObject, SIGNAL(anotherSlotWasCalled(QString)));
+
+  int testInt = 10;
+  m_service->emitIntSignal(testInt);
+  sleep(1000);
+
+  QCOMPARE(spyForTestObject.count(), 1);
+  QCOMPARE(anotherSpyForTestObject.count(), 1);
+
+  QVERIFY(m_interface->disconnectSignal(SIGNAL(serviceIntSignal(int)),
+                                        testObject,
+                                        SLOT(interfaceAnotherIntSlot(int))));
+
+  spyForTestObject.clear();
+  anotherSpyForTestObject.clear();
+
+  m_service->emitIntSignal(testInt);
+  sleep(1000);
+
+  QCOMPARE(spyForTestObject.count(), 1);
+  QCOMPARE(anotherSpyForTestObject.count(), 0);
+
+  delete testObject;
+}
+
+
+void TestSocketCommunication::testLocalSignalToMultipleSlots()
+{
+  // the one local signal is connected to multiple remote slots
+  InterfaceTestObject* testObject = new InterfaceTestObject(this);
+
+  QVERIFY(m_interface->remoteSlotConnect(testObject,
+                                 SIGNAL(interfaceIntSignal(int)),
+                                 SLOT(serviceIntSlot(int))));
+  QVERIFY(m_interface->remoteSlotConnect(testObject,
+                                 SIGNAL(interfaceIntSignal(int)),
+                                 SLOT(serviceAnotherIntSlot(int))));
+
+  QSignalSpy spyForService(m_service, SIGNAL(slotWasCalled(QString)));
+  QSignalSpy anotherSpyForService(m_service, SIGNAL(anotherSlotWasCalled(QString)));
+
+  //test transfers
+  int testInt = 30;
+
+  testObject->emitIntSignal(testInt);
+  sleep(1000);
+  QCOMPARE(spyForService.count(), 1);
+  QCOMPARE(anotherSpyForService.count(), 1);
+
+  QVERIFY(m_interface->disconnectSlot(testObject,
+                                 SIGNAL(interfaceIntSignal(int)),
+                                 SLOT(serviceAnotherIntSlot(int))));
+  spyForService.clear();
+  anotherSpyForService.clear();
+
+  testObject->emitIntSignal(testInt);
+  sleep(1000);
+  QCOMPARE(spyForService.count(), 1);
+  QCOMPARE(anotherSpyForService.count(), 0);
+
+  delete testObject;
 }
 
 

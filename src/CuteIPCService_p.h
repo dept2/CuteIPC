@@ -22,6 +22,7 @@ class CuteIPCServicePrivate
 
     void _q_newConnection();
     void _q_handleSignalRequest(QString, QObject*);
+    void _q_handleSignalDisconnect(QString, QObject*);
     void _q_removeSignalHandler(QString);
 
     QLocalServer* m_server;

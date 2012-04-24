@@ -74,6 +74,13 @@ void ServiceTestObject::serviceQStringIntSlot(const QString& str, int value)
 }
 
 
+void ServiceTestObject::serviceAnotherIntSlot(int value)
+{
+  this->testIntTransfer(value);
+  emit anotherSlotWasCalled(Q_FUNC_INFO);
+}
+
+
 const QByteArray& ServiceTestObject::getByteArray() const
 {
   return m_byteArray;

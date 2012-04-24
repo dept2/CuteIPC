@@ -95,6 +95,17 @@ void CuteIPCServicePrivate::_q_handleSignalRequest(QString signalSignature, QObj
 }
 
 
+void CuteIPCServicePrivate::_q_handleSignalDisconnect(QString signalSignature, QObject* sender)
+{
+  CuteIPCServiceConnection* senderConnection = qobject_cast<CuteIPCServiceConnection*>(sender);
+
+  CuteIPCSignalHandler* handler = m_signalHandlers.value(signalSignature);
+  if (handler)
+    handler->removeListener(senderConnection);
+  senderConnection->sendResponseMessage(signalSignature);
+}
+
+
 void CuteIPCServicePrivate::_q_removeSignalHandler(QString key)
 {
   m_signalHandlers.remove(key);

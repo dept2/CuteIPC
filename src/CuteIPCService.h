@@ -28,6 +28,7 @@ class CuteIPCService : public QObject
 
     Q_PRIVATE_SLOT(d_func(),void _q_newConnection())
     Q_PRIVATE_SLOT(d_func(),void _q_handleSignalRequest(QString, QObject*))
+    Q_PRIVATE_SLOT(d_func(),void _q_handleSignalDisconnect(QString, QObject*))
     Q_PRIVATE_SLOT(d_func(),void _q_removeSignalHandler(QString))
 };
 

@@ -82,6 +82,18 @@ bool CuteIPCInterfacePrivate::sendRemoteConnectionRequest(const QString &signal)
 }
 
 
+bool CuteIPCInterfacePrivate::sendSignalDisconnectRequest(const QString &signal)
+{
+  qDebug() << "REMOTE ACTION: Requesting remote signal disconnect" << signal;
+
+  CuteIPCMessage::Arguments args;
+  CuteIPCMessage message(CuteIPCMessage::SignalConnectionRequest, signal, args, "disconnect");
+  QByteArray request = CuteIPCMarshaller::marshallMessage(message);
+  bool  ok = sendSynchronousRequest(request);
+  return ok;
+}
+
+
 bool CuteIPCInterfacePrivate::checkRemoteSlotExistance(const QString& slot)
 {
   qDebug() << "REMOTE ACTION: Check remote slot existance" << slot;
@@ -175,7 +187,15 @@ void CuteIPCInterfacePrivate::handleLocalSignalRequest(QObject* localObject,
 
   MethodData data(localObject, signalSignature);
 
-  CuteIPCSignalHandler* handler = m_localSignalHandlers.value(data);
+  QList<CuteIPCSignalHandler*> handlers = m_localSignalHandlers.values(data);
+
+  CuteIPCSignalHandler* handler = 0;
+  foreach (CuteIPCSignalHandler* existingHandler, handlers)
+  {
+    if (existingHandler->signature() == slotSignature)
+      handler = existingHandler;
+  }
+
   if (!handler)
   {
     //create a new signal handler
@@ -343,6 +363,30 @@ bool CuteIPCInterface::remoteConnect(const char* signal, QObject* object, const 
   return true;
 }
 
+/*!
+    Disconnects remote signal of server
+    from local slot in object receiver.
+    Returns true if the connection is successfully broken;
+    otherwise returns false.
+
+    \sa remoteConnect
+ */
+bool CuteIPCInterface::disconnectSignal(const char* signal, QObject* object, const char* slot)
+{
+  Q_D(CuteIPCInterface);
+
+  if (signal[0] != '2' || slot[0] != '1')
+    return false;
+
+  QString signalSignature = QString::fromAscii(signal).mid(1);
+  QString slotSignature = QString::fromAscii(slot).mid(1);
+
+  d->m_connections.remove(signalSignature, CuteIPCInterfacePrivate::MethodData(object,slotSignature));
+  if (!d->m_connections.contains(signalSignature))
+    return d->sendSignalDisconnectRequest(signalSignature);
+  return true;
+}
+
 
 /*!
     The method is used to connect the signal of some local object (on the client-side) to the remote slot
@@ -390,6 +434,38 @@ bool CuteIPCInterface::remoteSlotConnect(QObject *localObject, const char *signa
   }
 
   d->handleLocalSignalRequest(localObject, signalSignature, slotSignature);
+  return true;
+}
+
+
+/*!
+    Disconnects local signal from remote slot of server.
+    Returns true if the connection is successfully broken;
+    otherwise returns false.
+
+    \sa remoteSlotConnect
+ */
+bool CuteIPCInterface::disconnectSlot(QObject* localObject, const char* signal, const char* remoteSlot)
+{
+  Q_D(CuteIPCInterface);
+
+  if (signal[0] != '2' || remoteSlot[0] != '1')
+    return false;
+
+  QString signalSignature = QString::fromAscii(signal).mid(1);
+  QString slotSignature = QString::fromAscii(remoteSlot).mid(1);
+
+  CuteIPCInterfacePrivate::MethodData data(localObject, signalSignature);
+
+  QList<CuteIPCSignalHandler*> handlers = d->m_localSignalHandlers.values(data);
+  foreach (CuteIPCSignalHandler* handler, handlers)
+  {
+    if (handler->signature() == slotSignature)
+    {
+      delete handler;
+      d->m_localSignalHandlers.remove(data, handler);
+    }
+  }
   return true;
 }
 

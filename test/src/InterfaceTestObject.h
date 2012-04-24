@@ -25,7 +25,10 @@ class InterfaceTestObject: public QObject
     void interfaceIntSignal(int);
     void interfaceQStringIntSignal(const QString& message, int value);
 
+    void interfaceAnotherIntSignal(int);
+
     void slotWasCalled(const QString& funcInfo);
+    void anotherSlotWasCalled(const QString& funcInfo);
 
   public slots:
     void interfaceQByteArraySlot(const QByteArray&);
@@ -33,6 +36,9 @@ class InterfaceTestObject: public QObject
     void interfaceQStringSlot(const QString&);
     void interfaceIntSlot(int);
     void interfaceQStringIntSlot(const QString&, int);
+
+    //to test multiple signal connections
+    void interfaceAnotherIntSlot(int);
 
     //emit related signals
     void emitQByteArraySignal(const QByteArray&);

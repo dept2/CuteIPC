@@ -46,6 +46,13 @@ void InterfaceTestObject::interfaceQStringIntSlot(const QString& str, int value)
 }
 
 
+void InterfaceTestObject::interfaceAnotherIntSlot(int value)
+{
+  m_int = value;
+  emit anotherSlotWasCalled(Q_FUNC_INFO);
+}
+
+
 const QByteArray& InterfaceTestObject::getByteArray() const
 {
   return m_byteArray;

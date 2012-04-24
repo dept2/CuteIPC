@@ -33,6 +33,7 @@ class ServiceTestObject: public CuteIPCService
     void serviceQStringIntSignal(const QString& message, int value);
 
     void slotWasCalled(const QString& funcInfo);
+    void anotherSlotWasCalled(const QString& funcInfo);
 
   public slots:
     void serviceQByteArraySlot(const QByteArray&);
@@ -40,6 +41,9 @@ class ServiceTestObject: public CuteIPCService
     void serviceQStringSlot(const QString&);
     void serviceIntSlot(int);
     void serviceQStringIntSlot(const QString&, int);
+
+    //to test multiple signal connections
+    void serviceAnotherIntSlot(int);
 
     //emit related signals
     void emitQByteArraySignal(const QByteArray&);

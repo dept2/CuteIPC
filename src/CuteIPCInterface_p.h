@@ -30,6 +30,7 @@ class CuteIPCInterfacePrivate
 
     bool checkConnectCorrection(const QString& signal, const QString& slot);
     bool sendRemoteConnectionRequest(const QString& signal);
+    bool sendSignalDisconnectRequest(const QString& signal);
     bool checkRemoteSlotExistance(const QString& slot);
     bool sendSynchronousRequest(const QByteArray& request);
 
@@ -46,7 +47,7 @@ class CuteIPCInterfacePrivate
 
     CuteIPCInterface* q_ptr;
     QMultiHash<QString,MethodData> m_connections;
-    QHash<MethodData, CuteIPCSignalHandler*> m_localSignalHandlers;
+    QMultiHash<MethodData, CuteIPCSignalHandler*> m_localSignalHandlers;
     QString m_lastError;
 };
 
