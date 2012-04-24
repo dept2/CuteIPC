@@ -174,7 +174,7 @@ void TestSocketCommunication::testLocalSignals()
   firstTestObject->emitQByteArraySignal(testByteArray);
   firstTestObject->emitQImageSignal(testImage);
   secondTestObject->emitQStringIntSignal(testString,testInt);
-  sleep(3000);
+  sleep(2000);
 
   QCOMPARE(spyForService.count(), 3);
 
@@ -364,7 +364,6 @@ void TestSocketCommunication::testRemoteSignalToMultipleSlots()
 
   QCOMPARE(spyForTestObject.count(), 1);
   QCOMPARE(anotherSpyForTestObject.count(), 0);
-
   delete testObject;
 }
 
@@ -384,9 +383,7 @@ void TestSocketCommunication::testLocalSignalToMultipleSlots()
   QSignalSpy spyForService(m_service, SIGNAL(slotWasCalled(QString)));
   QSignalSpy anotherSpyForService(m_service, SIGNAL(anotherSlotWasCalled(QString)));
 
-  //test transfers
   int testInt = 30;
-
   testObject->emitIntSignal(testInt);
   sleep(1000);
   QCOMPARE(spyForService.count(), 1);

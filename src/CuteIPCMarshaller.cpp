@@ -179,7 +179,7 @@ QGenericArgument CuteIPCMarshaller::demarshallArgumentFromStream(bool& ok, QData
     qWarning() << "Failed to deserialize argument value" << "of type" << typeName;
     QMetaType::destroy(type, data);
     ok = false;
-    return QGenericArgument(); //TODO!: need to discuss
+    return QGenericArgument();
   }
 
   ok = true;
@@ -231,7 +231,7 @@ QGenericArgument CuteIPCMarshaller::demarshallQImageFromStream(bool &ok, QDataSt
   QImage* image = new QImage((const uchar*)(imageData), width, height, format);
   QImage* newImage = new QImage(*image);
 
-  newImage->setPixel(0,0,image->pixel(0,0)); //force deep copy of QImage
+  newImage->setPixel(0,0,image->pixel(0,0)); //force deep copying of QImage
 
   delete image;
   delete[] imageData;

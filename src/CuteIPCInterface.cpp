@@ -166,7 +166,6 @@ void CuteIPCInterfacePrivate::_q_invokeRemoteSignal(const QString& signalSignatu
             args.at(6), args.at(7), args.at(8),
             args.at(9));
 
-    //TODO: need to cleanup memory!
     qDebug() << "ACTION SIGNAL: invoke slot:" << successfulInvoke;
   }
 }
@@ -328,7 +327,7 @@ void CuteIPCInterface::disconnectFromServer()
     you can type:
     \code remoteConnect(SIGNAL(exampleSignal()), object, SLOT(exampleSlot())); \endcode
 
-    \note This method doesn't establish the connection to the server, you must use connectToServer() before.
+    \note This method doesn't establish the connection to the server, you must use connectToServer() first.
 
     \sa remoteSlotConnect()
  */
@@ -513,7 +512,7 @@ bool CuteIPCInterface::call(const QString& method, QGenericReturnArgument ret, Q
     This overload can be used if the return value of the member is of no interest.
 
     \note To set arguments, you must enclose them using Q_ARG macro.
-    \note This method doesn't establish the connection to the server, you must use connectToServer() before.
+    \note This method doesn't establish the connection to the server, you must use connectToServer() first.
     \sa callNoReply()
  */
 bool CuteIPCInterface::call(const QString& method, QGenericArgument val0, QGenericArgument val1, QGenericArgument val2,
@@ -548,7 +547,7 @@ bool CuteIPCInterface::call(const QString& method, QGenericArgument val0, QGener
     You can pass up to ten arguments (val0, val1, val2, val3, val4, val5, val6, val7, val8, and val9) to the member function.
 
     \note To set arguments, you must enclose them using Q_ARG macro.
-    \note This method doesn't establish the connection to the server, you must use connectToServer() before.
+    \note This method doesn't establish the connection to the server, you must use connectToServer() first.
     \sa call(), connectToServer()
  */
 void CuteIPCInterface::callNoReply(const QString& method, QGenericArgument val0, QGenericArgument val1,
