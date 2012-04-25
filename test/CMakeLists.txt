@@ -1,7 +1,7 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 
 # Qt
-FIND_PACKAGE(Qt4 4.4 COMPONENTS QtCore QtGui QtNetwork REQUIRED)
+FIND_PACKAGE(Qt4 4.4 COMPONENTS QtCore QtGui QtNetwork QtTest REQUIRED)
 INCLUDE(${QT_USE_FILE})
 
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
@@ -30,9 +30,7 @@ MACRO(a_test testname testsrc testhdr)
     # qt4_automoc(${test_${testname}_SRCS})
     QT4_WRAP_CPP(sources_${testname} ${testhdr})
     add_executable(test_${testname} ${test_${testname}_SRCS} ${sources_${testname}} ${sources})
-    target_link_libraries(test_${testname} ${QT_QTCORE_LIBRARY}
-            ${QT_QTTEST_LIBRARY} ${QT_QTGUI_LIBRARY}
-            ${GSOAP_LIBRARIES} ${QT_QTLOCATION_LIBRARY} CuteIPC)
+    target_link_libraries(test_${testname} ${QT_LIBRARIES} CuteIPC)
     ADD_TEST(test_${testname} test_${testname})
 ENDMACRO(a_test)
 
