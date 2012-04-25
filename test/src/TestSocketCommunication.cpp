@@ -224,6 +224,20 @@ void TestSocketCommunication::benchmarkQImageTransfer()
 }
 
 
+void TestSocketCommunication::testGreyScaleQImageTransfer()
+{
+  // Grey scale image
+  QImage monoImage(":/images/finger.png");
+  qDebug() << "Test grey scale QImage size:" << monoImage.byteCount();
+
+  int intval;
+  if (!m_interface->call("testQImageGreyScale", Q_RETURN_ARG(int, intval), Q_ARG(QImage, monoImage)))
+    QSKIP("Remote call for grey scale fail", SkipAll);
+  else
+    QVERIFY(intval == monoImage.byteCount());
+}
+
+
 void TestSocketCommunication::testMultipleObjectsConnection()
 {
   //two objects are managed by one CuteIPCClient

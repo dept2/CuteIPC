@@ -17,7 +17,12 @@ SET(moc_headers
   src/InterfaceTestObject.h
 )
 
+SET(resources
+  images/images.qrc
+)
+
 QT4_WRAP_CPP(sources ${moc_headers})
+QT4_ADD_RESOURCES(sources ${resources})
 
 MACRO(a_test testname testsrc testhdr)
     SET(test_${testname}_SRCS ${testsrc})

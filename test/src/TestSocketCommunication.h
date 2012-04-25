@@ -31,6 +31,9 @@ class TestSocketCommunication: public QObject
     void benchmarkQByteArrayTransfer();
     void benchmarkQImageTransfer();
 
+    // image tests
+    void testGreyScaleQImageTransfer();
+
     // 'difficult' connection cases
     void testMultipleObjectsConnection();
     void testMultipleClients();

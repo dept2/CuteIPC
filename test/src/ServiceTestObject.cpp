@@ -38,6 +38,22 @@ void ServiceTestObject::testIntTransfer(int value)
 }
 
 
+int ServiceTestObject::testQImageGreyScale(const QImage& image)
+{
+  QImage originImage(":/images/finger.png");
+  if (originImage.width() != image.width() || originImage.height() != image.height())
+    return -1;
+
+  for (int y = 0; y < originImage.height(); ++y)
+    for (int x = 0; x < originImage.width(); ++x)
+      if (qRed(originImage.pixel(x, y)) != qRed(image.pixel(x, y)) || qGreen(originImage.pixel(x, y)) != qGreen(image.pixel(x, y))
+          || qBlue(originImage.pixel(x, y)) != qBlue(image.pixel(x, y)))
+        return -1;
+
+  return image.byteCount();
+}
+
+
 void ServiceTestObject::serviceQByteArraySlot(const QByteArray& ba)
 {
   this->testQByteArrayTransfer(ba);
