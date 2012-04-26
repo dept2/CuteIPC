@@ -47,11 +47,6 @@ SET(moc_headers
   src/CuteIPCInterfaceConnection_p.h
 )
 
-SET(public_headers
-  include/CuteIPCService.h
-  include/CuteIPCInterface.h
-)
-
 QT4_WRAP_CPP(sources include/CuteIPCService.h OPTIONS -f${CMAKE_CURRENT_SOURCE_DIR}/src/CuteIPCService_p.h)
 QT4_WRAP_CPP(sources include/CuteIPCInterface.h OPTIONS -f${CMAKE_CURRENT_SOURCE_DIR}/src/CuteIPCInterface_p.h)
 QT4_WRAP_CPP(sources ${moc_headers})
@@ -67,4 +62,3 @@ ADD_SUBDIRECTORY(example/server)
 ADD_SUBDIRECTORY(test)
 
 INSTALL(TARGETS ${lib_target} LIBRARY DESTINATION lib)
-INSTALL(FILES ${public_headers} DESTINATION include)
