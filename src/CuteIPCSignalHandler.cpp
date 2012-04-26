@@ -15,8 +15,7 @@ CuteIPCSignalHandler::CuteIPCSignalHandler(const QString& signature, QObject* pa
     m_signature(signature)
 {
   QMetaObject::connect(this, this->metaObject()->indexOfSignal("destroyed(QString)"),
-                       parent, parent->metaObject()->indexOfSlot(
-                           QMetaObject::normalizedSignature("_q_removeSignalHandler(QString)")));
+      parent, parent->metaObject()->indexOfSlot(QMetaObject::normalizedSignature("_q_removeSignalHandler(QString)")));
   m_signalParametersInfoWasSet = false;
 }
 

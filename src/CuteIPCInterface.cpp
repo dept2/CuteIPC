@@ -155,7 +155,7 @@ void CuteIPCInterfacePrivate::_q_invokeRemoteSignal(const QString& signalSignatu
       args.append(QGenericArgument());
 
     QMetaObject::invokeMethod(data.first, methodName.toAscii(), args.at(0), args.at(1), args.at(2),
-            args.at(3), args.at(4), args.at(5), args.at(6), args.at(7), args.at(8), args.at(9));
+                              args.at(3), args.at(4), args.at(5), args.at(6), args.at(7), args.at(8), args.at(9));
   }
 }
 
@@ -269,7 +269,7 @@ bool CuteIPCInterface::connectToServer(const QString& name)
   {
     d->m_connection = new CuteIPCInterfaceConnection(d->m_socket, this);
     connect(d->m_connection, SIGNAL(invokeRemoteSignal(QString, CuteIPCMessage::Arguments)),
-          this, SLOT(_q_invokeRemoteSignal(QString, CuteIPCMessage::Arguments)));
+            this, SLOT(_q_invokeRemoteSignal(QString, CuteIPCMessage::Arguments)));
     qDebug() << "CuteIPC:" << "Connected:" << name << connected;
   }
 
@@ -396,7 +396,7 @@ bool CuteIPCInterface::remoteSlotConnect(QObject* localObject, const char* signa
   slotSignature = slotSignature.mid(1);
 
   int signalIndex = localObject->metaObject()->indexOfSignal(
-        QMetaObject::normalizedSignature(signalSignature.toAscii()));
+      QMetaObject::normalizedSignature(signalSignature.toAscii()));
   if (signalIndex == -1)
   {
     d->m_lastError = "Signal doesn't exist:" + signalSignature;
