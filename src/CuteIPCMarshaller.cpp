@@ -198,6 +198,10 @@ bool CuteIPCMarshaller::marshallQImageToStream(QGenericArgument value, QDataStre
   stream << image->height();
   stream << image->format();
 
+  stream << image->colorCount();
+  if (image->colorCount() > 0)
+    stream << image->colorTable();
+
   stream << image->byteCount();
   stream.writeRawData((const char*)imageData, image->byteCount());
   return true;
@@ -215,6 +219,13 @@ QGenericArgument CuteIPCMarshaller::demarshallQImageFromStream(bool &ok, QDataSt
   stream >> formatBuffer;
   format = QImage::Format(formatBuffer);
 
+  int colorCount;
+  stream >> colorCount;
+
+  QVector<QRgb> colorTable;
+  if (colorCount > 0)
+    stream >> colorTable;
+
   int byteCount;
   stream >> byteCount;
   imageData = new char[byteCount];
@@ -229,9 +240,15 @@ QGenericArgument CuteIPCMarshaller::demarshallQImageFromStream(bool &ok, QDataSt
 
 
   QImage* image = new QImage((const uchar*)(imageData), width, height, format);
-  QImage* newImage = new QImage(*image);
+  QImage* newImage = new QImage(width, height, format);
 
-  newImage->setPixel(0,0,image->pixel(0,0)); //force deep copying of QImage
+  if (colorCount > 0)
+  {
+    image->setColorTable(colorTable);
+    newImage->setColorTable(colorTable);
+  }
+
+  memcpy(newImage->bits(), imageData, byteCount);
 
   delete image;
   delete[] imageData;

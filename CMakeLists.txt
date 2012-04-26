@@ -18,6 +18,7 @@ INCLUDE(${QT_USE_FILE})
 
 # Include directories
 INCLUDE_DIRECTORIES(
+  include
   src
   ${CMAKE_CURRENT_BINARY_DIR}
 )
@@ -46,12 +47,17 @@ SET(moc_headers
   src/CuteIPCInterfaceConnection_p.h
 )
 
-QT4_WRAP_CPP(sources src/CuteIPCService.h OPTIONS -f${CMAKE_CURRENT_SOURCE_DIR}/src/CuteIPCService_p.h)
-QT4_WRAP_CPP(sources src/CuteIPCInterface.h OPTIONS -f${CMAKE_CURRENT_SOURCE_DIR}/src/CuteIPCInterface_p.h)
+SET(public_headers
+  include/CuteIPCService.h
+  include/CuteIPCInterface.h
+)
+
+QT4_WRAP_CPP(sources include/CuteIPCService.h OPTIONS -f${CMAKE_CURRENT_SOURCE_DIR}/src/CuteIPCService_p.h)
+QT4_WRAP_CPP(sources include/CuteIPCInterface.h OPTIONS -f${CMAKE_CURRENT_SOURCE_DIR}/src/CuteIPCInterface_p.h)
 QT4_WRAP_CPP(sources ${moc_headers})
 
 SET(lib_target CuteIPC)
-ADD_LIBRARY(${lib_target} SHARED ${sources} ${headers} ${moc_headers})
+ADD_LIBRARY(${lib_target} SHARED ${sources} ${headers} ${public_headers} ${moc_headers})
 TARGET_LINK_LIBRARIES(${lib_target} ${QT_LIBRARIES})
 
 
@@ -59,3 +65,6 @@ TARGET_LINK_LIBRARIES(${lib_target} ${QT_LIBRARIES})
 ADD_SUBDIRECTORY(example/client)
 ADD_SUBDIRECTORY(example/server)
 ADD_SUBDIRECTORY(test)
+
+INSTALL(TARGETS ${lib_target} LIBRARY DESTINATION lib)
+INSTALL(FILES ${public_headers} DESTINATION include)
