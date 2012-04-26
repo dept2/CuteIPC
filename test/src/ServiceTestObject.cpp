@@ -2,7 +2,6 @@
 #include "ServiceTestObject.h"
 
 // Qt
-#include <QDebug>
 #include <QtGui/QImage>
 
 
@@ -46,7 +45,8 @@ int ServiceTestObject::testQImageGrayScale(const QImage& image)
 
   for (int y = 0; y < originImage.height(); ++y)
     for (int x = 0; x < originImage.width(); ++x)
-      if (qRed(originImage.pixel(x, y)) != qRed(image.pixel(x, y)) || qGreen(originImage.pixel(x, y)) != qGreen(image.pixel(x, y))
+      if (qRed(originImage.pixel(x, y)) != qRed(image.pixel(x, y))
+          || qGreen(originImage.pixel(x, y)) != qGreen(image.pixel(x, y))
           || qBlue(originImage.pixel(x, y)) != qBlue(image.pixel(x, y)))
         return -1;
 

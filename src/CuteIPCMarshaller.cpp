@@ -6,8 +6,8 @@
 #include <QDataStream>
 #include <QPair>
 #include <QMetaType>
-#include <QDebug>
 #include <QtGui/QImage>
+#include <QDebug>
 #include <QBuffer>
 
 
@@ -62,7 +62,7 @@ CuteIPCMessage CuteIPCMarshaller::demarshallMessage(QByteArray& call)
     QGenericArgument argument = demarshallArgumentFromStream(ok, stream);
     if (!ok)
     {
-      qWarning() << "Failed to deserialize argument" << i;
+      qWarning() << "CuteIPC:" << "Failed to deserialize argument" << i;
       break;
     }
     args.append(argument);
@@ -110,17 +110,17 @@ CuteIPCMessage CuteIPCMarshaller::demarshallResponse(QByteArray& call, QGenericR
     int type = QMetaType::type(typeName.toLatin1());
     if (type == 0)
     {
-      qWarning() << "Unsupported type of argument " << ":" << typeName;
+      qWarning() << "CuteIPC:" << "Unsupported type of argument " << ":" << typeName;
     }
     if (type != QMetaType::type(arg.name()))
     {
-      qWarning() << "Type doesn't match:" << typeName << "Expected:" << arg.name();
+      qWarning() << "CuteIPC:" << "Type doesn't match:" << typeName << "Expected:" << arg.name();
     }
 
     bool dataLoaded = QMetaType::load(stream, type, arg.data());
     if (!dataLoaded)
     {
-      qWarning() << "Failed to deserialize argument value" << "of type" << typeName;
+      qWarning() << "CuteIPC:" << "Failed to deserialize argument value" << "of type" << typeName;
     }
   }
 
@@ -134,7 +134,7 @@ bool CuteIPCMarshaller::marshallArgumentToStream(QGenericArgument value, QDataSt
   int type = QMetaType::type(value.name());
   if (type == 0)
   {
-    qWarning() << "Type" << value.name() << "have not been registered in Qt metaobject system";
+    qWarning() << "CuteIPC:" << "Type" << value.name() << "have not been registered in Qt metaobject system";
     return false;
   }
   if (type == QMetaType::type("QImage"))
@@ -144,7 +144,7 @@ bool CuteIPCMarshaller::marshallArgumentToStream(QGenericArgument value, QDataSt
   bool ok = QMetaType::save(stream, type, value.data());
   if (!ok)
   {
-    qWarning() << "Failed to serialize" << value.name()
+    qWarning() << "CuteIPC:" << "Failed to serialize" << value.name()
                << "to data stream. Call qRegisterMetaTypeStreamOperators to"
                   " register stream operators for this metatype";
     return false;
@@ -164,7 +164,7 @@ QGenericArgument CuteIPCMarshaller::demarshallArgumentFromStream(bool& ok, QData
   int type = QMetaType::type(typeName.toLatin1());
   if (type == 0)
   {
-    qWarning() << "Unsupported type of argument " << ":" << typeName;
+    qWarning() << "CuteIPC:" << "Unsupported type of argument " << ":" << typeName;
     ok = false;
     return QGenericArgument();
   }
@@ -176,7 +176,7 @@ QGenericArgument CuteIPCMarshaller::demarshallArgumentFromStream(bool& ok, QData
   bool dataLoaded = QMetaType::load(stream, type, data);
   if (!dataLoaded)
   {
-    qWarning() << "Failed to deserialize argument value" << "of type" << typeName;
+    qWarning() << "CuteIPC:" << "Failed to deserialize argument value" << "of type" << typeName;
     QMetaType::destroy(type, data);
     ok = false;
     return QGenericArgument();
@@ -233,7 +233,7 @@ QGenericArgument CuteIPCMarshaller::demarshallQImageFromStream(bool& ok, QDataSt
 
   if (stream.readRawData(imageData, byteCount) != byteCount)
   {
-    qWarning() << "Failed to deserialize argument value" << "of type" << "QImage";
+    qWarning() << "CuteIPC:" << "Failed to deserialize argument value" << "of type" << "QImage";
     delete[] imageData;
     ok = false;
     return QGenericArgument();

@@ -4,7 +4,6 @@
 // Qt
 #include <QDebug>
 
-
 CuteIPCMessage::CuteIPCMessage(MessageType type, const QString& method,
                                QGenericArgument val0, QGenericArgument val1,
                                QGenericArgument val2, QGenericArgument val3,
@@ -105,21 +104,19 @@ QDebug operator<<(QDebug dbg, const CuteIPCMessage& message)
     default: break;
   }
 
-  dbg.nospace() << "MESSAGE of type: " << type << "\n";
-  dbg.nospace() << "-- " << "Method: " << message.method() << "\n";
+  dbg.nospace() << "MESSAGE of type: " << type << "  " << "Method: " << message.method();
 
   if (message.arguments().length())
   {
-    dbg.nospace() << "-- " << "Arguments of type:";
+    dbg.nospace() << "  " << "Arguments of type: ";
     foreach (const QGenericArgument& arg, message.arguments())
     {
       dbg.space() << arg.name();
     }
-    dbg.space() << "\n";
   }
 
   if (!message.returnType().isEmpty())
-    dbg.space() << "--" << "Return type:" << message.returnType();
+    dbg.space() << " " << "Return type:" << message.returnType();
 
   return dbg.space();
 }

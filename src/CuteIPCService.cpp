@@ -61,12 +61,9 @@ void CuteIPCServicePrivate::_q_newConnection()
 void CuteIPCServicePrivate::_q_handleSignalRequest(QString signalSignature, QObject* sender)
 {
   Q_Q(CuteIPCService);
-//  qDebug() << Q_FUNC_INFO;
-
   CuteIPCServiceConnection* senderConnection = qobject_cast<CuteIPCServiceConnection*>(sender);
 
   int signalIndex = q->metaObject()->indexOfSignal(QMetaObject::normalizedSignature(signalSignature.toAscii()));
-//  qDebug() << "SIGNAL INDEX: " << signalIndex;
   if (signalIndex == -1)
   {
     senderConnection->sendErrorMessage("Signal doesn't exist:" + signalSignature);
@@ -78,16 +75,11 @@ void CuteIPCServicePrivate::_q_handleSignalRequest(QString signalSignature, QObj
   if (!handler)
   {
     //create a new signal handler
-    qDebug() << "ACTION: Create a new signal handler for the signature: " << signalSignature;
     handler = new CuteIPCSignalHandler(signalSignature, q);
     m_signalHandlers.insert(signalSignature, handler);
 
-
-    QMetaObject::connect(q,
-                         q->metaObject()->indexOfSignal(
-                             QMetaObject::normalizedSignature(signalSignature.toAscii())),
-                         handler,
-                             handler->metaObject()->indexOfSlot("relaySlot()"));
+    QMetaObject::connect(q, q->metaObject()->indexOfSignal(QMetaObject::normalizedSignature(signalSignature.toAscii())),
+                         handler, handler->metaObject()->indexOfSlot("relaySlot()"));
   }
 
   handler->addListener(senderConnection);
@@ -157,21 +149,21 @@ bool CuteIPCService::listen(const QString& serverName)
   if (name.isEmpty())
     name = QString(QLatin1String("%1.%2")).arg(metaObject()->className()).arg(reinterpret_cast<quintptr>(this));
 
-  qDebug() << "Trying to listen" << name;
+  DEBUG << "Trying to listen" << name;
   bool ok = d->m_server->listen(name);
 
   if (!ok)
   {
-    qDebug() << "Trying to reuse existing pipe";
+    DEBUG << "Trying to reuse existing pipe";
     ok = d->m_server->removeServer(name);
     if (ok)
     {
-      qDebug("Server removed, connecting again");
+      DEBUG << "Server removed, connecting again";
       ok = d->m_server->listen(name);
     }
   }
 
-  qDebug() << "Opened" << ok;
+  qDebug() << "CuteIPC:" << "Opened" << name << ok;
 
   return ok;
 }
@@ -225,5 +217,7 @@ QString CuteIPCService::serverName() const
  * You can also remotely connect the server-side signals to the client's slots and signals.
  * On the other hand, you can connect client's local signals to the remote slots of
  * the server.
+ *
+ * \note To enable debug output, set CUTEIPC_DEBUG environment variable to 1;
  *
  */

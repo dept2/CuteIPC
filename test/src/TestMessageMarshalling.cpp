@@ -17,8 +17,7 @@ void TestMessageMarshalling::constructMessageWithoutArgs()
   QCOMPARE(message.method(), QString("testSignalSignature()"));
   QVERIFY(message.returnType().isNull());
 
-  CuteIPCMessage message2(CuteIPCMessage::MessageCallWithReturn, "testMethod", args,
-                          "QString");
+  CuteIPCMessage message2(CuteIPCMessage::MessageCallWithReturn, "testMethod", args, "QString");
   QCOMPARE(message2.messageType(), CuteIPCMessage::MessageCallWithReturn);
   QCOMPARE(message2.method(), QString("testMethod"));
   QCOMPARE(message2.returnType(), QString("QString"));
@@ -40,11 +39,8 @@ void TestMessageMarshalling::constructMessageWithArgs()
   QString testString = "test";
   bool testBool = true;
 
-  CuteIPCMessage message(CuteIPCMessage::MessageCallWithReturn,
-                         "testCallMessage",
-                         Q_ARG(int, testInt),
-                         Q_ARG(QString, testString),
-                         Q_ARG(bool, testBool));
+  CuteIPCMessage message(CuteIPCMessage::MessageCallWithReturn, "testCallMessage", Q_ARG(int, testInt),
+                         Q_ARG(QString, testString), Q_ARG(bool, testBool));
 
   QCOMPARE(message.messageType(), CuteIPCMessage::MessageCallWithReturn);
   QCOMPARE(message.method(), QString("testCallMessage"));
@@ -63,8 +59,7 @@ void TestMessageMarshalling::constructMessageWithArgs()
   args.append(QGenericArgument("QString", &testString));
   args.append(QGenericArgument("bool", &testBool));
 
-  CuteIPCMessage message2(CuteIPCMessage::MessageCallWithReturn,
-                          "testCallMessageWithDirectArgs", args);
+  CuteIPCMessage message2(CuteIPCMessage::MessageCallWithReturn, "testCallMessageWithDirectArgs", args);
 
   QCOMPARE(message2.messageType(), CuteIPCMessage::MessageCallWithReturn);
   QCOMPARE(message2.method(), QString("testCallMessageWithDirectArgs"));
@@ -83,8 +78,7 @@ void TestMessageMarshalling::constructMessageWithArgs()
 void TestMessageMarshalling::marshallMessageParameters()
 {
   int intVal = 5;
-  CuteIPCMessage testMessage(CuteIPCMessage::MessageCallWithReturn,
-                             "testMessage", Q_ARG(int, intVal), "int");
+  CuteIPCMessage testMessage(CuteIPCMessage::MessageCallWithReturn, "testMessage", Q_ARG(int, intVal), "int");
 
   QByteArray serializedMessage = CuteIPCMarshaller::marshallMessage(testMessage);
   CuteIPCMessage deserializedMessage = CuteIPCMarshaller::demarshallMessage(serializedMessage);
@@ -99,8 +93,7 @@ void TestMessageMarshalling::marshallMessageParameters()
   }
 
 
-  testMessage = CuteIPCMessage(CuteIPCMessage::MessageError,
-                               "testErrorMessage");
+  testMessage = CuteIPCMessage(CuteIPCMessage::MessageError, "testErrorMessage");
   serializedMessage = CuteIPCMarshaller::marshallMessage(testMessage);
   deserializedMessage = CuteIPCMarshaller::demarshallMessage(serializedMessage);
 
@@ -126,12 +119,9 @@ void TestMessageMarshalling::marshallIntergers()
   float floatVal = 3.0;
   double doubleVal = 4.0;
 
-  CuteIPCMessage testMessage(CuteIPCMessage::MessageCallWithoutReturn,
-                             "testMessage",
-                             Q_ARG(bool, boolVal), Q_ARG(int, intVal),
-                             Q_ARG(uint, uintVal), Q_ARG(long, longVal),
-                             Q_ARG(short, shortVal), Q_ARG(float, floatVal),
-                             Q_ARG(double, doubleVal));
+  CuteIPCMessage testMessage(CuteIPCMessage::MessageCallWithoutReturn, "testMessage",
+                             Q_ARG(bool, boolVal), Q_ARG(int, intVal), Q_ARG(uint, uintVal), Q_ARG(long, longVal),
+                             Q_ARG(short, shortVal), Q_ARG(float, floatVal), Q_ARG(double, doubleVal));
 
   QByteArray serializedMessage = CuteIPCMarshaller::marshallMessage(testMessage);
   CuteIPCMessage deserializedMessage = CuteIPCMarshaller::demarshallMessage(serializedMessage);
@@ -161,8 +151,7 @@ void TestMessageMarshalling::marshallLiterals()
   QString testString = "testString";
   QChar testChar(65);
 
-  CuteIPCMessage testMessage(CuteIPCMessage::MessageCallWithoutReturn,
-                             "testMessage",
+  CuteIPCMessage testMessage(CuteIPCMessage::MessageCallWithoutReturn, "testMessage",
                              Q_ARG(QString, testString), Q_ARG(QChar, testChar));
 
   QByteArray serializedMessage = CuteIPCMarshaller::marshallMessage(testMessage);
@@ -183,9 +172,7 @@ void TestMessageMarshalling::marshallQImages()
   testImage.fill(0);
   testImage.setPixel(50, 50, qRgb(255, 0, 0));
 
-  CuteIPCMessage testMessage(CuteIPCMessage::MessageCallWithoutReturn,
-                             "testMessage",
-                             Q_ARG(QImage, testImage));
+  CuteIPCMessage testMessage(CuteIPCMessage::MessageCallWithoutReturn, "testMessage", Q_ARG(QImage, testImage));
 
   QByteArray serializedMessage = CuteIPCMarshaller::marshallMessage(testMessage);
   CuteIPCMessage deserializedMessage = CuteIPCMarshaller::demarshallMessage(serializedMessage);

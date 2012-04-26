@@ -3,7 +3,6 @@
 
 // Qt
 #include <QObject>
-#include <QDebug>
 
 InterfaceTestObject::InterfaceTestObject(QObject* parent)
     : QObject(parent)

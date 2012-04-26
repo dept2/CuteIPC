@@ -6,7 +6,6 @@
 #include "CuteIPCMarshaller_p.h"
 
 // Qt
-#include <QDebug>
 #include <QObject>
 #include <QMetaMethod>
 
@@ -15,14 +14,9 @@ CuteIPCSignalHandler::CuteIPCSignalHandler(const QString& signature, QObject* pa
   : QObject(parent),
     m_signature(signature)
 {
-//  qDebug() << Q_FUNC_INFO;
-
-  QMetaObject::connect(this,
-                       this->metaObject()->indexOfSignal("destroyed(QString)"),
-                       parent,
-                       parent->metaObject()->indexOfSlot(
-                          QMetaObject::normalizedSignature("_q_removeSignalHandler(QString)"))
-                       );
+  QMetaObject::connect(this, this->metaObject()->indexOfSignal("destroyed(QString)"),
+                       parent, parent->metaObject()->indexOfSlot(
+                           QMetaObject::normalizedSignature("_q_removeSignalHandler(QString)")));
   m_signalParametersInfoWasSet = false;
 }
 
@@ -30,7 +24,7 @@ CuteIPCSignalHandler::CuteIPCSignalHandler(const QString& signature, QObject* pa
 void CuteIPCSignalHandler::setSignalParametersInfo(QObject* owner, const QString& signature)
 {
   QMetaMethod method = owner->metaObject()->method(
-        owner->metaObject()->indexOfMethod(QMetaObject::normalizedSignature(signature.toAscii())));
+      owner->metaObject()->indexOfMethod(QMetaObject::normalizedSignature(signature.toAscii())));
   m_signalParametersInfo = method.parameterTypes();
   m_signalParametersInfoWasSet = true;
 }
@@ -43,15 +37,11 @@ QString CuteIPCSignalHandler::signature() const
 
 
 CuteIPCSignalHandler::~CuteIPCSignalHandler()
-{
-  qDebug() << Q_FUNC_INFO << ":" << this;
-}
+{}
 
 
 void CuteIPCSignalHandler::relaySlot(void** args)
 {
-//  qDebug() << Q_FUNC_INFO;
-
   if (!m_signalParametersInfoWasSet)
   {
     setSignalParametersInfo(parent(), m_signature);
@@ -75,6 +65,8 @@ void CuteIPCSignalHandler::relaySlot(void** args)
   foreach (const QGenericArgument& arg, messageArguments)
     delete[] arg.name();
 
+  DEBUG << "Send remote signal" << message.method();
+
   emit signalCaptured(serializedMessage);
 }
 
@@ -83,20 +75,14 @@ void CuteIPCSignalHandler::addListener(CuteIPCServiceConnection* listener)
 {
   m_listeners.push_back(listener);
 
-  QMetaObject::connect(listener,
-                       listener->metaObject()->indexOfSignal(
+  QMetaObject::connect(listener, listener->metaObject()->indexOfSignal(
                           QMetaObject::normalizedSignature("destroyed(QObject*)")),
-                       this,
-                       this->metaObject()->indexOfSlot("listenerDestroyed(QObject*)")
-                       );
+                       this, this->metaObject()->indexOfSlot("listenerDestroyed(QObject*)"));
 
-  QMetaObject::connect(this,
-                       this->metaObject()->indexOfSignal(
+  QMetaObject::connect(this, this->metaObject()->indexOfSignal(
                            QMetaObject::normalizedSignature("signalCaptured(QByteArray)")),
-                       listener,
-                       listener->metaObject()->indexOfSlot(
-                           QMetaObject::normalizedSignature("sendSignal(QByteArray)"))
-                       );
+                       listener, listener->metaObject()->indexOfSlot(
+                           QMetaObject::normalizedSignature("sendSignal(QByteArray)")));
 }
 
 
@@ -118,7 +104,6 @@ void CuteIPCSignalHandler::listenerDestroyed(QObject* listener)
     if (qobject_cast<QObject*>(m_listeners[i])== listener)
     {
       m_listeners.removeAt(i);
-      qDebug() << "ACTION: Remove listener:" << listener;
       break;
     }
   }

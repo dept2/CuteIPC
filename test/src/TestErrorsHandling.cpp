@@ -69,22 +69,19 @@ void TestErrorsHandling::testRemoteSignalsErrors()
   InterfaceTestObject* firstTestObject = new InterfaceTestObject(this);
 
   //incompatible signatures
-  QVERIFY(!m_interface->remoteConnect(SIGNAL(serviceQByteArraySignal(QByteArray)),
-                                      firstTestObject,
+  QVERIFY(!m_interface->remoteConnect(SIGNAL(serviceQByteArraySignal(QByteArray)), firstTestObject,
                                       SLOT(interfaceQByteArraySlot(int))));
   QCOMPARE(m_interface->lastError(),
            QString("Incompatible signatures: serviceQByteArraySignal(QByteArray),interfaceQByteArraySlot(int)"));
 
   //unexisted slot
-  QVERIFY(!m_interface->remoteConnect(SIGNAL(serviceQByteArraySignal(QByteArray)),
-                                      firstTestObject,
+  QVERIFY(!m_interface->remoteConnect(SIGNAL(serviceQByteArraySignal(QByteArray)), firstTestObject,
                                       SLOT(unexistedSlot(QByteArray))));
   QCOMPARE(m_interface->lastError(),
            QString("Method (slot or signal) doesn't exist:unexistedSlot(QByteArray)"));
 
   //unexisted remote signal
-  QVERIFY(!m_interface->remoteConnect(SIGNAL(unexistedSignal(QByteArray)),
-                                      firstTestObject,
+  QVERIFY(!m_interface->remoteConnect(SIGNAL(unexistedSignal(QByteArray)), firstTestObject,
                                       SLOT(interfaceQByteArraySlot(QByteArray))));
   QCOMPARE(m_interface->lastError(), QString("Signal doesn't exist:unexistedSignal(QByteArray)"));
 
@@ -102,27 +99,22 @@ void TestErrorsHandling::testRemoteSlotErrors()
   InterfaceTestObject* firstTestObject = new InterfaceTestObject(this);
 
   //incompatible signatures
-  QVERIFY(!m_interface->remoteSlotConnect(firstTestObject,
-                                          SIGNAL(interfaceQByteArraySignal(QByteArray)),
+  QVERIFY(!m_interface->remoteSlotConnect(firstTestObject, SIGNAL(interfaceQByteArraySignal(QByteArray)),
                                           SLOT(serviceQByteArraySlot(int))));
   QCOMPARE(m_interface->lastError(),
            QString("Incompatible signatures: interfaceQByteArraySignal(QByteArray),serviceQByteArraySlot(int)"));
 
 
   //unexisted signal
-  QVERIFY(!m_interface->remoteSlotConnect(firstTestObject,
-                                          SIGNAL(interfaceQImageSignal(QByteArray)),
+  QVERIFY(!m_interface->remoteSlotConnect(firstTestObject, SIGNAL(interfaceQImageSignal(QByteArray)),
                                           SLOT(serviceQByteArraySlot(QByteArray))));
-  QCOMPARE(m_interface->lastError(),
-           QString("Signal doesn't exist:interfaceQImageSignal(QByteArray)"));
+  QCOMPARE(m_interface->lastError(), QString("Signal doesn't exist:interfaceQImageSignal(QByteArray)"));
 
 
   //unexisted remote slot
-  QVERIFY(!m_interface->remoteSlotConnect(firstTestObject,
-                                          SIGNAL(interfaceQImageSignal(QImage)),
+  QVERIFY(!m_interface->remoteSlotConnect(firstTestObject, SIGNAL(interfaceQImageSignal(QImage)),
                                           SLOT(unexistedSlot(QImage))));
-  QCOMPARE(m_interface->lastError(),
-           QString("Remote slot doesn't exist:unexistedSlot(QImage)"));
+  QCOMPARE(m_interface->lastError(), QString("Remote slot doesn't exist:unexistedSlot(QImage)"));
 }
 
 

@@ -31,7 +31,7 @@ void CuteIPCInterfaceConnection::sendCallRequest(const QByteArray& request)
   int written = stream.writeRawData(request.constData(), request.size());
 
   if (written != request.size())
-    qDebug() << "Written bytes and request size doesn't match";
+    qWarning() << "CuteIPC:" << "Warning:" << "Written bytes and request size doesn't match";
 
   m_socket->flush();
   m_lastCallSuccessful = true;
@@ -58,8 +58,6 @@ bool CuteIPCInterfaceConnection::readMessageFromSocket()
   // Fetch next block size
   if (m_nextBlockSize == 0)
   {
-//    qDebug() << "";
-//    qDebug() << "Started fetching request for returned value:" << QTime::currentTime().toString("hh:mm:ss.zzz");
     if (m_socket->bytesAvailable() < (int)sizeof(quint32))
       return true;
 
@@ -75,9 +73,6 @@ bool CuteIPCInterfaceConnection::readMessageFromSocket()
   if (m_block.size() == (int)m_nextBlockSize)
   {
     // Fetched enough, need to parse
-//    qDebug() << "Returned value: Fetching block finished. Got" << m_block.size() << "bytes:"
-//             << QTime::currentTime().toString("hh:mm:ss.zzz");
-    qDebug() << "";
     CuteIPCMessage::MessageType type = CuteIPCMarshaller::demarshallMessageType(m_block);
 
     switch (type)
@@ -85,8 +80,6 @@ bool CuteIPCInterfaceConnection::readMessageFromSocket()
       case CuteIPCMessage::MessageResponse:
       {
         CuteIPCMessage message = CuteIPCMarshaller::demarshallResponse(m_block, m_returnedObject);
-        qDebug() << "SERVER: SUCCESS";
-        qDebug() << message;
         callWasFinished = true;
         CuteIPCMarshaller::freeArguments(message.arguments());
         break;
@@ -96,17 +89,14 @@ bool CuteIPCInterfaceConnection::readMessageFromSocket()
         m_lastCallSuccessful = false;
         callWasFinished = true;
         CuteIPCMessage message = CuteIPCMarshaller::demarshallMessage(m_block);
-        qDebug() << "SERVER: ERROR:" << message.method();
+        qWarning() << "CuteIPC:" << "Error:" << message.method();
         emit errorOccured(message.method());
         CuteIPCMarshaller::freeArguments(message.arguments());
         break;
       }
       case CuteIPCMessage::MessageSignal:
       {
-        qDebug() << "SERVER: SIGNAL";
         CuteIPCMessage message = CuteIPCMarshaller::demarshallMessage(m_block);
-        qDebug() << message;
-
         emit invokeRemoteSignal(message.method(), message.arguments());
 
         CuteIPCMarshaller::freeArguments(message.arguments());
@@ -138,7 +128,7 @@ bool CuteIPCInterfaceConnection::readMessageFromSocket()
 
 void CuteIPCInterfaceConnection::errorOccured(QLocalSocket::LocalSocketError)
 {
-  qDebug() << "Socket error: " << m_socket->errorString();
+  qWarning() << "CuteIPC" << "Socket error: " << m_socket->errorString();
   emit errorOccured(m_socket->errorString());
 }
 

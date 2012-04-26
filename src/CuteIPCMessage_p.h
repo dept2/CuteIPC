@@ -6,6 +6,7 @@
 #include <QGenericArgument>
 #include <QList>
 
+#define DEBUG if (qgetenv("CUTEIPC_DEBUG") == "1") qDebug() << "CuteIPC:"
 
 class CuteIPCMessage
 {

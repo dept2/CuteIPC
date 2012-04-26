@@ -24,12 +24,8 @@ void TestSignalHandler::testSignalHandlingWithoutArgs()
   QString signalSignature = "testSignal()";
   m_handler = new CuteIPCSignalHandler(signalSignature, this);
 
-  QCOMPARE(QMetaObject::connect(this,
-                                this->metaObject()->indexOfSignal(
-                                    QMetaObject::normalizedSignature(signalSignature.toAscii())),
-                                m_handler,
-                                    m_handler->metaObject()->indexOfSlot("relaySlot()")),
-           true);
+  QCOMPARE(QMetaObject::connect(this, this->metaObject()->indexOfSignal(QMetaObject::normalizedSignature(signalSignature.toAscii())),
+                                m_handler, m_handler->metaObject()->indexOfSlot("relaySlot()")), true);
 
   QSignalSpy spy(m_handler, SIGNAL(signalCaptured(QByteArray)));
 
@@ -59,11 +55,8 @@ void TestSignalHandler::testSignalHandlingWithArgs()
   m_handler = new CuteIPCSignalHandler(signalSignature, this);
 
   QCOMPARE(QMetaObject::connect(this,
-                                this->metaObject()->indexOfSignal(
-                                    QMetaObject::normalizedSignature(signalSignature.toAscii())),
-                                m_handler,
-                                    m_handler->metaObject()->indexOfSlot("relaySlot()")),
-           true);
+                                this->metaObject()->indexOfSignal(QMetaObject::normalizedSignature(signalSignature.toAscii())),
+                                m_handler, m_handler->metaObject()->indexOfSlot("relaySlot()")), true);
 
   QSignalSpy spy(m_handler, SIGNAL(signalCaptured(QByteArray)));
 
@@ -98,13 +91,8 @@ void TestSignalHandler::testSettingSignalParametersInfo()
   m_handler = new CuteIPCSignalHandler(signatureToSend, newObject);
   m_handler->setSignalParametersInfo(this, signatureToCatch);
 
-  QCOMPARE(QMetaObject::connect(this,
-                                this->metaObject()->indexOfSignal(
-                                    QMetaObject::normalizedSignature(signatureToCatch.toAscii())),
-                                m_handler,
-                                    m_handler->metaObject()->indexOfSlot("relaySlot()")),
-           true);
-
+  QCOMPARE(QMetaObject::connect(this, this->metaObject()->indexOfSignal(QMetaObject::normalizedSignature(signatureToCatch.toAscii())),
+                                m_handler, m_handler->metaObject()->indexOfSlot("relaySlot()")), true);
 
   QSignalSpy spy(m_handler, SIGNAL(signalCaptured(QByteArray)));
 
@@ -117,7 +105,7 @@ void TestSignalHandler::testSettingSignalParametersInfo()
   QByteArray serializedMessage = arguments.at(0).toByteArray();
   CuteIPCMessage message = CuteIPCMarshaller::demarshallMessage(serializedMessage);
 
-  QCOMPARE(message.method(), QString(signatureToSend)); //check setSignalParametersInfo functionality
+  QCOMPARE(message.method(), QString(signatureToSend));
   QVERIFY(message.arguments().size() == 2);
   QCOMPARE(message.arguments().at(0).name(), "QString");
   QCOMPARE(message.arguments().at(1).name(), "bool");
@@ -138,12 +126,8 @@ void TestSignalHandler::testListenersManaging()
 
   QString signalSignature = "testSignal2(QString, bool)";
   m_handler = new CuteIPCSignalHandler(signalSignature, service);
-  QCOMPARE(QMetaObject::connect(this,
-                                this->metaObject()->indexOfSignal(
-                                    QMetaObject::normalizedSignature(signalSignature.toAscii())),
-                                m_handler,
-                                    m_handler->metaObject()->indexOfSlot("relaySlot()")),
-           true);
+  QCOMPARE(QMetaObject::connect(this, this->metaObject()->indexOfSignal(QMetaObject::normalizedSignature(signalSignature.toAscii())),
+                                m_handler, m_handler->metaObject()->indexOfSlot("relaySlot()")), true);
 
   m_handler->addListener(listener1);
   m_handler->addListener(listener2);
