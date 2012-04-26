@@ -28,13 +28,13 @@ class CuteIPCInterfacePrivate
 
     void registerSocket();
 
-    bool checkConnectCorrection(const QString& signal, const QString& slot);
+    bool checkConnectCorrection(const QString& signal, const QString& method);
     bool sendRemoteConnectionRequest(const QString& signal);
     bool sendSignalDisconnectRequest(const QString& signal);
     bool checkRemoteSlotExistance(const QString& slot);
     bool sendSynchronousRequest(const QByteArray& request);
 
-    void registerConnection(const QString& signalSignature, QObject* reciever, const QString& slotSignature);
+    void registerConnection(const QString& signalSignature, QObject* reciever, const QString& methodSignature);
     void removeConnection(const QString& signalSignature);
 
     void handleLocalSignalRequest(QObject* localObject, const QString& signalSignature, const QString& slotSignature);

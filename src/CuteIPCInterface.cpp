@@ -29,7 +29,7 @@
     The signature of these methods concurs with QMetaObject::invokeMethod() method signature.
     Thus, you can invoke remote methods the same way as you did it locally through the QMetaObject.
 
-    You can also use a remoteConnect() to connect the remote signal to the slot
+    You can also use a remoteConnect() to connect the remote signal to the slot or signal
     of some local object.
 
     Contrarily, you can connect the local signal to the remote slot, by using
@@ -54,18 +54,18 @@ void CuteIPCInterfacePrivate::registerSocket()
 }
 
 
-bool CuteIPCInterfacePrivate::checkConnectCorrection(const QString& signal, const QString& slot)
+bool CuteIPCInterfacePrivate::checkConnectCorrection(const QString& signal, const QString& method)
 {
-  if (signal[0] != '2' || slot[0] != '1')
+  if (signal[0] != '2' || (method[0] != '1' && method[0] != '2'))
     return false;
 
   QString signalSignature = signal.mid(1);
-  QString slotSignature = slot.mid(1);
+  QString methodSignature = method.mid(1);
 
-  if (!QMetaObject::checkConnectArgs(signalSignature.toAscii(), slotSignature.toAscii()))
+  if (!QMetaObject::checkConnectArgs(signalSignature.toAscii(), methodSignature.toAscii()))
   {
-    qDebug() << "ERROR: incompatible signatures" << signalSignature << slotSignature;
-    m_lastError = "Incompatible signatures: " + signalSignature + "," + slotSignature;
+    qDebug() << "ERROR: incompatible signatures" << signalSignature << methodSignature;
+    m_lastError = "Incompatible signatures: " + signalSignature + "," + methodSignature;
     return false;
   }
   return true;
@@ -121,10 +121,10 @@ bool CuteIPCInterfacePrivate::sendSynchronousRequest(const QByteArray& request)
 
 void CuteIPCInterfacePrivate::registerConnection(const QString& signalSignature,
                                                  QObject* reciever,
-                                                 const QString& slotSignature)
+                                                 const QString& methodSignature)
 {
   Q_Q(CuteIPCInterface);
-  m_connections.insert(signalSignature, MethodData(reciever, slotSignature));
+  m_connections.insert(signalSignature, MethodData(reciever, methodSignature));
   QObject::connect(reciever, SIGNAL(destroyed(QObject*)), q, SLOT(_q_removeRemoteConnectionsOfObject(QObject*)));
 }
 
@@ -314,7 +314,7 @@ void CuteIPCInterface::disconnectFromServer()
 
 
 /*!
-    The method is used to connect the remote signal (on the server-side) to the slot
+    The method is used to connect the remote signal (on the server-side) to the slot or signal
     of some local object.
     It returns true on success. False otherwise (the slot doesn't exist,
     of signatures are incompatible, or if the server replies with an error).
@@ -330,23 +330,28 @@ void CuteIPCInterface::disconnectFromServer()
 
     \sa remoteSlotConnect()
  */
-bool CuteIPCInterface::remoteConnect(const char* signal, QObject* object, const char* slot)
+bool CuteIPCInterface::remoteConnect(const char* signal, QObject* object, const char* method)
 {
   Q_D(CuteIPCInterface);
   QString signalSignature = QString::fromAscii(signal);
-  QString slotSignature = QString::fromAscii(slot);
+  QString methodSignature = QString::fromAscii(method);
 
-  if (!d->checkConnectCorrection(signalSignature, slotSignature))
+  if (!d->checkConnectCorrection(signalSignature, methodSignature))
     return false;
 
   signalSignature = signalSignature.mid(1);
-  slotSignature = slotSignature.mid(1);
+  methodSignature = methodSignature.mid(1);
 
-  int slotIndex = object->metaObject()->indexOfSlot(
-        QMetaObject::normalizedSignature(slotSignature.toAscii()));
-  if (slotIndex == -1)
+
+  int methodIndex = -1;
+  if (method[0] == '1')
+    methodIndex = object->metaObject()->indexOfSlot(QMetaObject::normalizedSignature(methodSignature.toAscii()));
+  else if (method[0] == '2')
+    methodIndex = object->metaObject()->indexOfSignal(QMetaObject::normalizedSignature(methodSignature.toAscii()));
+
+  if (methodIndex == -1)
   {
-    d->m_lastError = "Slot doesn't exist:" + slotSignature;
+    d->m_lastError = "Method (slot or signal) doesn't exist:" + methodSignature;
     qDebug() << "ERROR: " + d->m_lastError + "; object:" << object;
     return false;
   }
@@ -357,7 +362,7 @@ bool CuteIPCInterface::remoteConnect(const char* signal, QObject* object, const 
       return false;
   }
 
-  d->registerConnection(signalSignature, object, slotSignature);
+  d->registerConnection(signalSignature, object, methodSignature);
   return true;
 }
 
@@ -369,17 +374,17 @@ bool CuteIPCInterface::remoteConnect(const char* signal, QObject* object, const 
 
     \sa remoteConnect
  */
-bool CuteIPCInterface::disconnectSignal(const char* signal, QObject* object, const char* slot)
+bool CuteIPCInterface::disconnectSignal(const char* signal, QObject* object, const char* method)
 {
   Q_D(CuteIPCInterface);
 
-  if (signal[0] != '2' || slot[0] != '1')
+  if (signal[0] != '2' || (method[0] != '1' && method[0] != '2'))
     return false;
 
   QString signalSignature = QString::fromAscii(signal).mid(1);
-  QString slotSignature = QString::fromAscii(slot).mid(1);
+  QString methodSignature = QString::fromAscii(method).mid(1);
 
-  d->m_connections.remove(signalSignature, CuteIPCInterfacePrivate::MethodData(object, slotSignature));
+  d->m_connections.remove(signalSignature, CuteIPCInterfacePrivate::MethodData(object, methodSignature));
   if (!d->m_connections.contains(signalSignature))
     return d->sendSignalDisconnectRequest(signalSignature);
   return true;
@@ -477,7 +482,8 @@ bool CuteIPCInterface::disconnectSlot(QObject* localObject, const char* signal, 
     Thus, you can use it the same way as you did it locally, with invokeMethod().
 
     The return value of the member function call is placed in \a ret.
-    You can pass up to ten arguments (val0, val1, val2, val3, val4, val5, val6, val7, val8, and val9) to the member function.
+    You can pass up to ten arguments (val0, val1, val2, val3, val4, val5, val6, val7, val8, and val9)
+    to the member function.
 
     \note To set arguments, you must enclose them using Q_ARG and Q_RETURN_ARG macros.
     \note This method doesn't establish the connection to the server, you must use connectToServer() first.
@@ -543,7 +549,8 @@ bool CuteIPCInterface::call(const QString& method, QGenericArgument val0, QGener
     (without return value).
     Thus, you can use it the same way as you did it locally, with invokeMethod().
 
-    You can pass up to ten arguments (val0, val1, val2, val3, val4, val5, val6, val7, val8, and val9) to the member function.
+    You can pass up to ten arguments (val0, val1, val2, val3, val4, val5, val6, val7, val8, and val9)
+    to the member function.
 
     \note To set arguments, you must enclose them using Q_ARG macro.
     \note This method doesn't establish the connection to the server, you must use connectToServer() first.

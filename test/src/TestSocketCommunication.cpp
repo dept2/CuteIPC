@@ -192,6 +192,37 @@ void TestSocketCommunication::testLocalSignals()
 }
 
 
+void TestSocketCommunication::testRemoteSignalToSignal()
+{
+  InterfaceTestObject* testObject = new InterfaceTestObject(this);
+
+  QVERIFY(m_interface->remoteConnect(SIGNAL(serviceIntSignal(int)), testObject, SIGNAL(interfaceIntSignal(int))));
+  QVERIFY(m_interface->remoteConnect(SIGNAL(serviceIntSignal(int)), testObject, SLOT(interfaceIntSlot(int))));
+
+  QSignalSpy spyForSlot(testObject, SIGNAL(slotWasCalled(QString)));
+  QSignalSpy spyForSignal(testObject, SIGNAL(interfaceIntSignal(int)));
+
+  int testInt = 25;
+  m_service->emitIntSignal(testInt);
+  sleep(1000);
+
+  QCOMPARE(spyForSlot.count(), 1);
+  QCOMPARE(spyForSignal.count(), 1);
+
+  QVERIFY(m_interface->disconnectSignal(SIGNAL(serviceIntSignal(int)), testObject, SIGNAL(interfaceIntSignal(int))));
+  spyForSlot.clear();
+  spyForSignal.clear();
+
+  m_service->emitIntSignal(testInt);
+  sleep(1000);
+
+  QCOMPARE(spyForSlot.count(), 1);
+  QCOMPARE(spyForSignal.count(), 0);
+
+  delete testObject;
+}
+
+
 void TestSocketCommunication::benchmarkQByteArrayTransfer()
 {
   QByteArray testByteArray(QBYTEARRAY_SIZE_FOR_BENCHMARK, 'H');

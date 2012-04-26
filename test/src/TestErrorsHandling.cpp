@@ -80,7 +80,7 @@ void TestErrorsHandling::testRemoteSignalsErrors()
                                       firstTestObject,
                                       SLOT(unexistedSlot(QByteArray))));
   QCOMPARE(m_interface->lastError(),
-           QString("Slot doesn't exist:unexistedSlot(QByteArray)"));
+           QString("Method (slot or signal) doesn't exist:unexistedSlot(QByteArray)"));
 
   //unexisted remote signal
   QVERIFY(!m_interface->remoteConnect(SIGNAL(unexistedSignal(QByteArray)),

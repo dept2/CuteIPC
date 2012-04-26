@@ -222,7 +222,7 @@ QString CuteIPCService::serverName() const
  * The signature of the CuteIPCInterface call methods is completely concurs
  * with \a QMetaObject::invokeMethod() Qt method signature.
  *
- * You can also remotely connect the server-side signals to the client's slots.
+ * You can also remotely connect the server-side signals to the client's slots and signals.
  * On the other hand, you can connect client's local signals to the remote slots of
  * the server.
  *

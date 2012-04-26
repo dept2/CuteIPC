@@ -26,6 +26,7 @@ class TestSocketCommunication : public QObject
     void testDirectCalls();
     void testRemoteSignals();
     void testLocalSignals();
+    void testRemoteSignalToSignal();
 
     // benchmark tests
     void benchmarkQByteArrayTransfer();
