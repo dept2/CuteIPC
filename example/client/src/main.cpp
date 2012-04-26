@@ -18,7 +18,7 @@ int main(int argc, char* argv[])
   if (interface.connectToServer("TestObject"))
   {
     TestObjectSlot* test = new TestObjectSlot();
-    interface.remoteSlotConnect(test,SIGNAL(testSignal(QString)),SLOT(foo(QString)));
+    interface.remoteSlotConnect(test, SIGNAL(testSignal(QString)), SLOT(foo(QString)));
     interface.remoteConnect(SIGNAL(testSignal2(QString,int)), test, SLOT(debugSlot(QString,int)));
 //    interface.remoteConnect(SIGNAL(testSignal(QString)), test, SLOT(debugSlot(QString)));
 

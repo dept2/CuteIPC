@@ -8,7 +8,7 @@
 #include <QObject>
 #include <QtGui/QImage>
 
-class ServiceTestObject: public CuteIPCService
+class ServiceTestObject : public CuteIPCService
 {
   Q_OBJECT
 
@@ -19,7 +19,7 @@ class ServiceTestObject: public CuteIPCService
     Q_INVOKABLE int testQImageTransfer(const QImage&);
     Q_INVOKABLE int testQStringTransfer(const QString&);
     Q_INVOKABLE void testIntTransfer(int);
-    Q_INVOKABLE int testQImageGreyScale(const QImage& image);
+    Q_INVOKABLE int testQImageGrayScale(const QImage& image);
 
     const QByteArray& getByteArray() const;
     const QImage& getImage() const;

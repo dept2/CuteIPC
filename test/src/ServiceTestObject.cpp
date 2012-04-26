@@ -38,7 +38,7 @@ void ServiceTestObject::testIntTransfer(int value)
 }
 
 
-int ServiceTestObject::testQImageGreyScale(const QImage& image)
+int ServiceTestObject::testQImageGrayScale(const QImage& image)
 {
   QImage originImage(":/images/finger.png");
   if (originImage.width() != image.width() || originImage.height() != image.height())
@@ -140,7 +140,7 @@ void ServiceTestObject::emitIntSignal(int value)
   emit serviceIntSignal(value);
 }
 
-void ServiceTestObject::emitQStringIntSignal(const QString &message, int value)
+void ServiceTestObject::emitQStringIntSignal(const QString& message, int value)
 {
   emit serviceQStringIntSignal(message, value);
 }

@@ -27,7 +27,7 @@ CuteIPCSignalHandler::CuteIPCSignalHandler(const QString& signature, QObject* pa
 }
 
 
-void CuteIPCSignalHandler::setSignalParametersInfo(QObject *owner, const QString& signature)
+void CuteIPCSignalHandler::setSignalParametersInfo(QObject* owner, const QString& signature)
 {
   QMetaMethod method = owner->metaObject()->method(
         owner->metaObject()->indexOfMethod(QMetaObject::normalizedSignature(signature.toAscii())));
@@ -65,7 +65,7 @@ void CuteIPCSignalHandler::relaySlot(void** args)
     const QByteArray& type = m_signalParametersInfo[i];
 
     //call arguments are started from index 1
-    messageArguments.push_back(QGenericArgument(qstrdup(QString(type).toLatin1()),args[i+1]));
+    messageArguments.push_back(QGenericArgument(qstrdup(QString(type).toLatin1()), args[i+1]));
   }
 
   CuteIPCMessage message(CuteIPCMessage::MessageSignal, m_signature, messageArguments);
@@ -100,7 +100,7 @@ void CuteIPCSignalHandler::addListener(CuteIPCServiceConnection* listener)
 }
 
 
-void CuteIPCSignalHandler::removeListener(CuteIPCServiceConnection *listener)
+void CuteIPCSignalHandler::removeListener(CuteIPCServiceConnection* listener)
 {
   m_listeners.removeOne(listener);
   if (m_listeners.length() == 0)

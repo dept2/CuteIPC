@@ -47,13 +47,13 @@ void TestErrorsHandling::testInvokeErrors()
   //existed method, but wrong parameters
   QVERIFY(!m_interface->call("testQByteArrayTransfer",
                              Q_RETURN_ARG(int, testInt),
-                             Q_ARG(int,testInt)));
+                             Q_ARG(int, testInt)));
   QCOMPARE(m_interface->lastError(), QString("Unsuccessful invoke"));
 
   //existed method, but wrong return type
   QVERIFY(!m_interface->call("testQByteArrayTransfer",
                              Q_RETURN_ARG(QByteArray, testByteArray),
-                             Q_ARG(QByteArray,testByteArray)));
+                             Q_ARG(QByteArray, testByteArray)));
   QCOMPARE(m_interface->lastError(), QString("Unsuccessful invoke"));
 
   delete m_service;

@@ -40,7 +40,6 @@ void TestMessageMarshalling::constructMessageWithArgs()
   QString testString = "test";
   bool testBool = true;
 
-
   CuteIPCMessage message(CuteIPCMessage::MessageCallWithReturn,
                          "testCallMessage",
                          Q_ARG(int, testInt),
@@ -129,8 +128,8 @@ void TestMessageMarshalling::marshallIntergers()
 
   CuteIPCMessage testMessage(CuteIPCMessage::MessageCallWithoutReturn,
                              "testMessage",
-                             Q_ARG(bool,boolVal), Q_ARG(int, intVal),
-                             Q_ARG(uint,uintVal), Q_ARG(long, longVal),
+                             Q_ARG(bool, boolVal), Q_ARG(int, intVal),
+                             Q_ARG(uint, uintVal), Q_ARG(long, longVal),
                              Q_ARG(short, shortVal), Q_ARG(float, floatVal),
                              Q_ARG(double, doubleVal));
 
@@ -146,13 +145,13 @@ void TestMessageMarshalling::marshallIntergers()
   QCOMPARE(deserializedMessage.arguments().at(5).name(), "float");
   QCOMPARE(deserializedMessage.arguments().at(6).name(), "double");
 
-  QCOMPARE(*(bool*)deserializedMessage.arguments().at(0).data(), boolVal);
-  QCOMPARE(*(int*)deserializedMessage.arguments().at(1).data(), intVal);
-  QCOMPARE(*(uint*)deserializedMessage.arguments().at(2).data(), uintVal);
-  QCOMPARE(*(long*)deserializedMessage.arguments().at(3).data(), longVal);
-  QCOMPARE(*(short*)deserializedMessage.arguments().at(4).data(), shortVal);
-  QCOMPARE(*(float*)deserializedMessage.arguments().at(5).data(), floatVal);
-  QCOMPARE(*(double*)deserializedMessage.arguments().at(6).data(), doubleVal);
+  QCOMPARE(*reinterpret_cast<bool*>(deserializedMessage.arguments().at(0).data()), boolVal);
+  QCOMPARE(*reinterpret_cast<int*>(deserializedMessage.arguments().at(1).data()), intVal);
+  QCOMPARE(*reinterpret_cast<uint*>(deserializedMessage.arguments().at(2).data()), uintVal);
+  QCOMPARE(*reinterpret_cast<long*>(deserializedMessage.arguments().at(3).data()), longVal);
+  QCOMPARE(*reinterpret_cast<short*>(deserializedMessage.arguments().at(4).data()), shortVal);
+  QCOMPARE(*reinterpret_cast<float*>(deserializedMessage.arguments().at(5).data()), floatVal);
+  QCOMPARE(*reinterpret_cast<double*>(deserializedMessage.arguments().at(6).data()), doubleVal);
 
 }
 
@@ -164,7 +163,7 @@ void TestMessageMarshalling::marshallLiterals()
 
   CuteIPCMessage testMessage(CuteIPCMessage::MessageCallWithoutReturn,
                              "testMessage",
-                             Q_ARG(QString,testString), Q_ARG(QChar, testChar));
+                             Q_ARG(QString, testString), Q_ARG(QChar, testChar));
 
   QByteArray serializedMessage = CuteIPCMarshaller::marshallMessage(testMessage);
   CuteIPCMessage deserializedMessage = CuteIPCMarshaller::demarshallMessage(serializedMessage);
@@ -173,31 +172,31 @@ void TestMessageMarshalling::marshallLiterals()
   QCOMPARE(deserializedMessage.arguments().at(0).name(), "QString");
   QCOMPARE(deserializedMessage.arguments().at(1).name(), "QChar");
 
-  QCOMPARE(*(QString*)deserializedMessage.arguments().at(0).data(), testString);
-  QCOMPARE(*(QChar*)deserializedMessage.arguments().at(1).data(), testChar);
+  QCOMPARE(*(reinterpret_cast<QString*>(deserializedMessage.arguments().at(0).data())), testString);
+  QCOMPARE(*(reinterpret_cast<QChar*>(deserializedMessage.arguments().at(1).data())), testChar);
 }
 
 
 void TestMessageMarshalling::marshallQImages()
 {
-  QImage testImage(800,600,QImage::Format_RGB888);
+  QImage testImage(800, 600, QImage::Format_RGB888);
   testImage.fill(0);
-  testImage.setPixel(50,50,qRgb(255,0,0));
+  testImage.setPixel(50, 50, qRgb(255, 0, 0));
 
   CuteIPCMessage testMessage(CuteIPCMessage::MessageCallWithoutReturn,
                              "testMessage",
-                             Q_ARG(QImage,testImage));
+                             Q_ARG(QImage, testImage));
 
   QByteArray serializedMessage = CuteIPCMarshaller::marshallMessage(testMessage);
   CuteIPCMessage deserializedMessage = CuteIPCMarshaller::demarshallMessage(serializedMessage);
 
   QVERIFY(deserializedMessage.arguments().size() == 1);
   QCOMPARE(deserializedMessage.arguments().at(0).name(), "QImage");
-  QImage* deserializedImage = (QImage*)deserializedMessage.arguments().at(0).data();
+  QImage* deserializedImage = reinterpret_cast<QImage*>(deserializedMessage.arguments().at(0).data());
 
   QCOMPARE(deserializedImage->size(), testImage.size());
-  QCOMPARE(deserializedImage->pixel(0,0), testImage.pixel(0,0));
-  QCOMPARE(deserializedImage->pixel(50,50), testImage.pixel(50,50));
+  QCOMPARE(deserializedImage->pixel(0, 0), testImage.pixel(0, 0));
+  QCOMPARE(deserializedImage->pixel(50, 50), testImage.pixel(50, 50));
   QCOMPARE(deserializedImage->format(), testImage.format());
 }
 

@@ -117,7 +117,7 @@ void CuteIPCServicePrivate::_q_removeSignalHandler(QString key)
 
     \sa listen()
  */
-CuteIPCService::CuteIPCService(QObject *parent)
+CuteIPCService::CuteIPCService(QObject* parent)
     : QObject(parent),
       d_ptr(new CuteIPCServicePrivate())
 {
@@ -209,7 +209,7 @@ QString CuteIPCService::serverName() const
  * through the local socket connection.
  *
  * It's based on QLocalSocket and QLocalServer Qt classes, thus adopts Qt
- * platform independency.
+ * platform independence.
  *
  *
  * \section usage_sec Usage

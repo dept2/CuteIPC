@@ -8,7 +8,7 @@
 class ServiceTestObject;
 class CuteIPCInterface;
 
-class TestErrorsHandling: public QObject
+class TestErrorsHandling : public QObject
 {
   Q_OBJECT
 

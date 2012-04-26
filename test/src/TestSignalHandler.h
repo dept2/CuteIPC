@@ -8,9 +8,10 @@
 #include <CuteIPCSignalHandler_p.h>
 #include <CuteIPCService.h>
 
-class TestSignalHandler: public QObject
+class TestSignalHandler : public QObject
 {
   Q_OBJECT
+
   signals:
     void testSignal();
     void testSignal2(QString, bool);

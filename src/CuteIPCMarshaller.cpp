@@ -82,7 +82,7 @@ CuteIPCMessage::MessageType CuteIPCMarshaller::demarshallMessageType(QByteArray&
 }
 
 
-CuteIPCMessage CuteIPCMarshaller::demarshallResponse(QByteArray &call, QGenericReturnArgument arg)
+CuteIPCMessage CuteIPCMarshaller::demarshallResponse(QByteArray& call, QGenericReturnArgument arg)
 {
   QDataStream stream(&call, QIODevice::ReadOnly);
 
@@ -187,7 +187,7 @@ QGenericArgument CuteIPCMarshaller::demarshallArgumentFromStream(bool& ok, QData
 }
 
 
-bool CuteIPCMarshaller::marshallQImageToStream(QGenericArgument value, QDataStream &stream)
+bool CuteIPCMarshaller::marshallQImageToStream(QGenericArgument value, QDataStream& stream)
 {
   QImage* image = (QImage*) value.data();
   const uchar* imageData = image->constBits();
@@ -208,16 +208,15 @@ bool CuteIPCMarshaller::marshallQImageToStream(QGenericArgument value, QDataStre
 }
 
 
-QGenericArgument CuteIPCMarshaller::demarshallQImageFromStream(bool &ok, QDataStream &stream)
+QGenericArgument CuteIPCMarshaller::demarshallQImageFromStream(bool& ok, QDataStream& stream)
 {
-  int width,height,formatBuffer;
-  QImage::Format format;
-  char* imageData;
-
+  int width;
   stream >> width;
+  int height;
   stream >> height;
+  int formatBuffer;
   stream >> formatBuffer;
-  format = QImage::Format(formatBuffer);
+  QImage::Format format = QImage::Format(formatBuffer);
 
   int colorCount;
   stream >> colorCount;
@@ -228,6 +227,8 @@ QGenericArgument CuteIPCMarshaller::demarshallQImageFromStream(bool &ok, QDataSt
 
   int byteCount;
   stream >> byteCount;
+
+  char* imageData;
   imageData = new char[byteCount];
 
   if (stream.readRawData(imageData, byteCount) != byteCount)
@@ -238,19 +239,13 @@ QGenericArgument CuteIPCMarshaller::demarshallQImageFromStream(bool &ok, QDataSt
     return QGenericArgument();
   }
 
-
-  QImage* image = new QImage((const uchar*)(imageData), width, height, format);
   QImage* newImage = new QImage(width, height, format);
 
   if (colorCount > 0)
-  {
-    image->setColorTable(colorTable);
     newImage->setColorTable(colorTable);
-  }
 
   memcpy(newImage->bits(), imageData, byteCount);
 
-  delete image;
   delete[] imageData;
   ok = true;
   return QGenericArgument(qstrdup("QImage"), newImage); //need for compatibility with freeArguments() method

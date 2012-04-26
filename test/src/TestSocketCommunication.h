@@ -8,12 +8,12 @@
 class ServiceTestObject;
 class CuteIPCInterface;
 
-class TestSocketCommunication: public QObject
+class TestSocketCommunication : public QObject
 {
+  Q_OBJECT
+
   static const int QBYTEARRAY_SIZE_FOR_BENCHMARK = 200 * 1024 * 1024;
   static const int QIMAGE_HEIGHT_WIDTH_FOR_BENCHMARK = 8000;
-
-  Q_OBJECT
 
   private slots:
 
@@ -32,7 +32,7 @@ class TestSocketCommunication: public QObject
     void benchmarkQImageTransfer();
 
     // image tests
-    void testGreyScaleQImageTransfer();
+    void testGrayScaleQImageTransfer();
 
     // 'difficult' connection cases
     void testMultipleObjectsConnection();

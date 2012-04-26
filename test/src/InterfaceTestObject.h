@@ -5,7 +5,7 @@
 #include <QObject>
 #include <QtGui/QImage>
 
-class InterfaceTestObject: public QObject
+class InterfaceTestObject : public QObject
 {
   Q_OBJECT
 

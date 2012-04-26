@@ -82,8 +82,8 @@ void TestSignalHandler::testSignalHandlingWithArgs()
 
   QCOMPARE(message.arguments().at(0).name(), "QString");
   QCOMPARE(message.arguments().at(1).name(), "bool");
-  QCOMPARE(*(QString*)message.arguments().at(0).data(), testString);
-  QCOMPARE(*(bool*)message.arguments().at(1).data(), true);
+  QCOMPARE(*reinterpret_cast<QString*>(message.arguments().at(0).data()), testString);
+  QCOMPARE(*reinterpret_cast<bool*>(message.arguments().at(1).data()), true);
 
   delete m_handler;
 }
@@ -91,10 +91,10 @@ void TestSignalHandler::testSignalHandlingWithArgs()
 
 void TestSignalHandler::testSettingSignalParametersInfo()
 {
+  TestSignalHandler* newObject = new TestSignalHandler();
   QString signatureToSend = "newSignal2(QString,bool)";
   QString signatureToCatch = "testSignal2(QString,bool)";
 
-  TestSignalHandler* newObject = new TestSignalHandler();
   m_handler = new CuteIPCSignalHandler(signatureToSend, newObject);
   m_handler->setSignalParametersInfo(this, signatureToCatch);
 
@@ -137,7 +137,7 @@ void TestSignalHandler::testListenersManaging()
   CuteIPCServiceConnection* listener2 = new CuteIPCServiceConnection(socket2, service);
 
   QString signalSignature = "testSignal2(QString, bool)";
-  m_handler = new CuteIPCSignalHandler(signalSignature,service);
+  m_handler = new CuteIPCSignalHandler(signalSignature, service);
   QCOMPARE(QMetaObject::connect(this,
                                 this->metaObject()->indexOfSignal(
                                     QMetaObject::normalizedSignature(signalSignature.toAscii())),

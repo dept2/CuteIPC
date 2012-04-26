@@ -223,7 +223,7 @@ void CuteIPCServiceConnection::errorOccured(QLocalSocket::LocalSocketError)
 }
 
 
-void CuteIPCServiceConnection::sendSignal(const QByteArray &data)
+void CuteIPCServiceConnection::sendSignal(const QByteArray& data)
 {
   sendResponse(data);
   qDebug() << "REMOTE ACTION: Signal was sent";

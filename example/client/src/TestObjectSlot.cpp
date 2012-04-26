@@ -5,11 +5,11 @@
 #include <QObject>
 #include <QDebug>
 
-TestObjectSlot::TestObjectSlot(QObject *parent)
+TestObjectSlot::TestObjectSlot(QObject* parent)
     : QObject(parent)
 {}
 
-void TestObjectSlot::debugSlot(const QString &msg, int i)
+void TestObjectSlot::debugSlot(const QString& msg, int i)
 {
   qDebug() << Q_FUNC_INFO << msg << i;
   qDebug() << "emit testSignal...";
@@ -17,7 +17,7 @@ void TestObjectSlot::debugSlot(const QString &msg, int i)
 }
 
 
-void TestObjectSlot::emitSignal(const QString &msg)
+void TestObjectSlot::emitSignal(const QString& msg)
 {
   emit testSignal(msg);
 }

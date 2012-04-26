@@ -76,7 +76,7 @@ const QString& CuteIPCMessage::returnType() const
 }
 
 
-QDebug operator<<(QDebug dbg, const CuteIPCMessage &message)
+QDebug operator<<(QDebug dbg, const CuteIPCMessage& message)
 {
   QString type;
   switch (message.messageType())

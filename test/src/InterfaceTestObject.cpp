@@ -5,7 +5,7 @@
 #include <QObject>
 #include <QDebug>
 
-InterfaceTestObject::InterfaceTestObject(QObject *parent)
+InterfaceTestObject::InterfaceTestObject(QObject* parent)
     : QObject(parent)
 {}
 
@@ -97,7 +97,7 @@ void InterfaceTestObject::emitIntSignal(int value)
   emit interfaceIntSignal(value);
 }
 
-void InterfaceTestObject::emitQStringIntSignal(const QString &message, int value)
+void InterfaceTestObject::emitQStringIntSignal(const QString& message, int value)
 {
   emit interfaceQStringIntSignal(message, value);
 }

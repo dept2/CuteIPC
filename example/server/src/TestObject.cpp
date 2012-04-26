@@ -20,7 +20,7 @@ int TestObject::bar(const QByteArray& ba)
 }
 
 
-void TestObject::imagetest(const QImage &image)
+void TestObject::imagetest(const QImage& image)
 {
   image.save("saved","PNG",100);
 }

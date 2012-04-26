@@ -72,7 +72,7 @@ bool CuteIPCInterfacePrivate::checkConnectCorrection(const QString& signal, cons
 }
 
 
-bool CuteIPCInterfacePrivate::sendRemoteConnectionRequest(const QString &signal)
+bool CuteIPCInterfacePrivate::sendRemoteConnectionRequest(const QString& signal)
 {
   qDebug() << "REMOTE ACTION: Requesting connection to signal" << signal;
   CuteIPCMessage message(CuteIPCMessage::SignalConnectionRequest, signal);
@@ -82,7 +82,7 @@ bool CuteIPCInterfacePrivate::sendRemoteConnectionRequest(const QString &signal)
 }
 
 
-bool CuteIPCInterfacePrivate::sendSignalDisconnectRequest(const QString &signal)
+bool CuteIPCInterfacePrivate::sendSignalDisconnectRequest(const QString& signal)
 {
   qDebug() << "REMOTE ACTION: Requesting remote signal disconnect" << signal;
 
@@ -120,7 +120,7 @@ bool CuteIPCInterfacePrivate::sendSynchronousRequest(const QByteArray& request)
 
 
 void CuteIPCInterfacePrivate::registerConnection(const QString& signalSignature,
-                                                 QObject *reciever,
+                                                 QObject* reciever,
                                                  const QString& slotSignature)
 {
   Q_Q(CuteIPCInterface);
@@ -187,7 +187,6 @@ void CuteIPCInterfacePrivate::handleLocalSignalRequest(QObject* localObject,
   MethodData data(localObject, signalSignature);
 
   QList<CuteIPCSignalHandler*> handlers = m_localSignalHandlers.values(data);
-
   CuteIPCSignalHandler* handler = 0;
   foreach (CuteIPCSignalHandler* existingHandler, handlers)
   {
@@ -242,7 +241,7 @@ void CuteIPCInterfacePrivate::_q_removeSignalHandlersOfObject(QObject* destroyed
 }
 
 
-void CuteIPCInterfacePrivate::_q_sendSignal(const QByteArray &request)
+void CuteIPCInterfacePrivate::_q_sendSignal(const QByteArray& request)
 {
   qDebug() << "REMOTE ACTION: Send signal...";
   m_connection->sendCallRequest(request);
@@ -295,8 +294,8 @@ bool CuteIPCInterface::connectToServer(const QString& name)
   if (connected)
   {
     d->m_connection = new CuteIPCInterfaceConnection(d->m_socket, this);
-    connect(d->m_connection, SIGNAL(invokeRemoteSignal(QString,CuteIPCMessage::Arguments)),
-          this, SLOT(_q_invokeRemoteSignal(QString,CuteIPCMessage::Arguments)));
+    connect(d->m_connection, SIGNAL(invokeRemoteSignal(QString, CuteIPCMessage::Arguments)),
+          this, SLOT(_q_invokeRemoteSignal(QString, CuteIPCMessage::Arguments)));
     qDebug() << "Connected:" << connected;
   }
 
@@ -380,7 +379,7 @@ bool CuteIPCInterface::disconnectSignal(const char* signal, QObject* object, con
   QString signalSignature = QString::fromAscii(signal).mid(1);
   QString slotSignature = QString::fromAscii(slot).mid(1);
 
-  d->m_connections.remove(signalSignature, CuteIPCInterfacePrivate::MethodData(object,slotSignature));
+  d->m_connections.remove(signalSignature, CuteIPCInterfacePrivate::MethodData(object, slotSignature));
   if (!d->m_connections.contains(signalSignature))
     return d->sendSignalDisconnectRequest(signalSignature);
   return true;
@@ -404,7 +403,7 @@ bool CuteIPCInterface::disconnectSignal(const char* signal, QObject* object, con
 
     \sa remoteConnect(), call()
  */
-bool CuteIPCInterface::remoteSlotConnect(QObject *localObject, const char *signal, const char *remoteSlot)
+bool CuteIPCInterface::remoteSlotConnect(QObject* localObject, const char* signal, const char* remoteSlot)
 {
   Q_D(CuteIPCInterface);
 

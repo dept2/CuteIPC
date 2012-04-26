@@ -60,13 +60,13 @@ void TestSocketCommunication::testDirectCalls()
 
 
   //test QImage transfer
-  QImage testImage(800,600,QImage::Format_RGB888);
+  QImage testImage(800, 600, QImage::Format_RGB888);
   QVERIFY(m_interface->call("testQImageTransfer",
                             Q_RETURN_ARG(int, intval),
                             Q_ARG(QImage, testImage)) == true);
   QCOMPARE(testImage.size(), m_service->getImage().size());
-  QCOMPARE(testImage.pixel(0,0), m_service->getImage().pixel(0,0));
-  QCOMPARE(testImage.pixel(50,50), m_service->getImage().pixel(50,50));
+  QCOMPARE(testImage.pixel(0, 0), m_service->getImage().pixel(0, 0));
+  QCOMPARE(testImage.pixel(50, 50), m_service->getImage().pixel(50, 50));
 
   //test QString transfer
   QString testString("testCallString");
@@ -115,13 +115,13 @@ void TestSocketCommunication::testRemoteSignals()
   //test transfers
   QByteArray testByteArray(1 * 1024 * 1024, 'A');
 
-  QImage testImage(800,600,QImage::Format_RGB888);
+  QImage testImage(800, 600, QImage::Format_RGB888);
   QString testString("testRemoteSignalsString");
   int testInt = 25;
 
   m_service->emitQByteArraySignal(testByteArray);
   m_service->emitQImageSignal(testImage);
-  m_service->emitQStringIntSignal(testString,testInt);
+  m_service->emitQStringIntSignal(testString, testInt);
   sleep(1000);
 
   QCOMPARE(spyForFirstObject.count(), 2);
@@ -130,8 +130,8 @@ void TestSocketCommunication::testRemoteSignals()
   //Compare result values
   QCOMPARE(testByteArray, firstTestObject->getByteArray());
   QCOMPARE(testImage.size(), firstTestObject->getImage().size());
-  QCOMPARE(testImage.pixel(0,0), firstTestObject->getImage().pixel(0,0));
-  QCOMPARE(testImage.pixel(50,50), firstTestObject->getImage().pixel(50,50));
+  QCOMPARE(testImage.pixel(0, 0), firstTestObject->getImage().pixel(0, 0));
+  QCOMPARE(testImage.pixel(50, 50), firstTestObject->getImage().pixel(50, 50));
 
   QCOMPARE(testString, secondTestObject->getString());
   QCOMPARE(testInt, secondTestObject->getInt());
@@ -167,13 +167,13 @@ void TestSocketCommunication::testLocalSignals()
   //test transfers
   QByteArray testByteArray(1 * 1024 * 1024, 'B');
 
-  QImage testImage(800,600,QImage::Format_RGB888);
+  QImage testImage(800, 600, QImage::Format_RGB888);
   QString testString("testLocalSignalsString");
   int testInt = 30;
 
   firstTestObject->emitQByteArraySignal(testByteArray);
   firstTestObject->emitQImageSignal(testImage);
-  secondTestObject->emitQStringIntSignal(testString,testInt);
+  secondTestObject->emitQStringIntSignal(testString, testInt);
   sleep(2000);
 
   QCOMPARE(spyForService.count(), 3);
@@ -181,8 +181,8 @@ void TestSocketCommunication::testLocalSignals()
   //Compare result values
   QCOMPARE(testByteArray, m_service->getByteArray());
   QCOMPARE(testImage.size(), m_service->getImage().size());
-  QCOMPARE(testImage.pixel(0,0), m_service->getImage().pixel(0,0));
-  QCOMPARE(testImage.pixel(50,50), m_service->getImage().pixel(50,50));
+  QCOMPARE(testImage.pixel(0, 0), m_service->getImage().pixel(0, 0));
+  QCOMPARE(testImage.pixel(50, 50), m_service->getImage().pixel(50, 50));
 
   QCOMPARE(testString, m_service->getString());
   QCOMPARE(testInt, m_service->getInt());
@@ -212,7 +212,7 @@ void TestSocketCommunication::benchmarkQImageTransfer()
   //test QImage transfer
   int intval;
   QImage testImage(QIMAGE_HEIGHT_WIDTH_FOR_BENCHMARK,
-                   QIMAGE_HEIGHT_WIDTH_FOR_BENCHMARK,QImage::Format_RGB888);
+                   QIMAGE_HEIGHT_WIDTH_FOR_BENCHMARK, QImage::Format_RGB888);
   qDebug() << "Test QImage size:" << testImage.byteCount();
 
   QBENCHMARK_ONCE {
@@ -224,14 +224,14 @@ void TestSocketCommunication::benchmarkQImageTransfer()
 }
 
 
-void TestSocketCommunication::testGreyScaleQImageTransfer()
+void TestSocketCommunication::testGrayScaleQImageTransfer()
 {
-  // Grey scale image
+  // Gray scale image
   QImage monoImage(":/images/finger.png");
-  qDebug() << "Test grey scale QImage size:" << monoImage.byteCount();
+  qDebug() << "Test gray scale QImage size:" << monoImage.byteCount();
 
   int intval;
-  if (!m_interface->call("testQImageGreyScale", Q_RETURN_ARG(int, intval), Q_ARG(QImage, monoImage)))
+  if (!m_interface->call("testQImageGrayScale", Q_RETURN_ARG(int, intval), Q_ARG(QImage, monoImage)))
     QSKIP("Remote call for grey scale fail", SkipAll);
   else
     QVERIFY(intval == monoImage.byteCount());
@@ -268,7 +268,7 @@ void TestSocketCommunication::testMultipleObjectsConnection()
 
   m_service->emitQStringSignal(testString);
   m_service->emitIntSignal(testInt);
-  m_service->emitQStringIntSignal(testString,testInt);
+  m_service->emitQStringIntSignal(testString, testInt);
   sleep(1000);
 
   QCOMPARE(spyForFirstObject.count(), 2);
@@ -280,7 +280,7 @@ void TestSocketCommunication::testMultipleObjectsConnection()
 
   m_service->emitQStringSignal(testString);
   m_service->emitIntSignal(testInt);
-  m_service->emitQStringIntSignal(testString,testInt);
+  m_service->emitQStringIntSignal(testString, testInt);
   sleep(1000);
 
   QCOMPARE(spyForSecondObject.count(), 2);
@@ -322,7 +322,7 @@ void TestSocketCommunication::testMultipleClients()
 
   m_service->emitQStringSignal(testString);
   m_service->emitIntSignal(testInt);
-  m_service->emitQStringIntSignal(testString,testInt);
+  m_service->emitQStringIntSignal(testString, testInt);
   sleep(1000);
 
   QCOMPARE(spyForFirstObject.count(), 2);
@@ -334,7 +334,7 @@ void TestSocketCommunication::testMultipleClients()
 
   m_service->emitQStringSignal(testString);
   m_service->emitIntSignal(testInt);
-  m_service->emitQStringIntSignal(testString,testInt);
+  m_service->emitQStringIntSignal(testString, testInt);
   sleep(1000);
 
   QCOMPARE(spyForSecondObject.count(), 2);
