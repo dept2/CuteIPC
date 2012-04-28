@@ -12,7 +12,8 @@
 CuteIPCServiceConnection::CuteIPCServiceConnection(QLocalSocket* socket, CuteIPCService* parent)
   : QObject(parent),
     m_socket(socket),
-    m_nextBlockSize(0)
+    m_nextBlockSize(0),
+    m_subject(0)
 {
   // Delete connection after the socket have been disconnected
   connect(socket, SIGNAL(disconnected()), socket, SLOT(deleteLater()));
@@ -28,6 +29,12 @@ CuteIPCServiceConnection::CuteIPCServiceConnection(QLocalSocket* socket, CuteIPC
     qWarning() << "CuteIPC:" << "Failed to open socket in ReadWrite mode:" << socket->errorString();
     deleteLater();
   }
+}
+
+
+void CuteIPCServiceConnection::setSubject(QObject* subject)
+{
+  m_subject = subject;
 }
 
 
@@ -85,6 +92,8 @@ void CuteIPCServiceConnection::processMessage()
   CuteIPCMessage::MessageType messageType = call.messageType();
   DEBUG << call;
 
+  QObject* subject = m_subject ? m_subject : parent();
+
   // Fill empty args
   CuteIPCMessage::Arguments args = call.arguments();
   while (args.size() < 10)
@@ -99,7 +108,7 @@ void CuteIPCServiceConnection::processMessage()
       void* retData = QMetaType::construct(retType);
 
       DEBUG << "Invoke local method:" << call.method();
-      bool successfulInvoke = QMetaObject::invokeMethod(parent(), call.method().toLatin1(),
+      bool successfulInvoke = QMetaObject::invokeMethod(subject, call.method().toLatin1(),
           QGenericReturnArgument(call.returnType().toLatin1(), retData),
           args.at(0), args.at(1), args.at(2), args.at(3), args.at(4), args.at(5),
           args.at(6), args.at(7), args.at(8), args.at(9));
@@ -125,7 +134,7 @@ void CuteIPCServiceConnection::processMessage()
   else if ((messageType == CuteIPCMessage::MessageCallWithReturn && call.returnType().isEmpty())
            || messageType == CuteIPCMessage::MessageCallWithoutReturn)
   {
-    bool successfulInvoke = QMetaObject::invokeMethod(parent(), call.method().toLatin1(),
+    bool successfulInvoke = QMetaObject::invokeMethod(subject, call.method().toLatin1(),
         args.at(0), args.at(1), args.at(2), args.at(3), args.at(4), args.at(5),
         args.at(6), args.at(7), args.at(8), args.at(9));
     if (!successfulInvoke)
@@ -140,7 +149,7 @@ void CuteIPCServiceConnection::processMessage()
   }
   else if (messageType == CuteIPCMessage::MessageSignal)
   {
-    bool successfulInvoke = QMetaObject::invokeMethod(parent(),
+    bool successfulInvoke = QMetaObject::invokeMethod(subject,
         call.method().left(call.method().indexOf("(")).toLatin1(),
         args.at(0), args.at(1), args.at(2), args.at(3), args.at(4), args.at(5),
         args.at(6), args.at(7), args.at(8), args.at(9));
@@ -156,7 +165,7 @@ void CuteIPCServiceConnection::processMessage()
   }
   else if (messageType == CuteIPCMessage::SlotConnectionRequest)
   {
-    if (parent()->metaObject()->indexOfSlot(QMetaObject::normalizedSignature(call.method().toAscii())) == -1)
+    if (subject->metaObject()->indexOfSlot(QMetaObject::normalizedSignature(call.method().toAscii())) == -1)
       sendErrorMessage("Remote slot doesn't exist:" + call.method());
     else
       sendResponseMessage(call.method());

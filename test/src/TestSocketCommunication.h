@@ -21,6 +21,7 @@ class TestSocketCommunication : public QObject
     void init();
     void cleanup();
     void testServerStop();
+    void testReconnect();
 
     // basic data transfer tests
     void testDirectCalls();
@@ -40,6 +41,8 @@ class TestSocketCommunication : public QObject
     void testMultipleClients();
     void testRemoteSignalToMultipleSlots();
     void testLocalSignalToMultipleSlots();
+
+    void testOwnersOnTheServerSide();
 
   private:
     ServiceTestObject* m_service;

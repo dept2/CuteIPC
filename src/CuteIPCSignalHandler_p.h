@@ -18,7 +18,9 @@ class CuteIPCSignalHandler : public QObject
     explicit CuteIPCSignalHandler(const QString& signature, QObject* parent = 0);
     ~CuteIPCSignalHandler();
 
-    //used on the client-side only, to handler local signals
+    //To send signals from client-side local objects, pass server's slot signature to constructor
+    //and object's signal to setSignalParametersInfo.
+    //Use this method to set server's signal owner also (with the same signature as passed in constructor)
     void setSignalParametersInfo(QObject* owner, const QString& signature);
     QString signature() const;
 

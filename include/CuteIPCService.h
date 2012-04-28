@@ -15,7 +15,7 @@ class CuteIPCService : public QObject
     explicit CuteIPCService(QObject* parent = 0);
     ~CuteIPCService();
 
-    bool listen(const QString& name = QString());
+    bool listen(const QString& name = QString(), QObject* subject = 0);
     void close();
     QString serverName() const;
 

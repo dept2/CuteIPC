@@ -284,6 +284,7 @@ void CuteIPCInterface::disconnectFromServer()
 {
   Q_D(CuteIPCInterface);
   d->m_socket->disconnectFromServer();
+  d->registerSocket();
 }
 
 

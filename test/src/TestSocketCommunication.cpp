@@ -44,6 +44,17 @@ void TestSocketCommunication::testServerStop()
 }
 
 
+void TestSocketCommunication::testReconnect()
+{
+  m_interface->disconnectFromServer();
+  delete m_service;
+  m_service = new ServiceTestObject(this);
+  QVERIFY(m_service->listen("NewSocket"));
+  QVERIFY(m_interface->connectToServer("NewSocket"));
+  m_interface->callNoReply("testMethod"); //check that socket is valid (no segfault)
+}
+
+
 void TestSocketCommunication::testDirectCalls()
 {
   int intval;
@@ -446,6 +457,48 @@ void TestSocketCommunication::testLocalSignalToMultipleSlots()
   QCOMPARE(anotherSpyForService.count(), 0);
 
   delete testObject;
+}
+
+
+void TestSocketCommunication::testOwnersOnTheServerSide()
+{
+  m_interface->disconnectFromServer();
+  CuteIPCService* service = new CuteIPCService(this);
+  QVERIFY(service->listen("TestServiceSocket", m_service));
+  QVERIFY(m_interface->connectToServer("TestServiceSocket"));
+
+  InterfaceTestObject* testObject = new InterfaceTestObject(this);
+
+  //test remote signals
+  QVERIFY(m_interface->remoteConnect(SIGNAL(serviceIntSignal(int)), testObject, SLOT(interfaceIntSlot(int))));
+
+  qDebug() << "ok";
+
+  QSignalSpy spyForTestObject(testObject, SIGNAL(slotWasCalled(QString)));
+  int testInt = 25;
+
+  sleep(1000);
+  m_service->emitIntSignal(testInt);
+  sleep(1000);
+  QCOMPARE(spyForTestObject.count(), 1);
+
+
+  //test remote slots
+  QVERIFY(m_interface->remoteSlotConnect(testObject, SIGNAL(interfaceQStringSignal(QString)),
+                                       SLOT(serviceQStringSlot(QString))));
+
+  QSignalSpy spyForService(m_service, SIGNAL(slotWasCalled(QString)));
+  QString testString("testLocalSignalsString");
+  testObject->emitQStringSignal(testString);
+  sleep(1000);
+  QCOMPARE(spyForService.count(), 1);
+
+  //test direct call
+  testInt = 10;
+  QVERIFY(m_interface->call("testIntTransfer", Q_ARG(int, testInt)) == true);
+  QCOMPARE(testInt, m_service->getInt());
+
+  delete service;
 }
 
 

@@ -27,6 +27,7 @@ class CuteIPCServicePrivate
 
     QLocalServer* m_server;
     QHash<QString, CuteIPCSignalHandler*> m_signalHandlers;
+    QObject* m_subject;
 
     CuteIPCService* q_ptr;
 };
