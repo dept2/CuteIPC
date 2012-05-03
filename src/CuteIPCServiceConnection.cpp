@@ -208,9 +208,12 @@ void CuteIPCServiceConnection::sendResponse(const QByteArray& response)
 }
 
 
-void CuteIPCServiceConnection::errorOccured(QLocalSocket::LocalSocketError)
+void CuteIPCServiceConnection::errorOccured(QLocalSocket::LocalSocketError error)
 {
-  qWarning() << "CuteIPC:" << "Socket error: " << m_socket->errorString();
+  // Connection closed by peer is normal situation: it just notifies us that the remote client have been disconnected
+  if (error != QLocalSocket::PeerClosedError)
+    qWarning() << "CuteIPC:" << "Socket error: " << m_socket->errorString();
+
   deleteLater();
 }
 
