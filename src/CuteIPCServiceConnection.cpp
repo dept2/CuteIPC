@@ -32,14 +32,14 @@ CuteIPCServiceConnection::CuteIPCServiceConnection(QLocalSocket* socket, CuteIPC
 }
 
 
+CuteIPCServiceConnection::~CuteIPCServiceConnection()
+{}
+
+
 void CuteIPCServiceConnection::setSubject(QObject* subject)
 {
   m_subject = subject;
 }
-
-
-CuteIPCServiceConnection::~CuteIPCServiceConnection()
-{}
 
 
 void CuteIPCServiceConnection::readyRead()
@@ -51,6 +51,7 @@ void CuteIPCServiceConnection::readyRead()
     messageStreamFinished = readMessageFromSocket();
   } while (!messageStreamFinished);
 }
+
 
 bool CuteIPCServiceConnection::readMessageFromSocket()
 {
