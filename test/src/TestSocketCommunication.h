@@ -39,10 +39,16 @@ class TestSocketCommunication : public QObject
     // 'difficult' connection cases
     void testMultipleObjectsConnection();
     void testMultipleClients();
+    void testSignalAfterReturnCall();
+    void testCallIntoInvokedRemoteSignal();
+
     void testRemoteSignalToMultipleSlots();
     void testLocalSignalToMultipleSlots();
 
     void testOwnersOnTheServerSide();
+
+  public slots:
+    void specialSlot(int);
 
   private:
     ServiceTestObject* m_service;

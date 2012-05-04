@@ -154,8 +154,9 @@ void CuteIPCInterfacePrivate::_q_invokeRemoteSignal(const QString& signalSignatu
     while (args.size() < 10)
       args.append(QGenericArgument());
 
-    QMetaObject::invokeMethod(data.first, methodName.toAscii(), args.at(0), args.at(1), args.at(2),
-                              args.at(3), args.at(4), args.at(5), args.at(6), args.at(7), args.at(8), args.at(9));
+    QMetaObject::invokeMethod(data.first, methodName.toAscii(), Qt::QueuedConnection,
+                              args.at(0), args.at(1), args.at(2), args.at(3), args.at(4), args.at(5), args.at(6),
+                              args.at(7), args.at(8), args.at(9));
   }
 }
 
@@ -234,6 +235,7 @@ CuteIPCInterface::CuteIPCInterface(QObject* parent)
   Q_D(CuteIPCInterface);
   d->q_ptr = this;
   d->registerSocket();
+
 }
 
 
@@ -268,6 +270,7 @@ bool CuteIPCInterface::connectToServer(const QString& name)
   if (connected)
   {
     d->m_connection = new CuteIPCInterfaceConnection(d->m_socket, this);
+//    qRegisterMetaType<CuteIPCMessage::Arguments>("CuteIPCMessage::Arguments");
     connect(d->m_connection, SIGNAL(invokeRemoteSignal(QString, CuteIPCMessage::Arguments)),
             this, SLOT(_q_invokeRemoteSignal(QString, CuteIPCMessage::Arguments)));
     qDebug() << "CuteIPC:" << "Connected:" << name << connected;

@@ -37,6 +37,13 @@ void ServiceTestObject::testIntTransfer(int value)
 }
 
 
+void ServiceTestObject::testCallWithRemoteSignal(int value)
+{
+  m_int = value;
+  emit serviceIntSignal(m_int + 42);
+}
+
+
 int ServiceTestObject::testQImageGrayScale(const QImage& image)
 {
   QImage originImage(":/images/finger.png");
