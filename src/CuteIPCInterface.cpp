@@ -44,7 +44,9 @@ CuteIPCInterfacePrivate::CuteIPCInterfacePrivate()
 
 
 CuteIPCInterfacePrivate::~CuteIPCInterfacePrivate()
-{}
+{
+  delete m_socket;
+}
 
 
 void CuteIPCInterfacePrivate::registerSocket()

@@ -116,12 +116,12 @@ bool CuteIPCInterfaceConnection::readMessageFromSocket()
     {
       m_returnedObject = QGenericReturnArgument();
       emit callFinished();
-      return true;
     }
 
     if (m_socket->bytesAvailable())
       return false;
   }
+
   return true;
 }
 
