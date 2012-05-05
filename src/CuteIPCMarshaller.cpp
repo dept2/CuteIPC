@@ -7,8 +7,8 @@
 #include <QPair>
 #include <QMetaType>
 #include <QtGui/QImage>
-#include <QDebug>
 #include <QBuffer>
+#include <QDebug>
 
 
 QByteArray CuteIPCMarshaller::marshallMessage(const CuteIPCMessage& message)

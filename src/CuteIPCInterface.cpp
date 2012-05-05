@@ -275,7 +275,7 @@ bool CuteIPCInterface::connectToServer(const QString& name)
 //    qRegisterMetaType<CuteIPCMessage::Arguments>("CuteIPCMessage::Arguments");
     connect(d->m_connection, SIGNAL(invokeRemoteSignal(QString, CuteIPCMessage::Arguments)),
             this, SLOT(_q_invokeRemoteSignal(QString, CuteIPCMessage::Arguments)));
-    qDebug() << "CuteIPC:" << "Connected:" << name << connected;
+    DEBUG << "CuteIPC:" << "Connected:" << name << connected;
   }
 
   return connected;

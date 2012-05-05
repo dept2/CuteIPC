@@ -173,7 +173,7 @@ bool CuteIPCService::listen(const QString& serverName, QObject* subject)
     }
   }
 
-  qDebug() << "CuteIPC:" << "Opened" << name << ok;
+  DEBUG << "CuteIPC:" << "Opened" << name << ok;
   d->m_subject = subject;
 
   return ok;
