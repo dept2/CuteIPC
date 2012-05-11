@@ -141,7 +141,9 @@ CuteIPCService::CuteIPCService(CuteIPCServicePrivate& dd, QObject* parent)
     Destroys the object.
  */
 CuteIPCService::~CuteIPCService()
-{}
+{
+  delete d_ptr;
+}
 
 /*!
     Tells the server to listen for incoming connections on \a serverName.

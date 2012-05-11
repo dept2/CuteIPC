@@ -9,6 +9,7 @@
 #include <QTime>
 #include <QMetaType>
 
+
 CuteIPCInterfaceConnection::CuteIPCInterfaceConnection(QLocalSocket* socket, CuteIPCInterface* parent)
   : QObject(parent),
     m_socket(socket),

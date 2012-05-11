@@ -39,14 +39,13 @@
 */
 
 CuteIPCInterfacePrivate::CuteIPCInterfacePrivate()
-    : m_socket(0), m_connection(0)
+  : m_socket(0),
+    m_connection(0)
 {}
 
 
 CuteIPCInterfacePrivate::~CuteIPCInterfacePrivate()
-{
-  delete m_socket;
-}
+{}
 
 
 void CuteIPCInterfacePrivate::registerSocket()
@@ -255,7 +254,9 @@ CuteIPCInterface::CuteIPCInterface(CuteIPCInterfacePrivate& dd, QObject* parent)
     Destroyes the object.
  */
 CuteIPCInterface::~CuteIPCInterface()
-{}
+{
+  delete d_ptr;
+}
 
 
 /*!
