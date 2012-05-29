@@ -4,6 +4,7 @@
 // Qt
 #include <QObject>
 #include <QMultiHash>
+#include <QPointer>
 class QLocalSocket;
 
 // Local
@@ -24,7 +25,7 @@ class CuteIPCInterfacePrivate
     virtual ~CuteIPCInterfacePrivate();
 
     QLocalSocket* m_socket;
-    CuteIPCInterfaceConnection* m_connection;
+    QPointer<CuteIPCInterfaceConnection> m_connection;
 
     void registerSocket();
 

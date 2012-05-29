@@ -106,6 +106,9 @@ bool CuteIPCInterfacePrivate::checkRemoteSlotExistance(const QString& slot)
 
 bool CuteIPCInterfacePrivate::sendSynchronousRequest(const QByteArray& request)
 {
+  if (!m_connection)
+    return false;
+
   m_connection->sendCallRequest(request);
 
   QEventLoop loop;
@@ -220,6 +223,9 @@ void CuteIPCInterfacePrivate::_q_removeSignalHandlersOfObject(QObject* destroyed
 
 void CuteIPCInterfacePrivate::_q_sendSignal(const QByteArray& request)
 {
+  if (!m_connection)
+    return;
+
   m_connection->sendCallRequest(request);
 }
 
@@ -478,6 +484,9 @@ bool CuteIPCInterface::call(const QString& method, QGenericReturnArgument ret, Q
                             QGenericArgument val9)
 {
   Q_D(CuteIPCInterface);
+  if (!d->m_connection)
+    return false;
+
   CuteIPCMessage message(CuteIPCMessage::MessageCallWithReturn, method, val0, val1, val2, val3, val4,
                          val5, val6, val7, val8, val9, QString::fromLatin1(ret.name()));
   QByteArray request = CuteIPCMarshaller::marshallMessage(message);
@@ -534,6 +543,9 @@ void CuteIPCInterface::callNoReply(const QString& method, QGenericArgument val0,
                                         QGenericArgument val8, QGenericArgument val9)
 {
   Q_D(CuteIPCInterface);
+  if (!d->m_connection)
+    return;
+
   CuteIPCMessage message(CuteIPCMessage::MessageCallWithoutReturn, method, val0, val1, val2, val3, val4,
                          val5, val6, val7, val8, val9);
   QByteArray request = CuteIPCMarshaller::marshallMessage(message);
