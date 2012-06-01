@@ -109,10 +109,9 @@ bool CuteIPCInterfacePrivate::sendSynchronousRequest(const QByteArray& request)
   if (!m_connection)
     return false;
 
-  m_connection->sendCallRequest(request);
-
   QEventLoop loop;
   QObject::connect(m_connection, SIGNAL(callFinished()), &loop, SLOT(quit()));
+  m_connection->sendCallRequest(request);
   loop.exec();
 
   return m_connection->lastCallSuccessful();
