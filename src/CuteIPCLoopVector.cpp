@@ -41,10 +41,12 @@ void CuteIPCLoopVector::signalCame()
 {
   if (!m_loopList.isEmpty())
   {
-//    QEventLoop* firstLoop = m_loopList.takeFirst();
-    QEventLoop* firstLoop = m_loopList.at(0);
-    firstLoop->exit(0);
-    firstLoop->deleteLater();
-    m_loopList.removeAt(0);
+    QEventLoop* firstLoop = m_loopList.takeFirst();
+    firstLoop->quit();
+
+    // Удаление цикла событий происходит через очередь событий, чтобы дождаться завершения exec() и только
+    // потом удалить объект. Иначе метод exec() не успеет закончить работу и в некоторых случаях вызовет падение приложения.
+    connect(this, SIGNAL(loopKiller()), firstLoop, SLOT(deleteLater()), Qt::QueuedConnection);
+    emit loopKiller();
   }
 }

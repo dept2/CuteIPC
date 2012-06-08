@@ -18,6 +18,9 @@ class CuteIPCLoopVector : public QObject
   private slots:
     void signalCame();
 
+  signals:
+    void loopKiller();
+
   private:
     QObject* m_sender;
     QString m_signal;
