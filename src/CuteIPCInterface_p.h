@@ -12,6 +12,8 @@ class QLocalSocket;
 #include "CuteIPCMessage_p.h"
 class CuteIPCInterfaceConnection;
 class CuteIPCSignalHandler;
+class CuteIPCInterfaceWorker;
+class CuteIPCLoopVector;
 
 
 class CuteIPCInterfacePrivate
@@ -24,16 +26,13 @@ class CuteIPCInterfacePrivate
     CuteIPCInterfacePrivate();
     virtual ~CuteIPCInterfacePrivate();
 
-    QLocalSocket* m_socket;
-    QPointer<CuteIPCInterfaceConnection> m_connection;
-
     void registerSocket();
 
     bool checkConnectCorrection(const QString& signal, const QString& method);
     bool sendRemoteConnectionRequest(const QString& signal);
     bool sendSignalDisconnectRequest(const QString& signal);
     bool checkRemoteSlotExistance(const QString& slot);
-    bool sendSynchronousRequest(const QByteArray& request);
+    bool sendSynchronousRequest(const QByteArray& request, QGenericReturnArgument returnedObject = QGenericReturnArgument());
 
     void registerConnection(const QString& signalSignature, QObject* reciever, const QString& methodSignature);
     void removeConnection(const QString& signalSignature);
@@ -44,12 +43,16 @@ class CuteIPCInterfacePrivate
     void _q_invokeRemoteSignal(const QString& signalSignature, const CuteIPCMessage::Arguments& arguments);
     void _q_removeSignalHandlersOfObject(QObject*);
     void _q_removeRemoteConnectionsOfObject(QObject*);
-    void _q_setLastError(QString);
+    void _q_setLastError(QString); //TODO: !!!!!!
 
     CuteIPCInterface* q_ptr;
     QMultiHash<QString,MethodData> m_connections;
     QMultiHash<MethodData, CuteIPCSignalHandler*> m_localSignalHandlers;
     QString m_lastError;
+    QThread* m_workerThread;
+    CuteIPCInterfaceWorker* m_worker;
+
+    CuteIPCLoopVector* m_syncCallLoops;
 };
 
 #endif //CUTEIPCINTERFACE_P_H

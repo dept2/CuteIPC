@@ -10,7 +10,7 @@
 #include <QMetaType>
 
 
-CuteIPCInterfaceConnection::CuteIPCInterfaceConnection(QLocalSocket* socket, CuteIPCInterface* parent)
+CuteIPCInterfaceConnection::CuteIPCInterfaceConnection(QLocalSocket* socket, QObject* parent)
   : QObject(parent),
     m_socket(socket),
     m_nextBlockSize(0)
@@ -21,7 +21,7 @@ CuteIPCInterfaceConnection::CuteIPCInterfaceConnection(QLocalSocket* socket, Cut
 
   connect(socket, SIGNAL(error(QLocalSocket::LocalSocketError)), SLOT(errorOccured(QLocalSocket::LocalSocketError)));
   connect(socket, SIGNAL(readyRead()), SLOT(readyRead()));
-  connect(this, SIGNAL(errorOccured(QString)), parent, SLOT(_q_setLastError(QString)));
+//  connect(this, SIGNAL(errorOccured(QString)), parent, SLOT(_q_setLastError(QString)));
 }
 
 
@@ -80,7 +80,8 @@ bool CuteIPCInterfaceConnection::readMessageFromSocket()
     {
       case CuteIPCMessage::MessageResponse:
       {
-        CuteIPCMessage message = CuteIPCMarshaller::demarshallResponse(m_block, m_returnedObject);
+        Q_ASSERT(!m_returnedObjects.isEmpty());
+        CuteIPCMessage message = CuteIPCMarshaller::demarshallResponse(m_block, m_returnedObjects.takeFirst());
         callWasFinished = true;
         CuteIPCMarshaller::freeArguments(message.arguments());
         break;
@@ -88,6 +89,7 @@ bool CuteIPCInterfaceConnection::readMessageFromSocket()
       case CuteIPCMessage::MessageError:
       {
         m_lastCallSuccessful = false;
+        qDebug() << "EEEEERRRRORRRR!";
         callWasFinished = true;
         CuteIPCMessage message = CuteIPCMarshaller::demarshallMessage(m_block);
         qWarning() << "CuteIPC:" << "Error:" << message.method();
@@ -114,10 +116,7 @@ bool CuteIPCInterfaceConnection::readMessageFromSocket()
     m_block.clear();
 
     if (callWasFinished)
-    {
-      m_returnedObject = QGenericReturnArgument();
       emit callFinished();
-    }
 
     if (m_socket->bytesAvailable())
       return false;
@@ -136,7 +135,7 @@ void CuteIPCInterfaceConnection::errorOccured(QLocalSocket::LocalSocketError)
 
 void CuteIPCInterfaceConnection::setReturnedObject(QGenericReturnArgument returnedObject)
 {
-  m_returnedObject = returnedObject;
+  m_returnedObjects.append(returnedObject);
 }
 
 

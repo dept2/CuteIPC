@@ -14,7 +14,7 @@ class CuteIPCInterfaceConnection : public QObject
   Q_OBJECT
 
   public:
-    CuteIPCInterfaceConnection(QLocalSocket* socket, CuteIPCInterface* parent);
+    CuteIPCInterfaceConnection(QLocalSocket* socket, QObject* parent);
 
     void sendCallRequest(const QByteArray& request);
     void setReturnedObject(QGenericReturnArgument returnedObject);
@@ -35,7 +35,7 @@ class CuteIPCInterfaceConnection : public QObject
     QByteArray m_block;
 
     bool m_lastCallSuccessful;
-    QGenericReturnArgument m_returnedObject;
+    QList<QGenericReturnArgument> m_returnedObjects;
 
     bool readMessageFromSocket();
 };

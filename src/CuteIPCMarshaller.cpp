@@ -109,18 +109,16 @@ CuteIPCMessage CuteIPCMarshaller::demarshallResponse(QByteArray& call, QGenericR
     // Check type
     int type = QMetaType::type(typeName.toLatin1());
     if (type == 0)
-    {
       qWarning() << "CuteIPC:" << "Unsupported type of argument " << ":" << typeName;
-    }
-    if (type != QMetaType::type(arg.name()))
-    {
-      qWarning() << "CuteIPC:" << "Type doesn't match:" << typeName << "Expected:" << arg.name();
-    }
 
-    bool dataLoaded = QMetaType::load(stream, type, arg.data());
-    if (!dataLoaded)
+    if (arg.name() && arg.data())
     {
-      qWarning() << "CuteIPC:" << "Failed to deserialize argument value" << "of type" << typeName;
+      if (type != QMetaType::type(arg.name()))
+        qWarning() << "CuteIPC:" << "Type doesn't match:" << typeName << "Expected:" << arg.name();
+
+      bool dataLoaded = QMetaType::load(stream, type, arg.data());
+      if (!dataLoaded)
+        qWarning() << "CuteIPC:" << "Failed to deserialize argument value" << "of type" << typeName;
     }
   }
 
