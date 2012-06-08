@@ -4,7 +4,6 @@
 #include "CuteIPCLoopVector.h"
 
 // Qt
-#include <QObject>
 #include <QEventLoop>
 
 
@@ -42,7 +41,8 @@ void CuteIPCInterfaceWorker::connectToServer(const QString& name, void* successf
             this, SIGNAL(invokeRemoteSignal(QString, CuteIPCMessage::Arguments)));
     connect(m_connection, SIGNAL(errorOccured(QString)), this, SIGNAL(setLastError(QString)));
 
-    m_syncCallLoops = new CuteIPCLoopVector(m_connection, SIGNAL(callFinished()), m_connection); //!!!!! Check m_connection as parent!!!!!
+    // Очередь циклов событий удаляется при удалении соединения
+    m_syncCallLoops = new CuteIPCLoopVector(m_connection, SIGNAL(callFinished()), m_connection);
 
     DEBUG << "CuteIPC:" << "Connected:" << name << connected;
   }
@@ -73,6 +73,8 @@ void CuteIPCInterfaceWorker::sendSynchronousRequest(const QByteArray& request, v
 
   m_connection->setReturnedObject(returnedObject);
 
+  // Хотя объект очереди удаляется при удалении соединения, его проверка не нужна,
+  // т.к выше есть проверка на наличие соединения
   m_syncCallLoops->append();
   m_connection->sendCallRequest(request);
   m_syncCallLoops->exec();

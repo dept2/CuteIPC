@@ -35,7 +35,6 @@ class CuteIPCInterfaceWorker : public QObject
     void connectToServer(const QString& name, void* successful);
     void disconnectFromServer();
 
-//    void setReturnedObject(QGenericReturnArgument returnedObject);
     void sendSynchronousRequest(const QByteArray& request, void* successful,
                                 QGenericReturnArgument returnedObject = QGenericReturnArgument());
     void sendSignal(const QByteArray& request);
@@ -46,7 +45,6 @@ class CuteIPCInterfaceWorker : public QObject
     QPointer<CuteIPCInterfaceConnection> m_connection;
     QLocalSocket* m_socket;
     CuteIPCLoopVector* m_syncCallLoops;
-
 };
 
 #endif // CUTEIPCINTERFACEWORKER_H

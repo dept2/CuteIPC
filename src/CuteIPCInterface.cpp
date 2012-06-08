@@ -9,12 +9,6 @@
 #include "CuteIPCLoopVector.h"
 
 // Qt
-#include <QLocalSocket>
-#include <QMetaObject>
-#include <QTime>
-#include <QEventLoop>
-#include <QMetaType>
-#include <QTimer>
 #include <QThread>
 
 
@@ -92,8 +86,7 @@ bool CuteIPCInterfacePrivate::sendRemoteConnectionRequest(const QString& signal)
   DEBUG << "Requesting connection to signal" << signal;
   CuteIPCMessage message(CuteIPCMessage::SignalConnectionRequest, signal);
   QByteArray request = CuteIPCMarshaller::marshallMessage(message);
-  bool ok = sendSynchronousRequest(request);
-  return ok;
+  return sendSynchronousRequest(request);
 }
 
 
@@ -103,8 +96,7 @@ bool CuteIPCInterfacePrivate::sendSignalDisconnectRequest(const QString& signal)
   CuteIPCMessage::Arguments args;
   CuteIPCMessage message(CuteIPCMessage::SignalConnectionRequest, signal, args, "disconnect");
   QByteArray request = CuteIPCMarshaller::marshallMessage(message);
-  bool  ok = sendSynchronousRequest(request);
-  return ok;
+  return sendSynchronousRequest(request);
 }
 
 
@@ -113,8 +105,7 @@ bool CuteIPCInterfacePrivate::checkRemoteSlotExistance(const QString& slot)
   DEBUG << "Check remote slot existance" << slot;
   CuteIPCMessage message(CuteIPCMessage::SlotConnectionRequest, slot);
   QByteArray request = CuteIPCMarshaller::marshallMessage(message);
-  bool ok = sendSynchronousRequest(request);
-  return ok;
+  return sendSynchronousRequest(request);
 }
 
 
@@ -130,8 +121,7 @@ bool CuteIPCInterfacePrivate::sendSynchronousRequest(const QByteArray& request, 
 }
 
 
-void CuteIPCInterfacePrivate::registerConnection(const QString& signalSignature,
-                                                 QObject* reciever,
+void CuteIPCInterfacePrivate::registerConnection(const QString& signalSignature, QObject* reciever,
                                                  const QString& methodSignature)
 {
   Q_Q(CuteIPCInterface);
@@ -143,11 +133,12 @@ void CuteIPCInterfacePrivate::registerConnection(const QString& signalSignature,
 void CuteIPCInterfacePrivate::_q_removeRemoteConnectionsOfObject(QObject* destroyedObject)
 {
   QMutableHashIterator<QString, MethodData> i(m_connections);
-  while (i.hasNext()) {
-      i.next();
-      MethodData data = i.value();
-      if (data.first == destroyedObject)
-        i.remove();
+  while (i.hasNext())
+  {
+    i.next();
+    MethodData data = i.value();
+    if (data.first == destroyedObject)
+      i.remove();
   }
 }
 
@@ -156,7 +147,8 @@ void CuteIPCInterfacePrivate::_q_invokeRemoteSignal(const QString& signalSignatu
                                                     const CuteIPCMessage::Arguments& arguments)
 {
   QList<MethodData> recieversData = m_connections.values(signalSignature);
-  foreach (const MethodData& data, recieversData) {
+  foreach (const MethodData& data, recieversData)
+  {
     if (!data.first)
       return;
 
@@ -182,8 +174,7 @@ void CuteIPCInterfacePrivate::_q_setLastError(QString lastError)
 }
 
 
-void CuteIPCInterfacePrivate::handleLocalSignalRequest(QObject* localObject,
-                                                       const QString& signalSignature,
+void CuteIPCInterfacePrivate::handleLocalSignalRequest(QObject* localObject, const QString& signalSignature,
                                                        const QString& slotSignature)
 {
   Q_Q(CuteIPCInterface);
@@ -223,11 +214,12 @@ void CuteIPCInterfacePrivate::handleLocalSignalRequest(QObject* localObject,
 void CuteIPCInterfacePrivate::_q_removeSignalHandlersOfObject(QObject* destroyedObject)
 {
   QMutableHashIterator<MethodData, CuteIPCSignalHandler*> i(m_localSignalHandlers);
-  while (i.hasNext()) {
-      i.next();
-      MethodData data = i.key();
-      if (data.first == destroyedObject)
-        i.remove();
+  while (i.hasNext())
+  {
+    i.next();
+    MethodData data = i.key();
+    if (data.first == destroyedObject)
+      i.remove();
   }
 }
 

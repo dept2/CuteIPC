@@ -1,5 +1,5 @@
+// Local
 #include "CuteIPCLoopVector.h"
-#include <QDebug>
 
 
 CuteIPCLoopVector::CuteIPCLoopVector(QObject* sender, const QString& signal, QObject* parent)

@@ -9,6 +9,7 @@
 #include "CuteIPCInterface.h"
 #include "CuteIPCMessage_p.h"
 
+
 class CuteIPCInterfaceConnection : public QObject
 {
   Q_OBJECT

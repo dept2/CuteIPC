@@ -5,6 +5,7 @@
 #include <QEventLoop>
 #include <QList>
 
+
 class CuteIPCLoopVector : public QObject
 {
   Q_OBJECT

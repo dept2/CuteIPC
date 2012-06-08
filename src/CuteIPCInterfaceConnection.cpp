@@ -89,7 +89,6 @@ bool CuteIPCInterfaceConnection::readMessageFromSocket()
       case CuteIPCMessage::MessageError:
       {
         m_lastCallSuccessful = false;
-        qDebug() << "EEEEERRRRORRRR!";
         callWasFinished = true;
         CuteIPCMessage message = CuteIPCMarshaller::demarshallMessage(m_block);
         qWarning() << "CuteIPC:" << "Error:" << message.method();
