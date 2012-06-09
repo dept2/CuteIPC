@@ -43,7 +43,7 @@ class CuteIPCInterfaceWorker : public QObject
 
   private:
     QPointer<CuteIPCInterfaceConnection> m_connection;
-    QLocalSocket* m_socket;
+    QPointer<QLocalSocket> m_socket;
     CuteIPCLoopVector* m_syncCallLoops;
 };
 

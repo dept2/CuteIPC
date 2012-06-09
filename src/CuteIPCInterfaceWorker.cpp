@@ -9,14 +9,14 @@
 
 CuteIPCInterfaceWorker::CuteIPCInterfaceWorker(QObject* parent)
   : QObject(parent),
-    m_socket(0),
     m_syncCallLoops(0)
 {}
 
 
 CuteIPCInterfaceWorker::~CuteIPCInterfaceWorker()
 {
-  m_socket->deleteLater();
+  if (m_socket)
+    m_socket->deleteLater();
 }
 
 
