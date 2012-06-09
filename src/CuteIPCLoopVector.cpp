@@ -13,11 +13,8 @@ CuteIPCLoopVector::CuteIPCLoopVector(QObject* sender, const QString& signal, QOb
 
 CuteIPCLoopVector::~CuteIPCLoopVector()
 {
-  foreach (QEventLoop* loop, m_loopList)
-  {
+  foreach (SafeEventLoop* loop, m_loopList)
     loop->quit();
-    delete loop;
-  }
 
   m_loopList.clear();
 }
@@ -25,7 +22,7 @@ CuteIPCLoopVector::~CuteIPCLoopVector()
 
 void CuteIPCLoopVector::append()
 {
-  QEventLoop* newLoop = new QEventLoop;
+  SafeEventLoop* newLoop = new SafeEventLoop;
   m_loopList.append(newLoop);
 }
 
@@ -41,12 +38,32 @@ void CuteIPCLoopVector::signalCame()
 {
   if (!m_loopList.isEmpty())
   {
-    QEventLoop* firstLoop = m_loopList.takeFirst();
+    SafeEventLoop* firstLoop = m_loopList.takeFirst();
     firstLoop->quit();
-
-    // Удаление цикла событий происходит через очередь событий, чтобы дождаться завершения exec() и только
-    // потом удалить объект. Иначе метод exec() не успеет закончить работу и в некоторых случаях вызовет падение приложения.
-    connect(this, SIGNAL(loopKiller()), firstLoop, SLOT(deleteLater()), Qt::QueuedConnection);
-    emit loopKiller();
   }
+}
+
+
+SafeEventLoop::SafeEventLoop(QObject *parent)
+  : QEventLoop(parent)
+{
+  connect(this, SIGNAL(mayBeDeleted()), SLOT(endOfExec()));
+}
+
+
+SafeEventLoop::~SafeEventLoop()
+{}
+
+
+void SafeEventLoop::exec()
+{
+  QEventLoop::exec();
+  emit mayBeDeleted();
+}
+
+
+void SafeEventLoop::endOfExec()
+{
+  if (!this->isRunning())
+    this->deleteLater();
 }

@@ -6,6 +6,22 @@
 #include <QList>
 
 
+class SafeEventLoop : public QEventLoop
+{
+  Q_OBJECT
+  public:
+    explicit SafeEventLoop(QObject* parent = 0);
+    ~SafeEventLoop();
+
+  signals:
+    void mayBeDeleted();
+
+  public slots:
+    void exec();
+    void endOfExec();
+};
+
+
 class CuteIPCLoopVector : public QObject
 {
   Q_OBJECT
@@ -25,7 +41,7 @@ class CuteIPCLoopVector : public QObject
   private:
     QObject* m_sender;
     QString m_signal;
-    QList<QEventLoop*> m_loopList;
+    QList<SafeEventLoop*> m_loopList;
 };
 
 #endif // CUTEIPCLOOPVECTOR_H

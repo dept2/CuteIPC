@@ -54,7 +54,7 @@ int ServiceTestObject::testCallWithRemoteSignal(int value)
   QTimer timer;
   QEventLoop loop;
   connect(&timer, SIGNAL(timeout()), &loop, SLOT(quit()));
-  timer.start(3000);
+  timer.start(1500);
   loop.exec();
 
   return value + 15;
