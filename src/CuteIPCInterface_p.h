@@ -29,8 +29,8 @@ class CuteIPCInterfacePrivate
     void registerSocket();
 
     bool checkConnectCorrection(const QString& signal, const QString& method);
-    bool sendRemoteConnectionRequest(const QString& signal);
-    bool sendSignalDisconnectRequest(const QString& signal);
+    void sendRemoteConnectionRequest(const QString& signal);
+    void sendSignalDisconnectRequest(const QString& signal);
     bool checkRemoteSlotExistance(const QString& slot);
     bool sendSynchronousRequest(const QByteArray& request, QGenericReturnArgument returnedObject = QGenericReturnArgument());
 
@@ -39,7 +39,7 @@ class CuteIPCInterfacePrivate
 
     void handleLocalSignalRequest(QObject* localObject, const QString& signalSignature, const QString& slotSignature);
 
-    void _q_sendSignal(const QByteArray& request);
+    void _q_sendAsynchronousRequest(const QByteArray& request);
     void _q_invokeRemoteSignal(const QString& signalSignature, const CuteIPCMessage::Arguments& arguments);
     void _q_removeSignalHandlersOfObject(QObject*);
     void _q_removeRemoteConnectionsOfObject(QObject*);
@@ -51,8 +51,7 @@ class CuteIPCInterfacePrivate
     QString m_lastError;
     QThread* m_workerThread;
     CuteIPCInterfaceWorker* m_worker;
-
-    CuteIPCLoopVector* m_syncCallLoops;
+    QString m_serverName;
 };
 
 #endif //CUTEIPCINTERFACE_P_H

@@ -1,15 +1,13 @@
 #include "CuteIPCInterfaceWorker.h"
 #include "CuteIPCInterfaceConnection_p.h"
 #include "CuteIPCMessage_p.h"
-#include "CuteIPCLoopVector.h"
 
 // Qt
 #include <QEventLoop>
 
 
 CuteIPCInterfaceWorker::CuteIPCInterfaceWorker(QObject* parent)
-  : QObject(parent),
-    m_syncCallLoops(0)
+  : QObject(parent)
 {}
 
 
@@ -41,9 +39,6 @@ void CuteIPCInterfaceWorker::connectToServer(const QString& name, void* successf
             this, SIGNAL(invokeRemoteSignal(QString, CuteIPCMessage::Arguments)));
     connect(m_connection, SIGNAL(errorOccured(QString)), this, SIGNAL(setLastError(QString)));
 
-    // Очередь циклов событий удаляется при удалении соединения
-    m_syncCallLoops = new CuteIPCLoopVector(m_connection, SIGNAL(callFinished()), m_connection);
-
     DEBUG << "CuteIPC:" << "Connected:" << name << connected;
   }
 
@@ -59,37 +54,6 @@ void CuteIPCInterfaceWorker::disconnectFromServer()
   registerSocket();
 
   emit disconnectFromServerFinished();
-}
-
-
-void CuteIPCInterfaceWorker::sendSynchronousRequest(const QByteArray& request, void* successful, QGenericReturnArgument returnedObject)
-{
-  if (!m_connection)
-  {
-    *reinterpret_cast<bool*>(successful) = false;
-    emit sendSynchronousRequestFinished();
-    return;
-  }
-
-  m_connection->setReturnedObject(returnedObject);
-
-  // Хотя объект очереди удаляется при удалении соединения, его проверка не нужна,
-  // т.к выше есть проверка на наличие соединения
-  m_syncCallLoops->append();
-  m_connection->sendCallRequest(request);
-  m_syncCallLoops->exec();
-
-  *reinterpret_cast<bool*>(successful) = m_connection->lastCallSuccessful();
-  emit sendSynchronousRequestFinished();
-}
-
-
-void CuteIPCInterfaceWorker::sendSignal(const QByteArray& request)
-{
-  if (!m_connection)
-    return;
-
-  m_connection->sendCallRequest(request);
 }
 
 

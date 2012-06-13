@@ -80,8 +80,7 @@ bool CuteIPCInterfaceConnection::readMessageFromSocket()
     {
       case CuteIPCMessage::MessageResponse:
       {
-        Q_ASSERT(!m_returnedObjects.isEmpty());
-        CuteIPCMessage message = CuteIPCMarshaller::demarshallResponse(m_block, m_returnedObjects.takeFirst());
+        CuteIPCMessage message = CuteIPCMarshaller::demarshallResponse(m_block, m_returnedObject);
         callWasFinished = true;
         CuteIPCMarshaller::freeArguments(message.arguments());
         break;
@@ -134,7 +133,7 @@ void CuteIPCInterfaceConnection::errorOccured(QLocalSocket::LocalSocketError)
 
 void CuteIPCInterfaceConnection::setReturnedObject(QGenericReturnArgument returnedObject)
 {
-  m_returnedObjects.append(returnedObject);
+  m_returnedObject = returnedObject;
 }
 
 

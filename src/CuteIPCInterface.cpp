@@ -6,10 +6,10 @@
 #include "CuteIPCMessage_p.h"
 #include "CuteIPCSignalHandler_p.h"
 #include "CuteIPCInterfaceWorker.h"
-#include "CuteIPCLoopVector.h"
 
 // Qt
 #include <QThread>
+#include <QEventLoop>
 
 
 /*!
@@ -81,22 +81,24 @@ bool CuteIPCInterfacePrivate::checkConnectCorrection(const QString& signal, cons
 }
 
 
-bool CuteIPCInterfacePrivate::sendRemoteConnectionRequest(const QString& signal)
+void CuteIPCInterfacePrivate::sendRemoteConnectionRequest(const QString& signal)
 {
   DEBUG << "Requesting connection to signal" << signal;
   CuteIPCMessage message(CuteIPCMessage::SignalConnectionRequest, signal);
   QByteArray request = CuteIPCMarshaller::marshallMessage(message);
-  return sendSynchronousRequest(request);
+
+  QMetaObject::invokeMethod(m_worker, "sendCallRequest", Q_ARG(QByteArray, request));
 }
 
 
-bool CuteIPCInterfacePrivate::sendSignalDisconnectRequest(const QString& signal)
+void CuteIPCInterfacePrivate::sendSignalDisconnectRequest(const QString& signal)
 {
   DEBUG << "Requesting remote signal disconnect" << signal;
   CuteIPCMessage::Arguments args;
   CuteIPCMessage message(CuteIPCMessage::SignalConnectionRequest, signal, args, "disconnect");
   QByteArray request = CuteIPCMarshaller::marshallMessage(message);
-  return sendSynchronousRequest(request);
+
+  QMetaObject::invokeMethod(m_worker, "sendCallRequest", Q_ARG(QByteArray, request));
 }
 
 
@@ -111,13 +113,30 @@ bool CuteIPCInterfacePrivate::checkRemoteSlotExistance(const QString& slot)
 
 bool CuteIPCInterfacePrivate::sendSynchronousRequest(const QByteArray& request, QGenericReturnArgument returnedObject)
 {
-  bool result = false;
+  Q_Q(CuteIPCInterface);
+  QLocalSocket socket;
+  socket.connectToServer(m_serverName);
+  bool connected = socket.waitForConnected(5000);
+  if (!connected)
+  {
+    socket.disconnectFromServer();
+    QString error("CuteIPC: Не удалось подключиться к серверу при вызове синхронного метода");
+    qWarning() << error;
+    _q_setLastError(error);
+    return false;
+  }
 
-  m_syncCallLoops->append();
-  QMetaObject::invokeMethod(m_worker, "sendSynchronousRequest", Q_ARG(QByteArray, request), Q_ARG(void*, &result),
-                            Q_ARG(QGenericReturnArgument, returnedObject));
-  m_syncCallLoops->exec();
-  return result;
+  CuteIPCInterfaceConnection connection(&socket);
+  QObject::connect(&connection, SIGNAL(errorOccured(QString)), q, SLOT(_q_setLastError(QString)));
+
+  connection.setReturnedObject(returnedObject);
+
+  QEventLoop loop;
+  QObject::connect(&connection, SIGNAL(callFinished()), &loop, SLOT(quit()));
+  connection.sendCallRequest(request);
+  loop.exec();
+
+  return connection.lastCallSuccessful();
 }
 
 
@@ -206,7 +225,7 @@ void CuteIPCInterfacePrivate::handleLocalSignalRequest(QObject* localObject, con
 
     QMetaObject::connect(
         handler, handler->metaObject()->indexOfSignal(QMetaObject::normalizedSignature("signalCaptured(QByteArray)")),
-        q, q->metaObject()->indexOfSlot(QMetaObject::normalizedSignature("_q_sendSignal(QByteArray)")));
+        q, q->metaObject()->indexOfSlot(QMetaObject::normalizedSignature("_q_sendAsynchronousRequest(QByteArray)")));
   }
 }
 
@@ -224,9 +243,9 @@ void CuteIPCInterfacePrivate::_q_removeSignalHandlersOfObject(QObject* destroyed
 }
 
 
-void CuteIPCInterfacePrivate::_q_sendSignal(const QByteArray& request)
+void CuteIPCInterfacePrivate::_q_sendAsynchronousRequest(const QByteArray& request)
 {
-  QMetaObject::invokeMethod(m_worker, "sendSignal", Q_ARG(QByteArray, request));
+  QMetaObject::invokeMethod(m_worker, "sendCallRequest", Q_ARG(QByteArray, request));
 }
 
 
@@ -246,8 +265,6 @@ CuteIPCInterface::CuteIPCInterface(QObject* parent)
                    this, SLOT(_q_invokeRemoteSignal(QString,CuteIPCMessage::Arguments)), Qt::BlockingQueuedConnection);
   QObject::connect(d->m_worker, SIGNAL(setLastError(QString)),
                    this, SLOT(_q_setLastError(QString)));
-
-  d->m_syncCallLoops = new CuteIPCLoopVector(d->m_worker, SIGNAL(sendSynchronousRequestFinished()), this);
 
   qRegisterMetaType<QGenericReturnArgument>("QGenericReturnArgument");
   qRegisterMetaType<QAbstractSocket::SocketState>("QAbstractSocket::SocketState");
@@ -299,6 +316,7 @@ bool CuteIPCInterface::connectToServer(const QString& name)
   QMetaObject::invokeMethod(d->m_worker, "connectToServer", Q_ARG(QString, name), Q_ARG(void*, &connected));
   loop.exec();
 
+  d->m_serverName = name;
   return connected;
 }
 
@@ -360,10 +378,7 @@ bool CuteIPCInterface::remoteConnect(const char* signal, QObject* object, const 
   }
 
   if (!d->m_connections.contains(signalSignature))
-  {
-    if (!d->sendRemoteConnectionRequest(signalSignature))
-      return false;
-  }
+    d->sendRemoteConnectionRequest(signalSignature);
 
   d->registerConnection(signalSignature, object, methodSignature);
   return true;
@@ -389,7 +404,7 @@ bool CuteIPCInterface::disconnectSignal(const char* signal, QObject* object, con
 
   d->m_connections.remove(signalSignature, CuteIPCInterfacePrivate::MethodData(object, methodSignature));
   if (!d->m_connections.contains(signalSignature))
-    return d->sendSignalDisconnectRequest(signalSignature);
+    d->sendSignalDisconnectRequest(signalSignature);
   return true;
 }
 
@@ -559,7 +574,7 @@ void CuteIPCInterface::callNoReply(const QString& method, QGenericArgument val0,
   QByteArray request = CuteIPCMarshaller::marshallMessage(message);
 
   DEBUG << "Remote call (asynchronous)" << method;
-  QMetaObject::invokeMethod(d->m_worker, "sendCallRequest", Q_ARG(QByteArray, request));
+  d->_q_sendAsynchronousRequest(request);
 }
 
 
