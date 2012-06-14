@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QPointer>
+#include <QMultiHash>
 class QLocalSocket;
 
 // Local
@@ -15,12 +16,13 @@ class CuteIPCInterfaceWorker : public QObject
 {
   Q_OBJECT
 
+  typedef QPair<QObject*,QString> MethodData;
+
   public:
     explicit CuteIPCInterfaceWorker(QObject* parent = 0);
     ~CuteIPCInterfaceWorker();
 
   signals:
-    void invokeRemoteSignal(const QString& methodName, const CuteIPCMessage::Arguments& arguments);
     void setLastError(const QString& error);
 
     // slot finish signals
@@ -34,9 +36,19 @@ class CuteIPCInterfaceWorker : public QObject
     void disconnectFromServer();
     void sendCallRequest(const QByteArray& request);
 
+    void remoteConnect(const QString& signalSignature, void* object, const QString& methodSignature);
+    void disconnectSignal(const QString& signalSignature, void* object, const QString& method);
+    void removeRemoteConnectionsOfObject(QObject* destroyedObject);
+    void invokeRemoteSignal(const QString& signalSignature, const CuteIPCMessage::Arguments& arguments);
+
   private:
+    void sendRemoteConnectionRequest(const QString& signal);
+    void sendSignalDisconnectRequest(const QString& signal);
+    void registerConnection(const QString& signalSignature, QObject* reciever, const QString& methodSignature);
+
     QPointer<CuteIPCInterfaceConnection> m_connection;
     QPointer<QLocalSocket> m_socket;
+    QMultiHash<QString,MethodData> m_connections;
 };
 
 #endif // CUTEIPCINTERFACEWORKER_H

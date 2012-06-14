@@ -81,27 +81,6 @@ bool CuteIPCInterfacePrivate::checkConnectCorrection(const QString& signal, cons
 }
 
 
-void CuteIPCInterfacePrivate::sendRemoteConnectionRequest(const QString& signal)
-{
-  DEBUG << "Requesting connection to signal" << signal;
-  CuteIPCMessage message(CuteIPCMessage::SignalConnectionRequest, signal);
-  QByteArray request = CuteIPCMarshaller::marshallMessage(message);
-
-  QMetaObject::invokeMethod(m_worker, "sendCallRequest", Q_ARG(QByteArray, request));
-}
-
-
-void CuteIPCInterfacePrivate::sendSignalDisconnectRequest(const QString& signal)
-{
-  DEBUG << "Requesting remote signal disconnect" << signal;
-  CuteIPCMessage::Arguments args;
-  CuteIPCMessage message(CuteIPCMessage::SignalConnectionRequest, signal, args, "disconnect");
-  QByteArray request = CuteIPCMarshaller::marshallMessage(message);
-
-  QMetaObject::invokeMethod(m_worker, "sendCallRequest", Q_ARG(QByteArray, request));
-}
-
-
 bool CuteIPCInterfacePrivate::checkRemoteSlotExistance(const QString& slot)
 {
   DEBUG << "Check remote slot existance" << slot;
@@ -137,53 +116,6 @@ bool CuteIPCInterfacePrivate::sendSynchronousRequest(const QByteArray& request, 
   loop.exec();
 
   return connection.lastCallSuccessful();
-}
-
-
-void CuteIPCInterfacePrivate::registerConnection(const QString& signalSignature, QObject* reciever,
-                                                 const QString& methodSignature)
-{
-  Q_Q(CuteIPCInterface);
-  m_connections.insert(signalSignature, MethodData(reciever, methodSignature));
-  QObject::connect(reciever, SIGNAL(destroyed(QObject*)), q, SLOT(_q_removeRemoteConnectionsOfObject(QObject*)));
-}
-
-
-void CuteIPCInterfacePrivate::_q_removeRemoteConnectionsOfObject(QObject* destroyedObject)
-{
-  QMutableHashIterator<QString, MethodData> i(m_connections);
-  while (i.hasNext())
-  {
-    i.next();
-    MethodData data = i.value();
-    if (data.first == destroyedObject)
-      i.remove();
-  }
-}
-
-
-void CuteIPCInterfacePrivate::_q_invokeRemoteSignal(const QString& signalSignature,
-                                                    const CuteIPCMessage::Arguments& arguments)
-{
-  QList<MethodData> recieversData = m_connections.values(signalSignature);
-  foreach (const MethodData& data, recieversData)
-  {
-    if (!data.first)
-      return;
-
-    DEBUG << "Invoke local method: " << data.second;
-
-    QString methodName = data.second;
-    methodName = methodName.left(methodName.indexOf("("));
-
-    CuteIPCMessage::Arguments args = arguments;
-    while (args.size() < 10)
-      args.append(QGenericArgument());
-
-    QMetaObject::invokeMethod(data.first, methodName.toAscii(), Qt::QueuedConnection,
-                              args.at(0), args.at(1), args.at(2), args.at(3), args.at(4), args.at(5), args.at(6),
-                              args.at(7), args.at(8), args.at(9));
-  }
 }
 
 
@@ -261,10 +193,7 @@ CuteIPCInterface::CuteIPCInterface(QObject* parent)
   Q_D(CuteIPCInterface);
   d->q_ptr = this;
 
-  QObject::connect(d->m_worker, SIGNAL(invokeRemoteSignal(QString,CuteIPCMessage::Arguments)),
-                   this, SLOT(_q_invokeRemoteSignal(QString,CuteIPCMessage::Arguments)), Qt::BlockingQueuedConnection);
-  QObject::connect(d->m_worker, SIGNAL(setLastError(QString)),
-                   this, SLOT(_q_setLastError(QString)));
+  QObject::connect(d->m_worker, SIGNAL(setLastError(QString)), this, SLOT(_q_setLastError(QString)));
 
   qRegisterMetaType<QGenericReturnArgument>("QGenericReturnArgument");
   qRegisterMetaType<QAbstractSocket::SocketState>("QAbstractSocket::SocketState");
@@ -282,10 +211,7 @@ CuteIPCInterface::CuteIPCInterface(CuteIPCInterfacePrivate& dd, QObject* parent)
   Q_D(CuteIPCInterface);
   d->q_ptr = this;
 
-  QObject::connect(d->m_worker, SIGNAL(invokeRemoteSignal(QString,CuteIPCMessage::Arguments)),
-                   this, SLOT(_q_invokeRemoteSignal(QString,CuteIPCMessage::Arguments)), Qt::BlockingQueuedConnection);
-  QObject::connect(d->m_worker, SIGNAL(setLastError(QString)),
-                   this, SLOT(_q_setLastError(QString)));
+  QObject::connect(d->m_worker, SIGNAL(setLastError(QString)), this, SLOT(_q_setLastError(QString)));
   qRegisterMetaType<QGenericReturnArgument>("QGenericReturnArgument");
   qRegisterMetaType<QAbstractSocket::SocketState>("QAbstractSocket::SocketState");
   qRegisterMetaType<CuteIPCMessage::Arguments>("CuteIPCMessage::Arguments");
@@ -377,10 +303,8 @@ bool CuteIPCInterface::remoteConnect(const char* signal, QObject* object, const 
     return false;
   }
 
-  if (!d->m_connections.contains(signalSignature))
-    d->sendRemoteConnectionRequest(signalSignature);
-
-  d->registerConnection(signalSignature, object, methodSignature);
+  QMetaObject::invokeMethod(d->m_worker, "remoteConnect", Q_ARG(QString, signalSignature), Q_ARG(void*, object),
+                            Q_ARG(QString, methodSignature));
   return true;
 }
 
@@ -402,9 +326,8 @@ bool CuteIPCInterface::disconnectSignal(const char* signal, QObject* object, con
   QString signalSignature = QString::fromAscii(signal).mid(1);
   QString methodSignature = QString::fromAscii(method).mid(1);
 
-  d->m_connections.remove(signalSignature, CuteIPCInterfacePrivate::MethodData(object, methodSignature));
-  if (!d->m_connections.contains(signalSignature))
-    d->sendSignalDisconnectRequest(signalSignature);
+  QMetaObject::invokeMethod(d->m_worker, "disconnectSignal", Q_ARG(QString, signalSignature), Q_ARG(void*, object),
+                            Q_ARG(QString, methodSignature));
   return true;
 }
 
