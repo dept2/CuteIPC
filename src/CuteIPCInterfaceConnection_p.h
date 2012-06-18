@@ -23,6 +23,7 @@ class CuteIPCInterfaceConnection : public QObject
 
   signals:
     void callFinished();
+    void socketDisconnected();
     void invokeRemoteSignal(const QString& signalSignature, const CuteIPCMessage::Arguments& arguments);
     void errorOccured(const QString&);
 

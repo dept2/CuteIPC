@@ -40,6 +40,9 @@ void CuteIPCInterfaceWorker::connectToServer(const QString& name, void* successf
             this, SLOT(invokeRemoteSignal(QString, CuteIPCMessage::Arguments)));
     connect(m_connection, SIGNAL(errorOccured(QString)), this, SIGNAL(setLastError(QString)));
 
+    connect(m_connection, SIGNAL(socketDisconnected()), m_connection, SLOT(deleteLater()));
+    connect(m_connection, SIGNAL(socketDisconnected()), m_socket, SLOT(deleteLater()));
+
     DEBUG << "CuteIPC:" << "Connected:" << name << connected;
   }
 
