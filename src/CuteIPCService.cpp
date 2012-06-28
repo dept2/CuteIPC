@@ -182,6 +182,12 @@ bool CuteIPCService::listen(const QString& serverName, QObject* subject)
 }
 
 
+bool CuteIPCService::listen(QObject* subject)
+{
+  return listen(QString(), subject);
+}
+
+
 /*!
     Stop listening for incoming connections.
     Existing connections are not effected, but any new connections will be refused.
