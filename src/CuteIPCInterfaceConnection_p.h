@@ -9,12 +9,13 @@
 #include "CuteIPCInterface.h"
 #include "CuteIPCMessage_p.h"
 
+
 class CuteIPCInterfaceConnection : public QObject
 {
   Q_OBJECT
 
   public:
-    CuteIPCInterfaceConnection(QLocalSocket* socket, CuteIPCInterface* parent);
+    CuteIPCInterfaceConnection(QLocalSocket* socket, QObject* parent = 0);
 
     void sendCallRequest(const QByteArray& request);
     void setReturnedObject(QGenericReturnArgument returnedObject);
@@ -22,6 +23,7 @@ class CuteIPCInterfaceConnection : public QObject
 
   signals:
     void callFinished();
+    void socketDisconnected();
     void invokeRemoteSignal(const QString& signalSignature, const CuteIPCMessage::Arguments& arguments);
     void errorOccured(const QString&);
 

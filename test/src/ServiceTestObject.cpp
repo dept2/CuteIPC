@@ -31,16 +31,33 @@ int ServiceTestObject::testQStringTransfer(const QString& string)
 }
 
 
+QString ServiceTestObject::testQStringTransfer2(const QString& string)
+{
+  m_string = string;
+  return string + string;
+}
+
+
 void ServiceTestObject::testIntTransfer(int value)
 {
   m_int = value;
 }
 
 
-void ServiceTestObject::testCallWithRemoteSignal(int value)
+#include <QEventLoop>
+#include <QTimer>
+int ServiceTestObject::testCallWithRemoteSignal(int value)
 {
   m_int = value;
   emit serviceIntSignal(m_int + 42);
+
+  QTimer timer;
+  QEventLoop loop;
+  connect(&timer, SIGNAL(timeout()), &loop, SLOT(quit()));
+  timer.start(1500);
+  loop.exec();
+
+  return value + 15;
 }
 
 

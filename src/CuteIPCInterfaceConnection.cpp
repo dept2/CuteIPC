@@ -10,18 +10,14 @@
 #include <QMetaType>
 
 
-CuteIPCInterfaceConnection::CuteIPCInterfaceConnection(QLocalSocket* socket, CuteIPCInterface* parent)
+CuteIPCInterfaceConnection::CuteIPCInterfaceConnection(QLocalSocket* socket, QObject* parent)
   : QObject(parent),
     m_socket(socket),
     m_nextBlockSize(0)
 {
-  // Delete connection after the socket have been disconnected
-  connect(socket, SIGNAL(disconnected()), socket, SLOT(deleteLater()));
-  connect(socket, SIGNAL(disconnected()), SLOT(deleteLater()));
-
+  connect(socket, SIGNAL(disconnected()), SIGNAL(socketDisconnected()));
   connect(socket, SIGNAL(error(QLocalSocket::LocalSocketError)), SLOT(errorOccured(QLocalSocket::LocalSocketError)));
   connect(socket, SIGNAL(readyRead()), SLOT(readyRead()));
-  connect(this, SIGNAL(errorOccured(QString)), parent, SLOT(_q_setLastError(QString)));
 }
 
 
@@ -114,10 +110,7 @@ bool CuteIPCInterfaceConnection::readMessageFromSocket()
     m_block.clear();
 
     if (callWasFinished)
-    {
-      m_returnedObject = QGenericReturnArgument();
       emit callFinished();
-    }
 
     if (m_socket->bytesAvailable())
       return false;

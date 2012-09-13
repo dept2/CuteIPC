@@ -40,15 +40,24 @@ class TestSocketCommunication : public QObject
     void testMultipleObjectsConnection();
     void testMultipleClients();
     void testSignalAfterReturnCall();
-    void testCallIntoInvokedRemoteSignal();
+//    void testCallIntoInvokedRemoteSignal();
 
     void testRemoteSignalToMultipleSlots();
     void testLocalSignalToMultipleSlots();
 
     void testOwnersOnTheServerSide();
 
+    void connectTime();
+
+    // thread tests
+    void testThread();
+    void testSimultaneousCalls();
+
   public slots:
     void specialSlot(int);
+
+  signals:
+    void specialSlotFinished();
 
   private:
     ServiceTestObject* m_service;

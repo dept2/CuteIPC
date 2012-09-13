@@ -55,10 +55,8 @@ class CuteIPCInterface : public QObject
 
   private:
     Q_DECLARE_PRIVATE(CuteIPCInterface)
-    Q_PRIVATE_SLOT(d_func(),void _q_invokeRemoteSignal(QString, CuteIPCMessage::Arguments))
-    Q_PRIVATE_SLOT(d_func(),void _q_sendSignal(QByteArray))
+    Q_PRIVATE_SLOT(d_func(),void _q_sendAsynchronousRequest(QByteArray))
     Q_PRIVATE_SLOT(d_func(),void _q_removeSignalHandlersOfObject(QObject*))
-    Q_PRIVATE_SLOT(d_func(),void _q_removeRemoteConnectionsOfObject(QObject*))
     Q_PRIVATE_SLOT(d_func(), void _q_setLastError(QString))
 };
 

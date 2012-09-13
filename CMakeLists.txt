@@ -32,6 +32,7 @@ SET(sources
   src/CuteIPCInterfaceConnection.cpp
   src/CuteIPCMessage.cpp
   src/CuteIPCSignalHandler.cpp
+  src/CuteIPCInterfaceWorker.cpp
 )
 
 SET(headers
@@ -45,6 +46,7 @@ SET(headers
 SET(moc_headers
   src/CuteIPCServiceConnection_p.h
   src/CuteIPCInterfaceConnection_p.h
+  src/CuteIPCInterfaceWorker.h
 )
 
 QT4_WRAP_CPP(sources include/CuteIPCService.h OPTIONS -f${CMAKE_CURRENT_SOURCE_DIR}/src/CuteIPCService_p.h)
