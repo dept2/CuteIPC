@@ -91,6 +91,16 @@ bool CuteIPCInterfaceConnection::readMessageFromSocket()
         CuteIPCMarshaller::freeArguments(message.arguments());
         break;
       }
+      case CuteIPCMessage::AboutToCloseSocket:
+      {
+        DEBUG << "Сервер сообщает о закрытии соединения";
+        CuteIPCMessage message = CuteIPCMarshaller::demarshallMessage(m_block);
+        CuteIPCMarshaller::freeArguments(message.arguments());
+        m_lastCallSuccessful = false;
+        // Разрываем соединение с сервером. При этом отправляется сигнал socketDiconnected
+        m_socket->disconnectFromServer();
+        break;
+      }
       case CuteIPCMessage::MessageSignal:
       {
         CuteIPCMessage message = CuteIPCMarshaller::demarshallMessage(m_block);

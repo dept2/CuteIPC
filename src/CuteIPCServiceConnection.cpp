@@ -192,7 +192,16 @@ void CuteIPCServiceConnection::sendResponseMessage(const QString& method, QGener
   QByteArray request = CuteIPCMarshaller::marshallMessage(message);
 
   sendResponse(request);
-//  qDebug() << "Returned value was sent";
+  //  qDebug() << "Returned value was sent";
+}
+
+
+void CuteIPCServiceConnection::sendAboutToQuit()
+{
+  CuteIPCMessage message(CuteIPCMessage::AboutToCloseSocket);
+  QByteArray request = CuteIPCMarshaller::marshallMessage(message);
+
+  sendResponse(request);
 }
 
 

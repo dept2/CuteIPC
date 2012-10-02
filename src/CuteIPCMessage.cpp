@@ -101,6 +101,9 @@ QDebug operator<<(QDebug dbg, const CuteIPCMessage& message)
     case CuteIPCMessage::SlotConnectionRequest:
       type = "SlotConnectionRequest";
       break;
+    case CuteIPCMessage::AboutToCloseSocket:
+      type = "AboutToCloseSocket";
+      break;
     default: break;
   }
 

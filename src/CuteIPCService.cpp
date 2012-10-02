@@ -10,6 +10,10 @@
 #include <QLocalSocket>
 #include <QTime>
 #include <QDebug>
+#include <QEventLoop>
+#include <QTimer>
+
+#define CLIENTS_DISCONNECT_TIMEOUT 500
 
 /*!
     \class CuteIPCService
@@ -42,7 +46,22 @@ CuteIPCServicePrivate::CuteIPCServicePrivate()
 
 
 CuteIPCServicePrivate::~CuteIPCServicePrivate()
-{}
+{
+  Q_Q(CuteIPCService);
+
+  // Отправляем каждому из клиентов сигнал о том, что соединение закрывается
+  QList<CuteIPCServiceConnection*> connections = q->findChildren<CuteIPCServiceConnection*>();
+  foreach (CuteIPCServiceConnection* connection, connections) {
+    connection->sendAboutToQuit();
+  }
+
+  // Таймаут для реакции на клиентах
+  QEventLoop loop;
+  QTimer timer;
+  QObject::connect(&timer, SIGNAL(timeout()), &loop, SLOT(quit()));
+  timer.start(CLIENTS_DISCONNECT_TIMEOUT);
+  loop.exec();
+}
 
 
 void CuteIPCServicePrivate::registerServer()
