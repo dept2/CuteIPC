@@ -10,11 +10,13 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
 SET(sources
   src/ServiceTestObject.cpp
   src/InterfaceTestObject.cpp
+  src/SignalWaiter.cpp
 )
 
 SET(moc_headers
   src/ServiceTestObject.h
   src/InterfaceTestObject.h
+  src/SignalWaiter.h
 )
 
 SET(resources
