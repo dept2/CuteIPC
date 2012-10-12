@@ -26,6 +26,7 @@ class TestSocketCommunication : public QObject
     // basic data transfer tests
     void testDirectCalls();
     void testRemoteSignals();
+    void testRemoteSignalsWithSyncCall();
     void testLocalSignals();
     void testRemoteSignalToSignal();
 

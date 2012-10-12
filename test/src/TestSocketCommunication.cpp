@@ -137,6 +137,25 @@ void TestSocketCommunication::testRemoteSignals()
 }
 
 
+void TestSocketCommunication::testRemoteSignalsWithSyncCall()
+{
+  InterfaceTestObject* testObject = new InterfaceTestObject(this);
+  SignalWaiter waiter;
+  waiter.addConnection(testObject, SIGNAL(slotWasCalled(QString)), 1);
+
+  QVERIFY(m_interface->remoteConnect(SIGNAL(serviceQStringSignal(QString)), testObject, SLOT(interfaceQStringSlot(QString))));
+  QVERIFY(m_interface->remoteConnect(SIGNAL(serviceQStringIntSignal(QString,int)), testObject, SLOT(interfaceQStringIntSlot(QString,int))));
+  QVERIFY(m_interface->remoteConnect(SIGNAL(serviceQByteArraySignal(QByteArray)), testObject, SLOT(interfaceQByteArraySlot(QByteArray))));
+  QVERIFY(m_interface->remoteConnect(SIGNAL(serviceQImageSignal(QImage)), testObject, SLOT(interfaceQImageSlot(QImage))));
+  QVERIFY(m_interface->remoteConnect(SIGNAL(serviceIntSignal(int)), testObject, SLOT(interfaceIntSlot(int))));
+
+  // all connections must be established before the following call
+  QVERIFY(m_interface->call("emitIntSignal", Q_ARG(int, 5)));
+
+  QVERIFY(waiter.wait());
+}
+
+
 void TestSocketCommunication::testLocalSignals()
 {
   InterfaceTestObject* firstTestObject = new InterfaceTestObject(this);
