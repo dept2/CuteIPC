@@ -22,7 +22,8 @@ class CuteIPCMessage
       SignalConnectionRequest,
       SlotConnectionRequest,
       MessageSignal,
-      AboutToCloseSocket
+      AboutToCloseSocket,
+      ConnectionInitialize
     };
 
     CuteIPCMessage(MessageType type,

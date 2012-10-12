@@ -90,6 +90,33 @@ bool CuteIPCInterfacePrivate::checkRemoteSlotExistance(const QString& slot)
 }
 
 
+bool CuteIPCInterfacePrivate::sendRemoteConnectRequest(const QString& signalSignature)
+{
+  QString connectionId = m_worker->connectionId();
+
+  DEBUG << "Requesting connection to signal" << signalSignature << "Worker connection ID: " << connectionId;
+
+  CuteIPCMessage message(CuteIPCMessage::SignalConnectionRequest, signalSignature, Q_ARG(QString, connectionId));
+  QByteArray request = CuteIPCMarshaller::marshallMessage(message);
+
+  return sendSynchronousRequest(request);
+}
+
+
+bool CuteIPCInterfacePrivate::sendRemoteDisconnectRequest(const QString& signalSignature)
+{
+  DEBUG << "Requesting remote signal disconnect" << signalSignature;
+
+  QString connectionId = m_worker->connectionId();
+  CuteIPCMessage::Arguments args;
+  args.push_back(Q_ARG(QString, connectionId));
+  CuteIPCMessage message(CuteIPCMessage::SignalConnectionRequest, signalSignature, args, "disconnect");
+  QByteArray request = CuteIPCMarshaller::marshallMessage(message);
+
+  return sendSynchronousRequest(request);
+}
+
+
 bool CuteIPCInterfacePrivate::sendSynchronousRequest(const QByteArray& request, QGenericReturnArgument returnedObject)
 {
   Q_Q(CuteIPCInterface);
@@ -123,6 +150,35 @@ bool CuteIPCInterfacePrivate::sendSynchronousRequest(const QByteArray& request, 
 void CuteIPCInterfacePrivate::_q_setLastError(QString lastError)
 {
   this->m_lastError = lastError;
+}
+
+
+void CuteIPCInterfacePrivate::_q_invokeRemoteSignal(const QString& signalSignature, const CuteIPCMessage::Arguments& arguments)
+{
+  QList<MethodData> recieversData = m_connections.values(signalSignature);
+  foreach (const MethodData& data, recieversData)
+  {
+    if (!data.first)
+    {
+      CuteIPCMarshaller::freeArguments(arguments);
+      return;
+    }
+
+    DEBUG << "Invoke local method: " << data.second;
+
+    QString methodName = data.second;
+    methodName = methodName.left(methodName.indexOf("("));
+
+    CuteIPCMessage::Arguments args = arguments;
+    while (args.size() < 10)
+      args.append(QGenericArgument());
+
+    QMetaObject::invokeMethod(data.first, methodName.toAscii(), Qt::QueuedConnection,
+                              args.at(0), args.at(1), args.at(2), args.at(3), args.at(4), args.at(5), args.at(6),
+                              args.at(7), args.at(8), args.at(9));
+  }
+
+  CuteIPCMarshaller::freeArguments(arguments);
 }
 
 
@@ -182,6 +238,27 @@ void CuteIPCInterfacePrivate::_q_sendAsynchronousRequest(const QByteArray& reque
 }
 
 
+void CuteIPCInterfacePrivate::registerConnection(const QString& signalSignature, QObject* reciever, const QString& methodSignature)
+{
+  Q_Q(CuteIPCInterface);
+  m_connections.insert(signalSignature, MethodData(reciever, methodSignature));
+  QObject::connect(reciever, SIGNAL(destroyed(QObject*)), q, SLOT(_q_removeRemoteConnectionsOfObject(QObject*)));
+}
+
+
+void CuteIPCInterfacePrivate::_q_removeRemoteConnectionsOfObject(QObject* destroyedObject)
+{
+  QMutableHashIterator<QString, MethodData> i(m_connections);
+  while (i.hasNext())
+  {
+    i.next();
+    MethodData data = i.value();
+    if (data.first == destroyedObject)
+      i.remove();
+  }
+}
+
+
 /*!
     Creates a new CuteIPCInterface object with the given \a parent.
 
@@ -194,14 +271,15 @@ CuteIPCInterface::CuteIPCInterface(QObject* parent)
   Q_D(CuteIPCInterface);
   d->q_ptr = this;
 
-  QObject::connect(d->m_worker, SIGNAL(setLastError(QString)), this, SLOT(_q_setLastError(QString)));
+  connect(d->m_worker, SIGNAL(setLastError(QString)), SLOT(_q_setLastError(QString)));
+  connect(d->m_worker, SIGNAL(invokeRemoteSignal(QString, CuteIPCMessage::Arguments)),
+          SLOT(_q_invokeRemoteSignal(QString, CuteIPCMessage::Arguments)));
 
   qRegisterMetaType<QGenericReturnArgument>("QGenericReturnArgument");
   qRegisterMetaType<QAbstractSocket::SocketState>("QAbstractSocket::SocketState");
   qRegisterMetaType<CuteIPCMessage::Arguments>("CuteIPCMessage::Arguments");
 
   d->registerSocket();
-
 }
 
 
@@ -212,7 +290,10 @@ CuteIPCInterface::CuteIPCInterface(CuteIPCInterfacePrivate& dd, QObject* parent)
   Q_D(CuteIPCInterface);
   d->q_ptr = this;
 
-  QObject::connect(d->m_worker, SIGNAL(setLastError(QString)), this, SLOT(_q_setLastError(QString)));
+  connect(d->m_worker, SIGNAL(setLastError(QString)), SLOT(_q_setLastError(QString)));
+  connect(d->m_worker, SIGNAL(invokeRemoteSignal(QString, CuteIPCMessage::Arguments)),
+          SLOT(_q_invokeRemoteSignal(QString, CuteIPCMessage::Arguments)));
+
   qRegisterMetaType<QGenericReturnArgument>("QGenericReturnArgument");
   qRegisterMetaType<QAbstractSocket::SocketState>("QAbstractSocket::SocketState");
   qRegisterMetaType<CuteIPCMessage::Arguments>("CuteIPCMessage::Arguments");
@@ -244,6 +325,7 @@ bool CuteIPCInterface::connectToServer(const QString& name)
   loop.exec();
 
   d->m_serverName = name;
+
   return connected;
 }
 
@@ -304,9 +386,13 @@ bool CuteIPCInterface::remoteConnect(const char* signal, QObject* object, const 
     return false;
   }
 
-  QMetaObject::invokeMethod(d->m_worker, "remoteConnect", Q_ARG(QString, signalSignature), Q_ARG(void*, object),
-                            Q_ARG(QString, methodSignature));
-  return true;
+  bool ok = true;
+  if (!(d->m_connections.contains(signalSignature)))
+    ok = d->sendRemoteConnectRequest(signalSignature);
+
+  if (ok)
+    d->registerConnection(signalSignature, object, methodSignature);
+  return ok;
 }
 
 /*!
@@ -327,8 +413,9 @@ bool CuteIPCInterface::disconnectSignal(const char* signal, QObject* object, con
   QString signalSignature = QString::fromAscii(signal).mid(1);
   QString methodSignature = QString::fromAscii(method).mid(1);
 
-  QMetaObject::invokeMethod(d->m_worker, "disconnectSignal", Q_ARG(QString, signalSignature), Q_ARG(void*, object),
-                            Q_ARG(QString, methodSignature));
+  d->m_connections.remove(signalSignature, QPair<QObject*, QString>(object, methodSignature));
+  if (!d->m_connections.contains(signalSignature))
+    d->sendRemoteDisconnectRequest(signalSignature);
   return true;
 }
 

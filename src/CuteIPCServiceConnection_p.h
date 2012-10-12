@@ -19,8 +19,9 @@ class CuteIPCServiceConnection : public QObject
     void setSubject(QObject* subject);
 
   signals:
-    void signalRequest(QString signalSignature, QObject* sender);
-    void signalDisconnectRequest(QString signalSignature, QObject* sender);
+    void signalRequest(QString signalSignature, const QString& connectionId, QObject* sender);
+    void signalDisconnectRequest(QString signalSignature, const QString& connectionId, QObject* sender);
+    void connectionInitializeRequest(const QString& connectionId, QObject* sender);
 
   public slots:
     void readyRead();

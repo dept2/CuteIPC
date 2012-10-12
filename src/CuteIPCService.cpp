@@ -47,15 +47,14 @@ CuteIPCServicePrivate::CuteIPCServicePrivate()
 
 CuteIPCServicePrivate::~CuteIPCServicePrivate()
 {
-  Q_Q(CuteIPCService);
-
-  // Отправляем каждому из клиентов сигнал о том, что соединение закрывается
-  QList<CuteIPCServiceConnection*> connections = q->findChildren<CuteIPCServiceConnection*>();
-  foreach (CuteIPCServiceConnection* connection, connections) {
-    connection->sendAboutToQuit();
+  // Inform long-lived connections about connection closing
+  QList<QObject*> connections = m_longLivedConnections.values();
+  foreach (QObject* connection, connections)
+  {
+    qobject_cast<CuteIPCServiceConnection*>(connection)->sendAboutToQuit();
   }
 
-  // Таймаут для реакции на клиентах
+  // Clients reaction timeout
   QEventLoop loop;
   QTimer timer;
   QObject::connect(&timer, SIGNAL(timeout()), &loop, SLOT(quit()));
@@ -83,7 +82,7 @@ void CuteIPCServicePrivate::_q_newConnection()
 }
 
 
-void CuteIPCServicePrivate::_q_handleSignalRequest(QString signalSignature, QObject* sender)
+void CuteIPCServicePrivate::_q_handleSignalRequest(const QString& signalSignature, const QString& connectionId, QObject* sender)
 {
   Q_Q(CuteIPCService);
   CuteIPCServiceConnection* senderConnection = qobject_cast<CuteIPCServiceConnection*>(sender);
@@ -94,6 +93,12 @@ void CuteIPCServicePrivate::_q_handleSignalRequest(QString signalSignature, QObj
   if (signalIndex == -1)
   {
     senderConnection->sendErrorMessage("Signal doesn't exist:" + signalSignature);
+    return;
+  }
+
+  if (!m_longLivedConnections.contains(connectionId))
+  {
+    senderConnection->sendErrorMessage("Connection ID is not registered: " + connectionId);
     return;
   }
 
@@ -109,23 +114,47 @@ void CuteIPCServicePrivate::_q_handleSignalRequest(QString signalSignature, QObj
                          handler, handler->metaObject()->indexOfSlot("relaySlot()"));
   }
 
-  handler->addListener(senderConnection);
+//  handler->addListener(senderConnection);
+  handler->addListener(qobject_cast<CuteIPCServiceConnection*>(m_longLivedConnections.value(connectionId)));
+  senderConnection->sendResponseMessage(signalSignature);
 }
 
 
-void CuteIPCServicePrivate::_q_handleSignalDisconnect(QString signalSignature, QObject* sender)
+void CuteIPCServicePrivate::_q_handleSignalDisconnect(const QString& signalSignature, const QString& connectionId, QObject* sender)
 {
   CuteIPCServiceConnection* senderConnection = qobject_cast<CuteIPCServiceConnection*>(sender);
 
   CuteIPCSignalHandler* handler = m_signalHandlers.value(signalSignature);
   if (handler)
-    handler->removeListener(senderConnection);
+    handler->removeListener(qobject_cast<CuteIPCServiceConnection*>(m_longLivedConnections.value(connectionId)));
+
+  senderConnection->sendResponseMessage(signalSignature);
 }
 
 
 void CuteIPCServicePrivate::_q_removeSignalHandler(QString key)
 {
   m_signalHandlers.remove(key);
+}
+
+
+void CuteIPCServicePrivate::_q_initializeConnection(QString connectionId, QObject* sender)
+{
+  CuteIPCServiceConnection* senderConnection = qobject_cast<CuteIPCServiceConnection*>(sender);
+  m_longLivedConnections.insert(connectionId, sender);
+  senderConnection->sendResponseMessage("connectionInitialize_" + connectionId);
+}
+
+
+void CuteIPCServicePrivate::_q_connectionDestroyed(QObject* destroyedObject)
+{
+  QMutableHashIterator<QString, QObject*> i(m_longLivedConnections);
+  while (i.hasNext())
+  {
+    i.next();
+    if (i.value() == destroyedObject)
+      i.remove();
+  }
 }
 
 

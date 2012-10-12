@@ -29,9 +29,11 @@ class CuteIPCService : public QObject
     Q_DECLARE_PRIVATE(CuteIPCService)
 
     Q_PRIVATE_SLOT(d_func(),void _q_newConnection())
-    Q_PRIVATE_SLOT(d_func(),void _q_handleSignalRequest(QString, QObject*))
-    Q_PRIVATE_SLOT(d_func(),void _q_handleSignalDisconnect(QString, QObject*))
+    Q_PRIVATE_SLOT(d_func(),void _q_handleSignalRequest(QString,QString,QObject*))
+    Q_PRIVATE_SLOT(d_func(),void _q_handleSignalDisconnect(QString,QString,QObject*))
     Q_PRIVATE_SLOT(d_func(),void _q_removeSignalHandler(QString))
+    Q_PRIVATE_SLOT(d_func(),void _q_initializeConnection(QString,QObject*))
+    Q_PRIVATE_SLOT(d_func(),void _q_connectionDestroyed(QObject*))
 };
 
 #endif // CUTEIPCSERVICE_H

@@ -3,7 +3,6 @@
 
 #include <QObject>
 #include <QPointer>
-#include <QMultiHash>
 class QLocalSocket;
 
 // Local
@@ -16,8 +15,6 @@ class CuteIPCInterfaceWorker : public QObject
 {
   Q_OBJECT
 
-  typedef QPair<QObject*,QString> MethodData;
-
   public:
     explicit CuteIPCInterfaceWorker(QObject* parent = 0);
     ~CuteIPCInterfaceWorker();
@@ -28,27 +25,23 @@ class CuteIPCInterfaceWorker : public QObject
     // slot finish signals
     void registerSocketFinished();
     void connectToServerFinished();
+    void sendConnectionIdFinished();
     void disconnectFromServerFinished();
+    void invokeRemoteSignal(const QString& signalSignature, const CuteIPCMessage::Arguments& arguments);
 
   public slots:
     void registerSocket();
     void connectToServer(const QString& name, void* successful);
     void disconnectFromServer();
     void sendCallRequest(const QByteArray& request);
-
-    void remoteConnect(const QString& signalSignature, void* object, const QString& methodSignature);
-    void disconnectSignal(const QString& signalSignature, void* object, const QString& method);
-    void removeRemoteConnectionsOfObject(QObject* destroyedObject);
-    void invokeRemoteSignal(const QString& signalSignature, const CuteIPCMessage::Arguments& arguments);
+    QString connectionId() const;
 
   private:
     void sendRemoteConnectionRequest(const QString& signal);
     void sendSignalDisconnectRequest(const QString& signal);
-    void registerConnection(const QString& signalSignature, QObject* reciever, const QString& methodSignature);
 
     QPointer<CuteIPCInterfaceConnection> m_connection;
     QPointer<QLocalSocket> m_socket;
-    QMultiHash<QString,MethodData> m_connections;
 };
 
 #endif // CUTEIPCINTERFACEWORKER_H

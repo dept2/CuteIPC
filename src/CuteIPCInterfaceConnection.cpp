@@ -105,8 +105,6 @@ bool CuteIPCInterfaceConnection::readMessageFromSocket()
       {
         CuteIPCMessage message = CuteIPCMarshaller::demarshallMessage(m_block);
         emit invokeRemoteSignal(message.method(), message.arguments());
-
-        CuteIPCMarshaller::freeArguments(message.arguments());
         break;
       }
       default:

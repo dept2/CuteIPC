@@ -309,7 +309,7 @@ void TestSocketCommunication::testMultipleObjectsConnection()
   m_interface->callNoReply("emitQStringIntSignal", Q_ARG(QString, testString), Q_ARG(int, testInt));
   QVERIFY(waiter.wait());
 
-  delete secondTestObject;
+  secondTestObject->deleteLater();
 }
 
 
@@ -332,7 +332,6 @@ void TestSocketCommunication::testMultipleClients()
                                      SLOT(interfaceQStringSlot(QString))));
   QVERIFY(anotherInterface->remoteConnect(SIGNAL(serviceQStringIntSignal(QString,int)), secondTestObject,
                                           SLOT(interfaceQStringIntSlot(QString,int))));
-  sleep(1000);
 
   SignalWaiter waiter;
   waiter.addConnection(firstTestObject, SIGNAL(slotWasCalled(QString)), 2);
@@ -366,7 +365,6 @@ void TestSocketCommunication::testSignalAfterReturnCall()
 
   //connected to the first object
   QVERIFY(m_interface->remoteConnect(SIGNAL(serviceIntSignal(int)), secondTestObject, SLOT(interfaceIntSlot(int))));
-  sleep(1000);
 
   SignalWaiter waiter;
   waiter.addConnection(secondTestObject, SIGNAL(slotWasCalled(QString)), 1);
@@ -387,9 +385,7 @@ void TestSocketCommunication::testRemoteSignalToMultipleSlots()
   InterfaceTestObject* testObject = new InterfaceTestObject(this);
 
   QVERIFY(m_interface->remoteConnect(SIGNAL(serviceIntSignal(int)), testObject, SLOT(interfaceIntSlot(int))));
-
   QVERIFY(m_interface->remoteConnect(SIGNAL(serviceIntSignal(int)), testObject, SLOT(interfaceAnotherIntSlot(int))));
-  sleep(1000);
 
   SignalWaiter waiter;
   waiter.addConnection(testObject, SIGNAL(slotWasCalled(QString)), 1);
@@ -457,7 +453,6 @@ void TestSocketCommunication::testOwnersOnTheServerSide()
 
   int testInt = 25;
 
-  sleep(1000);
   m_interface->callNoReply("emitIntSignal", Q_ARG(int, testInt));
   QVERIFY(waiter.wait());
 
@@ -529,7 +524,6 @@ void TestSocketCommunication::testSimultaneousCalls()
 
   //connected to the first object
   QVERIFY(m_interface->remoteConnect(SIGNAL(serviceIntSignal(int)), this, SLOT(specialSlot(int))));
-  sleep(1000);
 
   int testInt = 25;
   int res1;

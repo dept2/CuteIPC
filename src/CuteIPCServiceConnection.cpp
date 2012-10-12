@@ -18,10 +18,12 @@ CuteIPCServiceConnection::CuteIPCServiceConnection(QLocalSocket* socket, CuteIPC
   // Delete connection after the socket have been disconnected
   connect(socket, SIGNAL(disconnected()), socket, SLOT(deleteLater()));
   connect(socket, SIGNAL(disconnected()), SLOT(deleteLater()));
+  connect(this, SIGNAL(destroyed(QObject*)), parent, SLOT(_q_connectionDestroyed(QObject*)));
   connect(socket, SIGNAL(error(QLocalSocket::LocalSocketError)), SLOT(errorOccured(QLocalSocket::LocalSocketError)));
-  connect(this, SIGNAL(signalRequest(QString, QObject*)), parent, SLOT(_q_handleSignalRequest(QString, QObject*)));
-  connect(this, SIGNAL(signalDisconnectRequest(QString,QObject*)),
-          parent, SLOT(_q_handleSignalDisconnect(QString,QObject*)));
+  connect(this, SIGNAL(signalRequest(QString,QString,QObject*)), parent, SLOT(_q_handleSignalRequest(QString,QString,QObject*)));
+  connect(this, SIGNAL(signalDisconnectRequest(QString,QString,QObject*)),
+          parent, SLOT(_q_handleSignalDisconnect(QString,QString,QObject*)));
+  connect(this, SIGNAL(connectionInitializeRequest(QString,QObject*)), parent, SLOT(_q_initializeConnection(QString,QObject*)));
 
   connect(socket, SIGNAL(readyRead()), SLOT(readyRead()));
   if (!socket->open(QIODevice::ReadWrite))
@@ -159,10 +161,14 @@ void CuteIPCServiceConnection::processMessage()
   }
   else if (messageType == CuteIPCMessage::SignalConnectionRequest)
   {
+    void* connectionId = QMetaType::construct(QMetaType::QString, args.at(0).data());
+
     if (call.returnType() != QString("disconnect"))
-      emit signalRequest(call.method(), this);
+      emit signalRequest(call.method(), *((QString*)(connectionId)), this);
     else
-      emit signalDisconnectRequest(call.method(), this);
+      emit signalDisconnectRequest(call.method(), *((QString*)(connectionId)), this);
+
+    QMetaType::destroy(QMetaType::QString, connectionId);
   }
   else if (messageType == CuteIPCMessage::SlotConnectionRequest)
   {
@@ -171,6 +177,14 @@ void CuteIPCServiceConnection::processMessage()
     else
       sendResponseMessage(call.method());
   }
+  else if (messageType == CuteIPCMessage::ConnectionInitialize)
+  {
+    void* connectionId = QMetaType::construct(QMetaType::QString, args.at(0).data());
+    emit connectionInitializeRequest(*((QString*)(connectionId)), this);
+
+    QMetaType::destroy(QMetaType::QString, connectionId);
+  }
+
 
   // Cleanup
   CuteIPCMarshaller::freeArguments(call.arguments());
@@ -201,7 +215,11 @@ void CuteIPCServiceConnection::sendAboutToQuit()
   CuteIPCMessage message(CuteIPCMessage::AboutToCloseSocket);
   QByteArray request = CuteIPCMarshaller::marshallMessage(message);
 
-  sendResponse(request);
+  DEBUG << "Send aboutToClose notification";
+
+  if (m_socket->isOpen()) {
+    sendResponse(request);
+  }
 }
 
 
