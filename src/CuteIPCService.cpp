@@ -13,7 +13,7 @@
 #include <QEventLoop>
 #include <QTimer>
 
-#define CLIENTS_DISCONNECT_TIMEOUT 500
+#define CLIENTS_DISCONNECT_TIMEOUT 100
 
 /*!
     \class CuteIPCService
