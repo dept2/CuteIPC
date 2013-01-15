@@ -36,6 +36,8 @@ SET(sources
 )
 
 SET(headers
+  include/CuteIPCService.h
+  include/CuteIPCInterface.h
   src/CuteIPCService_p.h
   src/CuteIPCInterface_p.h
   src/CuteIPCMarshaller_p.h
@@ -54,7 +56,7 @@ QT4_WRAP_CPP(sources include/CuteIPCInterface.h OPTIONS -f${CMAKE_CURRENT_SOURCE
 QT4_WRAP_CPP(sources ${moc_headers})
 
 SET(lib_target CuteIPC)
-ADD_LIBRARY(${lib_target} SHARED ${sources} ${headers} ${public_headers} ${moc_headers})
+ADD_LIBRARY(${lib_target} SHARED ${sources} ${headers} ${moc_headers})
 TARGET_LINK_LIBRARIES(${lib_target} ${QT_LIBRARIES})
 
 
