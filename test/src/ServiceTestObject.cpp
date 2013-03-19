@@ -127,7 +127,7 @@ const QByteArray& ServiceTestObject::getByteArray() const
 }
 
 
-const QImage& ServiceTestObject::getImage() const
+QImage ServiceTestObject::getImage() const
 {
   return m_image;
 }

@@ -25,7 +25,7 @@ class ServiceTestObject : public CuteIPCService
     Q_INVOKABLE int testCallWithRemoteSignal(int);
 
     const QByteArray& getByteArray() const;
-    const QImage& getImage() const;
+    Q_INVOKABLE QImage getImage() const;
     const QString& getString() const;
     int getInt() const;
 

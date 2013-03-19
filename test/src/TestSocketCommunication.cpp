@@ -67,13 +67,18 @@ void TestSocketCommunication::testDirectCalls()
   QCOMPARE(intval, testByteArray.size());
   QCOMPARE(testByteArray, m_service->getByteArray());
 
-
   //test QImage transfer
   QImage testImage(800, 600, QImage::Format_RGB888);
   QVERIFY(m_interface->call("testQImageTransfer", Q_RETURN_ARG(int, intval), Q_ARG(QImage, testImage)) == true);
   QCOMPARE(testImage.size(), m_service->getImage().size());
   QCOMPARE(testImage.pixel(0, 0), m_service->getImage().pixel(0, 0));
   QCOMPARE(testImage.pixel(50, 50), m_service->getImage().pixel(50, 50));
+
+  // Test QImage return
+  QImage returnedImage;
+  QVERIFY(m_interface->call("getImage", Q_RETURN_ARG(QImage, returnedImage)));
+  qDebug() << "ret" << returnedImage.format() << returnedImage.size();
+  QCOMPARE(testImage, returnedImage);
 
   //test QString transfer
   QString testString("testCallString");
@@ -237,9 +242,9 @@ void TestSocketCommunication::benchmarkQByteArrayTransfer()
   int intval;
   qDebug() << "Test QByteArray size:" << testByteArray.size();
 
-  QBENCHMARK_ONCE {
-     if (!m_interface->call("testQByteArrayTransfer", Q_RETURN_ARG(int, intval), Q_ARG(QByteArray, testByteArray)))
-       QSKIP("Remote call fail. Maybe you need to run TestSocketCommunication tests", SkipAll);
+  QBENCHMARK
+  {
+    QVERIFY(m_interface->call("testQByteArrayTransfer", Q_RETURN_ARG(int, intval), Q_ARG(QByteArray, testByteArray)));
   }
 }
 
@@ -251,9 +256,9 @@ void TestSocketCommunication::benchmarkQImageTransfer()
   QImage testImage(QIMAGE_HEIGHT_WIDTH_FOR_BENCHMARK, QIMAGE_HEIGHT_WIDTH_FOR_BENCHMARK, QImage::Format_RGB888);
   qDebug() << "Test QImage size:" << testImage.byteCount();
 
-  QBENCHMARK_ONCE {
-     if (!m_interface->call("testQImageTransfer", Q_RETURN_ARG(int, intval), Q_ARG(QImage, testImage)))
-       QSKIP("Remote call fail. Maybe you need to run TestSocketCommunication tests", SkipAll);
+  QBENCHMARK
+  {
+    QVERIFY(m_interface->call("testQImageTransfer", Q_RETURN_ARG(int, intval), Q_ARG(QImage, testImage)));
   }
 }
 
@@ -264,11 +269,10 @@ void TestSocketCommunication::testGrayScaleQImageTransfer()
   QImage monoImage(":/images/finger.png");
   qDebug() << "Test gray scale QImage size:" << monoImage.byteCount();
 
+  // Send grayscale image
   int intval;
-  if (!m_interface->call("testQImageGrayScale", Q_RETURN_ARG(int, intval), Q_ARG(QImage, monoImage)))
-    QSKIP("Remote call for grey scale fail", SkipAll);
-  else
-    QVERIFY(intval == monoImage.byteCount());
+  QVERIFY(m_interface->call("testQImageGrayScale", Q_RETURN_ARG(int, intval), Q_ARG(QImage, monoImage)));
+  QVERIFY(intval == monoImage.byteCount());
 }
 
 
@@ -321,9 +325,7 @@ void TestSocketCommunication::testMultipleClients()
   InterfaceTestObject* firstTestObject = new InterfaceTestObject(this);
   InterfaceTestObject* secondTestObject = new InterfaceTestObject(this);
   CuteIPCInterface* anotherInterface = new CuteIPCInterface(this);
-  if (!anotherInterface->connectToServer("TestSocket"))
-    QSKIP("Can't connect another interface to the server. Skip test", SkipSingle);
-
+  QVERIFY(anotherInterface->connectToServer("TestSocket"));
 
   QVERIFY(m_interface->remoteConnect(SIGNAL(serviceIntSignal(int)), firstTestObject, SLOT(interfaceIntSlot(int))));
   QVERIFY(anotherInterface->remoteConnect(SIGNAL(serviceIntSignal(int)), secondTestObject, SLOT(interfaceIntSlot(int))));
