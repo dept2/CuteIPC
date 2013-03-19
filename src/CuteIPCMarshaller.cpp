@@ -101,7 +101,7 @@ CuteIPCMessage CuteIPCMarshaller::demarshallResponse(QByteArray& call, QGenericR
 
   int argc;
   stream >> argc;
-  if (argc != 0) //load returned value to the arg (not to the message)
+  if (argc != 0) // load returned value to the arg (not to the message)
   {
     QString typeName;
     stream >> typeName;
@@ -116,7 +116,7 @@ CuteIPCMessage CuteIPCMarshaller::demarshallResponse(QByteArray& call, QGenericR
       if (type != QMetaType::type(arg.name()))
         qWarning() << "CuteIPC:" << "Type doesn't match:" << typeName << "Expected:" << arg.name();
 
-      bool dataLoaded = QMetaType::load(stream, type, arg.data());
+      bool dataLoaded = (type == QMetaType::QImage) ? loadQImage(stream, arg.data()) : QMetaType::load(stream, type, arg.data());
       if (!dataLoaded)
         qWarning() << "CuteIPC:" << "Failed to deserialize argument value" << "of type" << typeName;
     }
@@ -166,12 +166,10 @@ QGenericArgument CuteIPCMarshaller::demarshallArgumentFromStream(bool& ok, QData
     ok = false;
     return QGenericArgument();
   }
-  if (type == QMetaType::type("QImage"))
-    return demarshallQImageFromStream(ok, stream);
 
   // Read argument data from stream
   void* data = QMetaType::construct(type);
-  bool dataLoaded = QMetaType::load(stream, type, data);
+  bool dataLoaded = (type == QMetaType::QImage) ? loadQImage(stream, data) : QMetaType::load(stream, type, data);
   if (!dataLoaded)
   {
     qWarning() << "CuteIPC:" << "Failed to deserialize argument value" << "of type" << typeName;
@@ -206,47 +204,40 @@ bool CuteIPCMarshaller::marshallQImageToStream(QGenericArgument value, QDataStre
 }
 
 
-QGenericArgument CuteIPCMarshaller::demarshallQImageFromStream(bool& ok, QDataStream& stream)
+bool CuteIPCMarshaller::loadQImage(QDataStream& stream, void* data)
 {
+  // Construct image
   int width;
   stream >> width;
   int height;
   stream >> height;
-  int formatBuffer;
-  stream >> formatBuffer;
-  QImage::Format format = QImage::Format(formatBuffer);
+  int format;
+  stream >> format;
 
+  QImage img(width, height, QImage::Format(format));
+
+  // Construct color table (if needed)
   int colorCount;
   stream >> colorCount;
 
-  QVector<QRgb> colorTable;
   if (colorCount > 0)
-    stream >> colorTable;
-
-  int byteCount;
-  stream >> byteCount;
-
-  char* imageData;
-  imageData = new char[byteCount];
-
-  if (stream.readRawData(imageData, byteCount) != byteCount)
   {
-    qWarning() << "CuteIPC:" << "Failed to deserialize argument value" << "of type" << "QImage";
-    delete[] imageData;
-    ok = false;
-    return QGenericArgument();
+    QVector<QRgb> colorTable;
+    stream >> colorTable;
+    img.setColorTable(colorTable);
   }
 
-  QImage* newImage = new QImage(width, height, format);
+  // Read image bytes
+  int byteCount;
+  stream >> byteCount;
+  if (stream.readRawData(reinterpret_cast<char*>(img.bits()), byteCount) != byteCount)
+  {
+    qWarning() << "CuteIPC:" << "Failed to deserialize argument value" << "of type" << "QImage";
+    return false;
+  }
 
-  if (colorCount > 0)
-    newImage->setColorTable(colorTable);
-
-  memcpy(newImage->bits(), imageData, byteCount);
-
-  delete[] imageData;
-  ok = true;
-  return QGenericArgument(qstrdup("QImage"), newImage); //need for compatibility with freeArguments() method
+  *static_cast<QImage*>(data) = img;
+  return true;
 }
 
 
@@ -254,12 +245,14 @@ void CuteIPCMarshaller::freeArguments(const CuteIPCMessage::Arguments& args)
 {
   // Free allocated memory
   for (int i = 0; i < args.size(); ++i)
-  {
-    const QGenericArgument& arg = args.at(i);
-    if (arg.data() == 0)
-      continue;
+    freeArgument(args.at(i));
+}
 
+
+void CuteIPCMarshaller::freeArgument(QGenericArgument arg)
+{
+  if (arg.data())
     QMetaType::destroy(QMetaType::type(arg.name()), arg.data());
-    delete[] arg.name();
-  }
+
+  delete[] arg.name();
 }

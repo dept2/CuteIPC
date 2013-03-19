@@ -20,14 +20,15 @@ class CuteIPCMarshaller
     static CuteIPCMessage::MessageType demarshallMessageType(QByteArray& message);
 
     static void freeArguments(const CuteIPCMessage::Arguments&);
+    static void freeArgument(QGenericArgument);
 
   private:
     static bool marshallArgumentToStream(QGenericArgument value, QDataStream& stream);
     static QGenericArgument demarshallArgumentFromStream(bool& ok, QDataStream& stream);
 
     static bool marshallQImageToStream(QGenericArgument value, QDataStream& stream);
-    static QGenericArgument demarshallQImageFromStream(bool& ok, QDataStream& stream);
 
+    static bool loadQImage(QDataStream& stream, void* data);
 };
 
 #endif // CUTEIPCMARSHALLER_P_H
