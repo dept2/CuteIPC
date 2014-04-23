@@ -14,7 +14,8 @@ class TestMessageMarshalling : public QObject
     void marshallMessageParameters();
     void marshallIntergers();
     void marshallLiterals();
-    void marshallQImages();
+    void marshallQImageRGB888();
+    void marshallQImageIndexed8();
 };
 
 #endif // TESTMESSAGEMARSHALLING_H

@@ -192,11 +192,10 @@ bool CuteIPCMarshaller::marshallQImageToStream(QGenericArgument value, QDataStre
 
   stream << image->width();
   stream << image->height();
+  stream << image->bytesPerLine();
   stream << image->format();
 
-  stream << image->colorCount();
-  if (image->colorCount() > 0)
-    stream << image->colorTable();
+  stream << image->colorTable();
 
   stream << image->byteCount();
   stream.writeRawData((const char*)imageData, image->byteCount());
@@ -206,37 +205,36 @@ bool CuteIPCMarshaller::marshallQImageToStream(QGenericArgument value, QDataStre
 
 bool CuteIPCMarshaller::loadQImage(QDataStream& stream, void* data)
 {
-  // Construct image
+  // Image parameters
   int width;
   stream >> width;
   int height;
   stream >> height;
+  int bytesPerLine;
+  stream >> bytesPerLine;
   int format;
   stream >> format;
 
-  QImage img(width, height, QImage::Format(format));
-
-  // Construct color table (if needed)
-  int colorCount;
-  stream >> colorCount;
-
-  if (colorCount > 0)
-  {
-    QVector<QRgb> colorTable;
-    stream >> colorTable;
-    img.setColorTable(colorTable);
-  }
+  // Color table
+  QVector<QRgb> colorTable;
+  stream >> colorTable;
 
   // Read image bytes
   int byteCount;
   stream >> byteCount;
-  if (stream.readRawData(reinterpret_cast<char*>(img.bits()), byteCount) != byteCount)
+
+  uchar* bits = new uchar[byteCount];
+  if (stream.readRawData(reinterpret_cast<char*>(bits), byteCount) != byteCount)
   {
     qWarning() << "CuteIPC:" << "Failed to deserialize argument value" << "of type" << "QImage";
     return false;
   }
 
-  *static_cast<QImage*>(data) = img;
+  QImage image(const_cast<const uchar*>(bits), width, height, bytesPerLine, QImage::Format(format));
+  image.setColorTable(colorTable);
+  delete[] bits;
+
+  *static_cast<QImage*>(data) = image;
   return true;
 }
 

@@ -166,9 +166,9 @@ void TestMessageMarshalling::marshallLiterals()
 }
 
 
-void TestMessageMarshalling::marshallQImages()
+void TestMessageMarshalling::marshallQImageRGB888()
 {
-  QImage testImage(800, 600, QImage::Format_RGB888);
+  QImage testImage(759, 663, QImage::Format_RGB888);
   testImage.fill(0);
   testImage.setPixel(50, 50, qRgb(255, 0, 0));
 
@@ -184,7 +184,46 @@ void TestMessageMarshalling::marshallQImages()
   QCOMPARE(deserializedImage->size(), testImage.size());
   QCOMPARE(deserializedImage->pixel(0, 0), testImage.pixel(0, 0));
   QCOMPARE(deserializedImage->pixel(50, 50), testImage.pixel(50, 50));
+  QCOMPARE(deserializedImage->pixel(deserializedImage->width() - 1, deserializedImage->height() - 1), testImage.pixel(testImage.width() - 1, testImage.height() - 1));
   QCOMPARE(deserializedImage->format(), testImage.format());
+  QCOMPARE(deserializedImage->colorCount(), testImage.colorCount());
+  QCOMPARE(deserializedImage->colorTable(), testImage.colorTable());
+  QCOMPARE(deserializedImage->bytesPerLine(), testImage.bytesPerLine());
+
+  CuteIPCMarshaller::freeArguments(deserializedMessage.arguments());
 }
+
+
+void TestMessageMarshalling::marshallQImageIndexed8()
+{
+  QImage testImage(759, 657, QImage::Format_Indexed8);
+  testImage.setColorCount(255);
+  for (int i = 0; i <= 255; ++i)
+    testImage.setColor(i, qRgb(i, i, i));
+
+  testImage.fill(255);
+  testImage.scanLine(50)[50] = 0;
+
+  CuteIPCMessage testMessage(CuteIPCMessage::MessageCallWithoutReturn, "testMessage", Q_ARG(QImage, testImage));
+
+  QByteArray serializedMessage = CuteIPCMarshaller::marshallMessage(testMessage);
+  CuteIPCMessage deserializedMessage = CuteIPCMarshaller::demarshallMessage(serializedMessage);
+
+  QVERIFY(deserializedMessage.arguments().size() == 1);
+  QCOMPARE(deserializedMessage.arguments().at(0).name(), "QImage");
+  QImage* deserializedImage = reinterpret_cast<QImage*>(deserializedMessage.arguments().at(0).data());
+
+  QCOMPARE(deserializedImage->size(), testImage.size());
+  QCOMPARE(deserializedImage->pixel(0, 0), testImage.pixel(0, 0));
+  QCOMPARE(deserializedImage->pixel(50, 50), testImage.pixel(50, 50));
+  QCOMPARE(deserializedImage->pixel(deserializedImage->width() - 1, deserializedImage->height() - 1), testImage.pixel(testImage.width() - 1, testImage.height() - 1));
+  QCOMPARE(deserializedImage->format(), testImage.format());
+  QCOMPARE(deserializedImage->colorCount(), testImage.colorCount());
+  QCOMPARE(deserializedImage->colorTable(), testImage.colorTable());
+  QCOMPARE(deserializedImage->bytesPerLine(), testImage.bytesPerLine());
+
+  CuteIPCMarshaller::freeArguments(deserializedMessage.arguments());
+}
+
 
 QTEST_MAIN(TestMessageMarshalling)
