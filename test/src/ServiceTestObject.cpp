@@ -78,6 +78,12 @@ int ServiceTestObject::testQImageGrayScale(const QImage& image)
 }
 
 
+QImage ServiceTestObject::testQImageReturn(const QImage& image)
+{
+  return image;
+}
+
+
 void ServiceTestObject::serviceQByteArraySlot(const QByteArray& ba)
 {
   this->testQByteArrayTransfer(ba);

@@ -195,6 +195,9 @@ bool CuteIPCMarshaller::marshallQImageToStream(QGenericArgument value, QDataStre
   stream << image->bytesPerLine();
   stream << image->format();
 
+  stream << image->dotsPerMeterX();
+  stream << image->dotsPerMeterY();
+
   stream << image->colorTable();
 
   stream << image->byteCount();
@@ -215,6 +218,11 @@ bool CuteIPCMarshaller::loadQImage(QDataStream& stream, void* data)
   int format;
   stream >> format;
 
+  int dpmX;
+  stream >> dpmX;
+  int dpmY;
+  stream >> dpmY;
+
   // Color table
   QVector<QRgb> colorTable;
   stream >> colorTable;
@@ -231,6 +239,8 @@ bool CuteIPCMarshaller::loadQImage(QDataStream& stream, void* data)
   }
 
   QImage image(const_cast<const uchar*>(bits), width, height, bytesPerLine, QImage::Format(format));
+  image.setDotsPerMeterX(dpmX);
+  image.setDotsPerMeterY(dpmY);
   image.setColorTable(colorTable);
   delete[] bits;
 

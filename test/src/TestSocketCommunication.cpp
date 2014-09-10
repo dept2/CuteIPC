@@ -263,6 +263,20 @@ void TestSocketCommunication::benchmarkQImageTransfer()
 }
 
 
+void TestSocketCommunication::testImageDPI()
+{
+  QImage testImage(640, 480, QImage::Format_ARGB32);
+  testImage.fill(Qt::white);
+  testImage.setDotsPerMeterX(300 / 2.54 * 100);
+  testImage.setDotsPerMeterY(600 / 2.54 * 100);
+
+  QImage returnImage;
+  QVERIFY(m_interface->call("testQImageReturn", Q_RETURN_ARG(QImage, returnImage), Q_ARG(QImage, testImage)));
+  QCOMPARE(testImage.dotsPerMeterX(), returnImage.dotsPerMeterX());
+  QCOMPARE(testImage.dotsPerMeterY(), returnImage.dotsPerMeterY());
+}
+
+
 void TestSocketCommunication::testGrayScaleQImageTransfer()
 {
   // Gray scale image
