@@ -268,13 +268,12 @@ void *CuteIPCSignalHandler::qt_metacast(const char *_clname)
 
 #if QT_VERSION >= 0x050000
   if (!strcmp(_clname, qt_meta_stringdata_CuteIPCSignalHandler.stringdata))
-    return static_cast<void*>(const_cast< CuteIPCSignalHandler*>(this));
-  return QObject::qt_metacast(_clname);
 #else
   if (!strcmp(_clname, qt_meta_stringdata_CuteIPCSignalHandler))
+#endif
     return static_cast<void*>(const_cast< CuteIPCSignalHandler*>(this));
   return QObject::qt_metacast(_clname);
-#endif
+
 }
 
 
