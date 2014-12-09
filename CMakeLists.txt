@@ -51,9 +51,13 @@ SET(moc_headers
   src/CuteIPCInterfaceWorker.h
 )
 
-QT4_WRAP_CPP(sources include/CuteIPCService.h OPTIONS -f${CMAKE_CURRENT_SOURCE_DIR}/src/CuteIPCService_p.h)
-QT4_WRAP_CPP(sources include/CuteIPCInterface.h OPTIONS -f${CMAKE_CURRENT_SOURCE_DIR}/src/CuteIPCInterface_p.h)
 QT4_WRAP_CPP(sources ${moc_headers})
+
+QT4_GENERATE_MOC(include/CuteIPCService.h ${CMAKE_CURRENT_BINARY_DIR}/moc_CuteIPCService.cpp)
+SET_SOURCE_FILES_PROPERTIES(src/CuteIPCService.cpp PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/moc_CuteIPCService.cpp)
+
+QT4_GENERATE_MOC(include/CuteIPCInterface.h ${CMAKE_CURRENT_BINARY_DIR}/moc_CuteIPCInterface.cpp)
+SET_SOURCE_FILES_PROPERTIES(src/CuteIPCInterface.cpp PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/moc_CuteIPCInterface.cpp)
 
 SET(lib_target CuteIPC)
 ADD_LIBRARY(${lib_target} SHARED ${sources} ${headers} ${moc_headers})

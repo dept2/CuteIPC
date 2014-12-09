@@ -599,3 +599,5 @@ QString CuteIPCInterface::lastError() const
   Q_D(const CuteIPCInterface);
   return d->m_lastError;
 }
+
+#include "moc_CuteIPCInterface.cpp"

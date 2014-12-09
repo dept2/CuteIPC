@@ -287,3 +287,4 @@ QString CuteIPCService::serverName() const
  * \note To enable debug output, set CUTEIPC_DEBUG environment variable to 1;
  *
  */
+#include "moc_CuteIPCService.cpp"
