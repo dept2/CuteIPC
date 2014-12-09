@@ -28,7 +28,12 @@ void SignalWaiter::addConnection(QObject* object, const char* signal, int times)
 {
   connect(object, signal, SLOT(signalEmmited()), Qt::UniqueConnection);
 
+#if QT_VERSION >= 0x050000
+  int signalIndex = object->metaObject()->indexOfSignal(QString::fromLatin1(signal).mid(1).toLatin1());
+#else
   int signalIndex = object->metaObject()->indexOfSignal(QString::fromAscii(signal).mid(1).toAscii());
+#endif
+
   QPair<const QObject*, int> pair(object, signalIndex);
   m_signalsTimesMap.insert(pair, times);
   m_allSignalsAreEmitted = false;

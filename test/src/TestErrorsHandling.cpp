@@ -35,7 +35,6 @@ void TestErrorsHandling::testInvokeErrors()
   QVERIFY(m_service->listen("TestSocket"));
   QVERIFY(m_interface->connectToServer("TestSocket"));
 
-
   int testInt = 5;
   //unexisted method
   QByteArray testByteArray(10 * 1024 * 1024, 'M');

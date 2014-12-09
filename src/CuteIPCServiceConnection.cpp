@@ -26,7 +26,13 @@ CuteIPCServiceConnection::CuteIPCServiceConnection(QLocalSocket* socket, CuteIPC
   connect(this, SIGNAL(connectionInitializeRequest(QString,QObject*)), parent, SLOT(_q_initializeConnection(QString,QObject*)));
 
   connect(socket, SIGNAL(readyRead()), SLOT(readyRead()));
-  if (!socket->open(QIODevice::ReadWrite))
+  if (socket->state() != QLocalSocket::ConnectedState || !socket->isReadable() || !socket->isWritable())
+  {
+    qWarning() << "CuteIPC:" << "Socket was not opened corectly. We tried to open again";
+    socket->open(QIODevice::ReadWrite);
+  }
+
+  if (!socket->isOpen())
   {
     qWarning() << "CuteIPC:" << "Failed to open socket in ReadWrite mode:" << socket->errorString();
     deleteLater();
@@ -108,7 +114,11 @@ void CuteIPCServiceConnection::processMessage()
     if (retType > 0)
     {
       // Read argument data from stream
+#if QT_VERSION >= 0x050000
+      void* retData = QMetaType::create(retType);
+#else
       void* retData = QMetaType::construct(retType);
+#endif
 
       DEBUG << "Invoke local method:" << call.method();
       bool successfulInvoke = QMetaObject::invokeMethod(subject, call.method().toLatin1(),
@@ -161,7 +171,12 @@ void CuteIPCServiceConnection::processMessage()
   }
   else if (messageType == CuteIPCMessage::SignalConnectionRequest)
   {
+#if QT_VERSION >= 0x050000
+    void* connectionId = QMetaType::create(QMetaType::QString, args.at(0).data());
+#else
+
     void* connectionId = QMetaType::construct(QMetaType::QString, args.at(0).data());
+#endif
 
     if (call.returnType() != QString("disconnect"))
       emit signalRequest(call.method(), *((QString*)(connectionId)), this);
@@ -172,14 +187,23 @@ void CuteIPCServiceConnection::processMessage()
   }
   else if (messageType == CuteIPCMessage::SlotConnectionRequest)
   {
+#if QT_VERSION >= 0x050000
+    if (subject->metaObject()->indexOfSlot(QMetaObject::normalizedSignature(call.method().toLatin1())) == -1)
+#else
     if (subject->metaObject()->indexOfSlot(QMetaObject::normalizedSignature(call.method().toAscii())) == -1)
+#endif
       sendErrorMessage("Remote slot doesn't exist:" + call.method());
     else
       sendResponseMessage(call.method());
   }
   else if (messageType == CuteIPCMessage::ConnectionInitialize)
   {
+#if QT_VERSION >= 0x050000
+    void* connectionId = QMetaType::create(QMetaType::QString, args.at(0).data());
+#else
     void* connectionId = QMetaType::construct(QMetaType::QString, args.at(0).data());
+#endif
+
     emit connectionInitializeRequest(*((QString*)(connectionId)), this);
 
     QMetaType::destroy(QMetaType::QString, connectionId);

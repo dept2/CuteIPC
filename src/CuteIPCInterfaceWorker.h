@@ -6,7 +6,8 @@
 class QLocalSocket;
 
 // Local
-#include <CuteIPCMessage_p.h>
+#include "CuteIPCMessage_p.h"
+
 class CuteIPCInterfaceConnection;
 class CuteIPCLoopVector;
 

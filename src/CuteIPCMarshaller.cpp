@@ -168,7 +168,12 @@ QGenericArgument CuteIPCMarshaller::demarshallArgumentFromStream(bool& ok, QData
   }
 
   // Read argument data from stream
+#if QT_VERSION >= 0x050000
+  void* data = QMetaType::create(type);
+#else
   void* data = QMetaType::construct(type);
+#endif
+
   bool dataLoaded = (type == QMetaType::QImage) ? loadQImage(stream, data) : QMetaType::load(stream, type, data);
   if (!dataLoaded)
   {
