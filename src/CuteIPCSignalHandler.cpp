@@ -22,13 +22,8 @@ CuteIPCSignalHandler::CuteIPCSignalHandler(const QString& signature, QObject* pa
 
 void CuteIPCSignalHandler::setSignalParametersInfo(QObject* owner, const QString& signature)
 {
-#if QT_VERSION >= 0x050000
   QMetaMethod method = owner->metaObject()->method(
                          owner->metaObject()->indexOfMethod(QMetaObject::normalizedSignature(signature.toLatin1())));
-#else
-  QMetaMethod method = owner->metaObject()->method(
-                         owner->metaObject()->indexOfMethod(QMetaObject::normalizedSignature(signature.toAscii())));
-#endif
 
   m_signalParametersInfo = method.parameterTypes();
   m_signalParametersInfoWasSet = true;

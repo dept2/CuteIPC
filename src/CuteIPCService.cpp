@@ -88,12 +88,7 @@ void CuteIPCServicePrivate::_q_handleSignalRequest(const QString& signalSignatur
   CuteIPCServiceConnection* senderConnection = qobject_cast<CuteIPCServiceConnection*>(sender);
 
   QObject* subject = m_subject ? m_subject : q;
-
-#if QT_VERSION >= 0x050000
   int signalIndex = subject->metaObject()->indexOfSignal(QMetaObject::normalizedSignature(signalSignature.toLatin1()));
-#else
-  int signalIndex = subject->metaObject()->indexOfSignal(QMetaObject::normalizedSignature(signalSignature.toAscii()));
-#endif
 
   if (signalIndex == -1)
   {
@@ -114,14 +109,8 @@ void CuteIPCServicePrivate::_q_handleSignalRequest(const QString& signalSignatur
     handler = new CuteIPCSignalHandler(signalSignature, q);
     handler->setSignalParametersInfo(subject,signalSignature);
     m_signalHandlers.insert(signalSignature, handler);
-
-#if QT_VERSION >= 0x050000
     QMetaObject::connect(subject, subject->metaObject()->indexOfSignal(QMetaObject::normalizedSignature(signalSignature.toLatin1())),
                          handler, handler->metaObject()->indexOfSlot("relaySlot()"));
-#else
-    QMetaObject::connect(subject, subject->metaObject()->indexOfSignal(QMetaObject::normalizedSignature(signalSignature.toAscii())),
-                         handler, handler->metaObject()->indexOfSlot("relaySlot()"));
-#endif
   }
 
 //  handler->addListener(senderConnection);

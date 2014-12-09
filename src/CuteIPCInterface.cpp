@@ -71,11 +71,7 @@ bool CuteIPCInterfacePrivate::checkConnectCorrection(const QString& signal, cons
   QString signalSignature = signal.mid(1);
   QString methodSignature = method.mid(1);
 
-#if QT_VERSION >= 0x050000
   if (!QMetaObject::checkConnectArgs(signalSignature.toLatin1(), methodSignature.toLatin1()))
-#else
-  if (!QMetaObject::checkConnectArgs(signalSignature.toAscii(), methodSignature.toAscii()))
-#endif
   {
     qWarning() << "CuteIPC:" << "Error: incompatible signatures" << signalSignature << methodSignature;
     m_lastError = "Incompatible signatures: " + signalSignature + "," + methodSignature;
@@ -177,15 +173,9 @@ void CuteIPCInterfacePrivate::_q_invokeRemoteSignal(const QString& signalSignatu
     while (args.size() < 10)
       args.append(QGenericArgument());
 
-#if QT_VERSION >= 0x050000
     QMetaObject::invokeMethod(data.first, methodName.toLatin1(), Qt::QueuedConnection,
                               args.at(0), args.at(1), args.at(2), args.at(3), args.at(4), args.at(5), args.at(6),
                               args.at(7), args.at(8), args.at(9));
-#else
-    QMetaObject::invokeMethod(data.first, methodName.toAscii(), Qt::QueuedConnection,
-                              args.at(0), args.at(1), args.at(2), args.at(3), args.at(4), args.at(5), args.at(6),
-                              args.at(7), args.at(8), args.at(9));
-#endif
   }
 
   CuteIPCMarshaller::freeArguments(arguments);
@@ -218,15 +208,9 @@ void CuteIPCInterfacePrivate::handleLocalSignalRequest(QObject* localObject, con
         localObject->metaObject()->indexOfSignal("destroyed(QObject*)"),
         q, q->metaObject()->indexOfSlot(QMetaObject::normalizedSignature("_q_removeSignalHandlersOfObject(QObject*)")));
 
-#if QT_VERSION >= 0x050000
     QMetaObject::connect(localObject,
         localObject->metaObject()->indexOfSignal(QMetaObject::normalizedSignature(signalSignature.toLatin1())),
         handler, handler->metaObject()->indexOfSlot("relaySlot()"));
-#else
-    QMetaObject::connect(localObject,
-        localObject->metaObject()->indexOfSignal(QMetaObject::normalizedSignature(signalSignature.toAscii())),
-        handler, handler->metaObject()->indexOfSlot("relaySlot()"));
-#endif
 
     QMetaObject::connect(
         handler, handler->metaObject()->indexOfSignal(QMetaObject::normalizedSignature("signalCaptured(QByteArray)")),
@@ -380,13 +364,8 @@ bool CuteIPCInterface::remoteConnect(const char* signal, QObject* object, const 
 {
   Q_D(CuteIPCInterface);
 
-#if QT_VERSION >= 0x050000
   QString signalSignature = QString::fromLatin1(signal);
   QString methodSignature = QString::fromLatin1(method);
-#else
-  QString signalSignature = QString::fromAscii(signal);
-  QString methodSignature = QString::fromAscii(method);
-#endif
 
   if (!d->checkConnectCorrection(signalSignature, methodSignature))
     return false;
@@ -397,17 +376,10 @@ bool CuteIPCInterface::remoteConnect(const char* signal, QObject* object, const 
 
   int methodIndex = -1;
 
-#if QT_VERSION >= 0x050000
   if (method[0] == '1')
     methodIndex = object->metaObject()->indexOfSlot(QMetaObject::normalizedSignature(methodSignature.toLatin1()));
   else if (method[0] == '2')
     methodIndex = object->metaObject()->indexOfSignal(QMetaObject::normalizedSignature(methodSignature.toLatin1()));
-#else
-  if (method[0] == '1')
-    methodIndex = object->metaObject()->indexOfSlot(QMetaObject::normalizedSignature(methodSignature.toAscii()));
-  else if (method[0] == '2')
-    methodIndex = object->metaObject()->indexOfSignal(QMetaObject::normalizedSignature(methodSignature.toAscii()));
-#endif
 
   if (methodIndex == -1)
   {
@@ -440,13 +412,8 @@ bool CuteIPCInterface::disconnectSignal(const char* signal, QObject* object, con
   if (signal[0] != '2' || (method[0] != '1' && method[0] != '2'))
     return false;
 
-#if QT_VERSION >= 0x050000
   QString signalSignature = QString::fromLatin1(signal).mid(1);
   QString methodSignature = QString::fromLatin1(method).mid(1);
-#else
-  QString signalSignature = QString::fromAscii(signal).mid(1);
-  QString methodSignature = QString::fromAscii(method).mid(1);
-#endif
 
   d->m_connections.remove(signalSignature, QPair<QObject*, QString>(object, methodSignature));
   if (!d->m_connections.contains(signalSignature))
@@ -476,13 +443,8 @@ bool CuteIPCInterface::remoteSlotConnect(QObject* localObject, const char* signa
 {
   Q_D(CuteIPCInterface);
 
-#if QT_VERSION >= 0x050000
   QString signalSignature = QString::fromLatin1(signal);
   QString slotSignature = QString::fromLatin1(remoteSlot);
-#else
-  QString signalSignature = QString::fromAscii(signal);
-  QString slotSignature = QString::fromAscii(remoteSlot);
-#endif
 
   if (!d->checkConnectCorrection(signalSignature, slotSignature))
     return false;
@@ -490,13 +452,8 @@ bool CuteIPCInterface::remoteSlotConnect(QObject* localObject, const char* signa
   signalSignature = signalSignature.mid(1);
   slotSignature = slotSignature.mid(1);
 
-#if QT_VERSION >= 0x050000
   int signalIndex = localObject->metaObject()->indexOfSignal(
       QMetaObject::normalizedSignature(signalSignature.toLatin1()));
-#else
-  int signalIndex = localObject->metaObject()->indexOfSignal(
-      QMetaObject::normalizedSignature(signalSignature.toAscii()));
-#endif
 
   if (signalIndex == -1)
   {
@@ -530,14 +487,8 @@ bool CuteIPCInterface::disconnectSlot(QObject* localObject, const char* signal, 
   if (signal[0] != '2' || remoteSlot[0] != '1')
     return false;
 
-#if QT_VERSION >= 0x050000
   QString signalSignature = QString::fromLatin1(signal).mid(1);
   QString slotSignature = QString::fromLatin1(remoteSlot).mid(1);
-#else
-  QString signalSignature = QString::fromAscii(signal).mid(1);
-  QString slotSignature = QString::fromAscii(remoteSlot).mid(1);
-#endif
-
   CuteIPCInterfacePrivate::MethodData data(localObject, signalSignature);
 
   QList<CuteIPCSignalHandler*> handlers = d->m_localSignalHandlers.values(data);

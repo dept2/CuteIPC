@@ -187,11 +187,7 @@ void CuteIPCServiceConnection::processMessage()
   }
   else if (messageType == CuteIPCMessage::SlotConnectionRequest)
   {
-#if QT_VERSION >= 0x050000
     if (subject->metaObject()->indexOfSlot(QMetaObject::normalizedSignature(call.method().toLatin1())) == -1)
-#else
-    if (subject->metaObject()->indexOfSlot(QMetaObject::normalizedSignature(call.method().toAscii())) == -1)
-#endif
       sendErrorMessage("Remote slot doesn't exist:" + call.method());
     else
       sendResponseMessage(call.method());
