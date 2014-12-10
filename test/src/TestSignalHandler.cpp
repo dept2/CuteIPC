@@ -123,6 +123,13 @@ void TestSignalHandler::testListenersManaging()
   QLocalSocket* socket1 = new QLocalSocket(this);
   QLocalSocket* socket2 = new QLocalSocket(this);
   CuteIPCService* service = new CuteIPCService();
+
+  service->listen("TestSocket");
+  socket1->connectToServer("TestSocket");
+  socket2->connectToServer("TestSocket");
+  socket1->open(QIODevice::ReadWrite);
+  socket2->open(QIODevice::ReadWrite);
+
   CuteIPCServiceConnection* listener1 = new CuteIPCServiceConnection(socket1, service);
   CuteIPCServiceConnection* listener2 = new CuteIPCServiceConnection(socket2, service);
 
