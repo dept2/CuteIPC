@@ -8,7 +8,6 @@ Project {
 
     Depends { name: "cpp" }
 
-    //cpp.rpaths: cpp.libraryPaths
     cpp.includePaths: "include"
     cpp.defines: "CUTEIPC_LIBRARY"
 
