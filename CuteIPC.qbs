@@ -1,28 +1,28 @@
-import qbs 1.0
+import qbs
 
 Project {
-  DynamicLibrary {
-    name: "CuteIPC"
 
-    files: [ "src/*", "include/*" ]
+    DynamicLibrary {
+        name: "CuteIPC"
 
-    Depends { name: "cpp" }
+        files: [ "src/*", "include/*" ]        
 
-    cpp.includePaths: "include"
-    cpp.defines: "CUTEIPC_LIBRARY"
+        cpp.includePaths: "include"
+        cpp.defines: ["CUTEIPC_LIBRARY" ]
 
-    Depends {
-      name: "Qt";
-      submodules: [ "core", "gui", "network" ]
+        Depends { name: "cpp" }
+        Depends {
+            name: "Qt";
+            submodules: [ "core", "gui", "network" ]
+        }
+
+        Export {
+            Depends { name: "cpp" }
+            cpp.includePaths: "include"
+        }
     }
 
-    Export {
-      Depends { name: "cpp" }
-      cpp.includePaths: "include"
-    }
-  }
-
-  references: [
-    "test/test.qbs",
-  ]
+    references: [
+        "test/test.qbs",
+    ]
 }
