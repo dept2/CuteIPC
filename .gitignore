@@ -39,6 +39,7 @@ build/
 *.kdev4
 *.cbp
 *.pro.user
+*.qbs.user
 .idea
 CMakeLists.txt.user*
 CMakeLists.txt.shared
