@@ -4,6 +4,7 @@
 
 // Qt
 #include <QLocalSocket>
+#include <QTcpSocket>
 #include <QDataStream>
 #include <QTime>
 #include <QMetaType>
@@ -27,6 +28,38 @@ CuteIPCServiceConnection::CuteIPCServiceConnection(QLocalSocket* socket, CuteIPC
 
   connect(socket, SIGNAL(readyRead()), SLOT(readyRead()));
   if (socket->state() != QLocalSocket::ConnectedState || !socket->isReadable() || !socket->isWritable())
+  {
+    qWarning() << "CuteIPC:" << "Socket was not opened corectly. We tried to open again";
+    socket->open(QIODevice::ReadWrite);
+  }
+
+  if (!socket->isOpen())
+  {
+    qWarning() << "CuteIPC:" << "Failed to open socket in ReadWrite mode:" << socket->errorString();
+    deleteLater();
+  }
+}
+
+
+CuteIPCServiceConnection::CuteIPCServiceConnection(QTcpSocket* socket, CuteIPCService* parent)
+  : QObject(parent),
+    m_socket(socket),
+    m_nextBlockSize(0),
+    m_subject(0)
+{
+  // Delete connection after the socket have been disconnected
+  connect(socket, SIGNAL(disconnected()), socket, SLOT(deleteLater()));
+  connect(socket, SIGNAL(disconnected()), SLOT(deleteLater()));
+  connect(this, SIGNAL(destroyed(QObject*)), parent, SLOT(_q_connectionDestroyed(QObject*)));
+  connect(socket, SIGNAL(error(QAbstractSocket::SocketError)), SLOT(errorOccured(QAbstractSocket::SocketError)));
+
+  connect(this, SIGNAL(signalRequest(QString,QString,QObject*)), parent, SLOT(_q_handleSignalRequest(QString,QString,QObject*)));
+  connect(this, SIGNAL(signalDisconnectRequest(QString,QString,QObject*)),
+          parent, SLOT(_q_handleSignalDisconnect(QString,QString,QObject*)));
+  connect(this, SIGNAL(connectionInitializeRequest(QString,QObject*)), parent, SLOT(_q_initializeConnection(QString,QObject*)));
+
+  connect(socket, SIGNAL(readyRead()), SLOT(readyRead()));
+  if (socket->state() != QAbstractSocket::ConnectedState || !socket->isReadable() || !socket->isWritable())
   {
     qWarning() << "CuteIPC:" << "Socket was not opened corectly. We tried to open again";
     socket->open(QIODevice::ReadWrite);
@@ -252,7 +285,10 @@ void CuteIPCServiceConnection::sendResponse(const QByteArray& response)
   if (written != response.size())
     qWarning() << "CuteIPC:" << "Socket error: Written bytes and request size doesn't match";
 
-  m_socket->flush();
+  if (QAbstractSocket* socket = qobject_cast<QAbstractSocket*>(m_socket))
+    socket->flush();
+  else if (QLocalSocket* socket = qobject_cast<QLocalSocket*>(m_socket))
+    socket->flush();
 }
 
 
@@ -260,6 +296,16 @@ void CuteIPCServiceConnection::errorOccured(QLocalSocket::LocalSocketError error
 {
   // Connection closed by peer is normal situation: it just notifies us that the remote client have been disconnected
   if (error != QLocalSocket::PeerClosedError)
+    qWarning() << "CuteIPC:" << "Socket error: " << m_socket->errorString();
+
+  deleteLater();
+}
+
+
+void CuteIPCServiceConnection::errorOccured(QAbstractSocket::SocketError error)
+{
+  // Connection closed by peer is normal situation: it just notifies us that the remote client have been disconnected
+  if (error != QAbstractSocket::RemoteHostClosedError)
     qWarning() << "CuteIPC:" << "Socket error: " << m_socket->errorString();
 
   deleteLater();

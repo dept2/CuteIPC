@@ -4,6 +4,7 @@
 // Qt
 #include <QObject>
 #include <QLocalSocket>
+class QTcpSocket;
 
 // Local
 #include "CuteIPCService.h"
@@ -15,6 +16,8 @@ class CuteIPCServiceConnection : public QObject
 
   public:
     CuteIPCServiceConnection(QLocalSocket* socket, CuteIPCService* parent);
+    CuteIPCServiceConnection(QTcpSocket* socket, CuteIPCService* parent);
+
     ~CuteIPCServiceConnection();
     void setSubject(QObject* subject);
 
@@ -25,7 +28,10 @@ class CuteIPCServiceConnection : public QObject
 
   public slots:
     void readyRead();
-    void errorOccured(QLocalSocket::LocalSocketError);
+
+    void errorOccured(QLocalSocket::LocalSocketError); // local socket error
+    void errorOccured(QAbstractSocket::SocketError);   // network socket error
+
     void sendSignal(const QByteArray& data);
 
     void sendErrorMessage(const QString& error);
@@ -33,7 +39,8 @@ class CuteIPCServiceConnection : public QObject
     void sendAboutToQuit();
 
   private:
-    QLocalSocket* m_socket;
+    QIODevice* m_socket;
+
     quint32 m_nextBlockSize;
     QByteArray m_block;
     QObject* m_subject;

@@ -13,6 +13,9 @@
 #include <QEventLoop>
 #include <QTimer>
 
+#include <QTcpServer>
+#include <QTcpSocket>
+
 #define CLIENTS_DISCONNECT_TIMEOUT 100
 
 /*!
@@ -40,8 +43,7 @@
 
 
 CuteIPCServicePrivate::CuteIPCServicePrivate()
-    : m_server(0),
-      m_subject(0)
+  : m_subject(0)
 {}
 
 
@@ -63,18 +65,43 @@ CuteIPCServicePrivate::~CuteIPCServicePrivate()
 }
 
 
-void CuteIPCServicePrivate::registerServer()
+void CuteIPCServicePrivate::registerLocalServer()
 {
   Q_Q(CuteIPCService);
-  m_server = new QLocalServer(q);
-  QObject::connect(m_server, SIGNAL(newConnection()), q, SLOT(_q_newConnection()));
+  if (!m_localServer)
+  {
+    m_localServer = new QLocalServer(q);
+    QObject::connect(m_localServer, SIGNAL(newConnection()), q, SLOT(_q_newLocalConnection()), Qt::UniqueConnection);
+  }
 }
 
 
-void CuteIPCServicePrivate::_q_newConnection()
+void CuteIPCServicePrivate::registerTcpServer()
 {
   Q_Q(CuteIPCService);
-  QLocalSocket* socket = m_server->nextPendingConnection();
+  if (!m_tcpServer)
+  {
+    m_tcpServer = new QTcpServer(q);
+    QObject::connect(m_tcpServer, SIGNAL(newConnection()), q, SLOT(_q_newTcpConnection()), Qt::UniqueConnection);
+  }
+}
+
+
+void CuteIPCServicePrivate::_q_newLocalConnection()
+{
+  Q_Q(CuteIPCService);
+  QLocalSocket* socket = m_localServer->nextPendingConnection();
+  Q_ASSERT(socket != 0);
+
+  CuteIPCServiceConnection* connection = new CuteIPCServiceConnection(socket, q);
+  connection->setSubject(m_subject);
+}
+
+
+void CuteIPCServicePrivate::_q_newTcpConnection()
+{
+  Q_Q(CuteIPCService);
+  QTcpSocket* socket = m_tcpServer->nextPendingConnection();
   Q_ASSERT(socket != 0);
 
   CuteIPCServiceConnection* connection = new CuteIPCServiceConnection(socket, q);
@@ -168,7 +195,6 @@ CuteIPCService::CuteIPCService(QObject* parent)
 {
   Q_D(CuteIPCService);
   d->q_ptr = this;
-  d->registerServer();
 }
 
 
@@ -178,7 +204,6 @@ CuteIPCService::CuteIPCService(CuteIPCServicePrivate& dd, QObject* parent)
 {
   Q_D(CuteIPCService);
   d->q_ptr = this;
-  d->registerServer();
 }
 
 
@@ -188,6 +213,20 @@ CuteIPCService::CuteIPCService(CuteIPCServicePrivate& dd, QObject* parent)
 CuteIPCService::~CuteIPCService()
 {
   delete d_ptr;
+}
+
+
+bool CuteIPCService::listen(const QHostAddress& address, quint16 port, QObject* subject)
+{
+  Q_D(CuteIPCService);
+
+  DEBUG << "Trying to listen" << address << "on port" << port;
+  d->registerTcpServer();
+  bool ok = d->m_tcpServer->listen(address, port);
+
+  DEBUG << "CuteIPC:" << "Opened" << address << port << ok;
+  d->m_subject = subject;
+  return ok;
 }
 
 /*!
@@ -207,16 +246,17 @@ bool CuteIPCService::listen(const QString& serverName, QObject* subject)
     name = QString(QLatin1String("%1.%2")).arg(metaObject()->className()).arg(reinterpret_cast<quintptr>(this));
 
   DEBUG << "Trying to listen" << name;
-  bool ok = d->m_server->listen(name);
+  d->registerLocalServer();
+  bool ok = d->m_localServer->listen(name);
 
   if (!ok)
   {
     DEBUG << "Trying to reuse existing pipe";
-    ok = d->m_server->removeServer(name);
+    ok = d->m_localServer->removeServer(name);
     if (ok)
     {
       DEBUG << "Server removed, connecting again";
-      ok = d->m_server->listen(name);
+      ok = d->m_localServer->listen(name);
     }
   }
 
@@ -240,7 +280,10 @@ bool CuteIPCService::listen(QObject* subject)
 void CuteIPCService::close()
 {
   Q_D(CuteIPCService);
-  d->m_server->close();
+  if (d->m_localServer)
+    d->m_localServer->close();
+  else if (d->m_tcpServer)
+    d->m_tcpServer->close();
 }
 
 
@@ -253,7 +296,7 @@ void CuteIPCService::close()
 QString CuteIPCService::serverName() const
 {
   Q_D(const CuteIPCService);
-  return d->m_server->serverName();
+  return d->m_localServer->serverName();
 }
 
 /*! \mainpage CuteIPC
