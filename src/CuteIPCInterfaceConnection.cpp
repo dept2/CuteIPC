@@ -21,6 +21,17 @@ CuteIPCInterfaceConnection::CuteIPCInterfaceConnection(QLocalSocket* socket, QOb
 }
 
 
+CuteIPCInterfaceConnection::CuteIPCInterfaceConnection(QTcpSocket* socket, QObject* parent)
+  : QObject(parent),
+    m_socket(socket),
+    m_nextBlockSize(0)
+{
+  connect(socket, SIGNAL(disconnected()), SIGNAL(socketDisconnected()));
+  connect(socket, SIGNAL(error(QAbstractSocket::SocketError)), SLOT(errorOccured(QAbstractSocket::SocketError)));
+  connect(socket, SIGNAL(readyRead()), SLOT(readyRead()));
+}
+
+
 void CuteIPCInterfaceConnection::sendCallRequest(const QByteArray& request)
 {
   QDataStream stream(m_socket);
@@ -30,7 +41,11 @@ void CuteIPCInterfaceConnection::sendCallRequest(const QByteArray& request)
   if (written != request.size())
     qWarning() << "CuteIPC:" << "Warning:" << "Written bytes and request size doesn't match";
 
-  m_socket->flush();
+  if (QAbstractSocket* socket = qobject_cast<QAbstractSocket*>(m_socket))
+    socket->flush();
+  else if (QLocalSocket* socket = qobject_cast<QLocalSocket*>(m_socket))
+    socket->flush();
+
   m_lastCallSuccessful = true;
 }
 
@@ -97,8 +112,13 @@ bool CuteIPCInterfaceConnection::readMessageFromSocket()
         CuteIPCMessage message = CuteIPCMarshaller::demarshallMessage(m_block);
         CuteIPCMarshaller::freeArguments(message.arguments());
         m_lastCallSuccessful = false;
+
         // Разрываем соединение с сервером. При этом отправляется сигнал socketDiconnected
-        m_socket->disconnectFromServer();
+        if (QTcpSocket* socket = qobject_cast<QTcpSocket*>(m_socket))
+          socket->disconnectFromHost();
+        else if (QLocalSocket* socket = qobject_cast<QLocalSocket*>(m_socket))
+          socket->disconnectFromServer();
+
         break;
       }
       case CuteIPCMessage::MessageSignal:
@@ -129,6 +149,13 @@ bool CuteIPCInterfaceConnection::readMessageFromSocket()
 
 
 void CuteIPCInterfaceConnection::errorOccured(QLocalSocket::LocalSocketError)
+{
+  qWarning() << "CuteIPC" << "Socket error: " << m_socket->errorString();
+  emit errorOccured(m_socket->errorString());
+}
+
+
+void CuteIPCInterfaceConnection::errorOccured(QAbstractSocket::SocketError)
 {
   qWarning() << "CuteIPC" << "Socket error: " << m_socket->errorString();
   emit errorOccured(m_socket->errorString());

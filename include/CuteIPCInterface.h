@@ -3,6 +3,7 @@
 
 // Qt
 #include <QObject>
+class QHostAddress;
 
 // Local
 class CuteIPCInterfacePrivate;
@@ -17,6 +18,8 @@ class CuteIPCInterface : public QObject
     ~CuteIPCInterface();
 
     bool connectToServer(const QString& name);
+    bool connectToServer(const QHostAddress& host, quint16 port);
+
     void disconnectFromServer();
 
     bool remoteConnect(const char* signal, QObject* object, const char* method);

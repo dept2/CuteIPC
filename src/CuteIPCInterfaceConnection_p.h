@@ -4,6 +4,7 @@
 // Qt
 #include <QObject>
 #include <QLocalSocket>
+#include <QTcpSocket>
 
 // Local
 #include "CuteIPCInterface.h"
@@ -16,6 +17,7 @@ class CuteIPCInterfaceConnection : public QObject
 
   public:
     CuteIPCInterfaceConnection(QLocalSocket* socket, QObject* parent = 0);
+    CuteIPCInterfaceConnection(QTcpSocket* socket, QObject* parent = 0);
 
     void sendCallRequest(const QByteArray& request);
     void setReturnedObject(QGenericReturnArgument returnedObject);
@@ -29,10 +31,13 @@ class CuteIPCInterfaceConnection : public QObject
 
   public slots:
     void readyRead();
-    void errorOccured(QLocalSocket::LocalSocketError);
+
+    void errorOccured(QLocalSocket::LocalSocketError); // local socket error
+    void errorOccured(QAbstractSocket::SocketError);   // network socket error
 
   private:
-    QLocalSocket* m_socket;
+    QIODevice* m_socket;
+
     quint32 m_nextBlockSize;
     QByteArray m_block;
 

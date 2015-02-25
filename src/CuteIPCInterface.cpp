@@ -10,6 +10,7 @@
 // Qt
 #include <QThread>
 #include <QEventLoop>
+#include <QHostAddress>
 
 
 /*!
@@ -51,15 +52,6 @@ CuteIPCInterfacePrivate::~CuteIPCInterfacePrivate()
 
   delete m_worker;
   delete m_workerThread;
-}
-
-
-void CuteIPCInterfacePrivate::registerSocket()
-{
-  QEventLoop loop;
-  QObject::connect(m_worker, SIGNAL(registerSocketFinished()), &loop, SLOT(quit()));
-  QMetaObject::invokeMethod(m_worker, "registerSocket");
-  loop.exec();
 }
 
 
@@ -120,30 +112,61 @@ bool CuteIPCInterfacePrivate::sendRemoteDisconnectRequest(const QString& signalS
 bool CuteIPCInterfacePrivate::sendSynchronousRequest(const QByteArray& request, QGenericReturnArgument returnedObject)
 {
   Q_Q(CuteIPCInterface);
-  QLocalSocket socket;
-  socket.connectToServer(m_serverName);
-  bool connected = socket.waitForConnected(5000);
-  if (!connected)
+
+  if (!m_localServer.isEmpty())
   {
-    socket.disconnectFromServer();
-    QString error("CuteIPC: Не удалось подключиться к серверу при вызове синхронного метода");
-    qWarning() << error;
-    _q_setLastError(error);
-    return false;
+    QLocalSocket socket;
+    socket.connectToServer(m_localServer);
+    bool connected = socket.waitForConnected(5000);
+    if (!connected)
+    {
+      socket.disconnectFromServer();
+      QString error("CuteIPC: Не удалось подключиться к серверу при вызове синхронного метода");
+      qWarning() << error;
+      _q_setLastError(error);
+      return false;
+    }
+
+    CuteIPCInterfaceConnection connection(&socket);
+    QObject::connect(&connection, SIGNAL(errorOccured(QString)), q, SLOT(_q_setLastError(QString)));
+    connection.setReturnedObject(returnedObject);
+
+    QEventLoop loop;
+    QObject::connect(&connection, SIGNAL(callFinished()), &loop, SLOT(quit()));
+    QObject::connect(&connection, SIGNAL(socketDisconnected()), &loop, SLOT(quit()));
+    connection.sendCallRequest(request);
+    loop.exec();
+
+    return connection.lastCallSuccessful();
+  }
+  else if (!m_tcpAddress.first.isNull())
+  {
+    QTcpSocket socket;
+    socket.connectToHost(m_tcpAddress.first, m_tcpAddress.second);
+    bool connected = socket.waitForConnected(5000);
+    if (!connected)
+    {
+      socket.disconnectFromHost();
+      QString error("CuteIPC: Не удалось подключиться к серверу при вызове синхронного метода");
+      qWarning() << error;
+      _q_setLastError(error);
+      return false;
+    }
+
+    CuteIPCInterfaceConnection connection(&socket);
+    QObject::connect(&connection, SIGNAL(errorOccured(QString)), q, SLOT(_q_setLastError(QString)));
+    connection.setReturnedObject(returnedObject);
+
+    QEventLoop loop;
+    QObject::connect(&connection, SIGNAL(callFinished()), &loop, SLOT(quit()));
+    QObject::connect(&connection, SIGNAL(socketDisconnected()), &loop, SLOT(quit()));
+    connection.sendCallRequest(request);
+    loop.exec();
+
+    return connection.lastCallSuccessful();
   }
 
-  CuteIPCInterfaceConnection connection(&socket);
-  QObject::connect(&connection, SIGNAL(errorOccured(QString)), q, SLOT(_q_setLastError(QString)));
-
-  connection.setReturnedObject(returnedObject);
-
-  QEventLoop loop;
-  QObject::connect(&connection, SIGNAL(callFinished()), &loop, SLOT(quit()));
-  QObject::connect(&connection, SIGNAL(socketDisconnected()), &loop, SLOT(quit()));
-  connection.sendCallRequest(request);
-  loop.exec();
-
-  return connection.lastCallSuccessful();
+  return false;
 }
 
 
@@ -278,8 +301,7 @@ CuteIPCInterface::CuteIPCInterface(QObject* parent)
   qRegisterMetaType<QGenericReturnArgument>("QGenericReturnArgument");
   qRegisterMetaType<QAbstractSocket::SocketState>("QAbstractSocket::SocketState");
   qRegisterMetaType<CuteIPCMessage::Arguments>("CuteIPCMessage::Arguments");
-
-  d->registerSocket();
+  qRegisterMetaType<QHostAddress>("QHostAddress");
 }
 
 
@@ -297,8 +319,7 @@ CuteIPCInterface::CuteIPCInterface(CuteIPCInterfacePrivate& dd, QObject* parent)
   qRegisterMetaType<QGenericReturnArgument>("QGenericReturnArgument");
   qRegisterMetaType<QAbstractSocket::SocketState>("QAbstractSocket::SocketState");
   qRegisterMetaType<CuteIPCMessage::Arguments>("CuteIPCMessage::Arguments");
-
-  d->registerSocket();
+  qRegisterMetaType<QHostAddress>("QHostAddress");
 }
 
 
@@ -324,8 +345,23 @@ bool CuteIPCInterface::connectToServer(const QString& name)
   QMetaObject::invokeMethod(d->m_worker, "connectToServer", Q_ARG(QString, name), Q_ARG(void*, &connected));
   loop.exec();
 
-  d->m_serverName = name;
+  d->m_localServer = name;
 
+  return connected;
+}
+
+
+bool CuteIPCInterface::connectToServer(const QHostAddress& host, quint16 port)
+{
+  Q_D(CuteIPCInterface);
+  bool connected;
+
+  QEventLoop loop;
+  connect(d->m_worker, SIGNAL(connectToServerFinished()), &loop, SLOT(quit()));
+  QMetaObject::invokeMethod(d->m_worker, "connectToTcpServer", Q_ARG(QHostAddress, host), Q_ARG(quint16, port), Q_ARG(void*, &connected));
+  loop.exec();
+
+  d->m_tcpAddress = qMakePair(host, port);
   return connected;
 }
 

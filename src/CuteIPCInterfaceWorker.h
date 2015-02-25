@@ -3,7 +3,8 @@
 
 #include <QObject>
 #include <QPointer>
-class QLocalSocket;
+class QIODevice;
+class QHostAddress;
 
 // Local
 #include "CuteIPCMessage_p.h"
@@ -24,16 +25,17 @@ class CuteIPCInterfaceWorker : public QObject
     void setLastError(const QString& error);
 
     // slot finish signals
-    void registerSocketFinished();
     void connectToServerFinished();
     void sendConnectionIdFinished();
     void disconnectFromServerFinished();
     void invokeRemoteSignal(const QString& signalSignature, const CuteIPCMessage::Arguments& arguments);
 
   public slots:
-    void registerSocket();
     void connectToServer(const QString& name, void* successful);
+    void connectToTcpServer(const QHostAddress& host, const quint16 port, void* successful);
+
     void disconnectFromServer();
+
     void sendCallRequest(const QByteArray& request);
     QString connectionId() const;
 
@@ -42,7 +44,7 @@ class CuteIPCInterfaceWorker : public QObject
     void sendSignalDisconnectRequest(const QString& signal);
 
     QPointer<CuteIPCInterfaceConnection> m_connection;
-    QPointer<QLocalSocket> m_socket;
+    QPointer<QIODevice> m_socket;
 };
 
 #endif // CUTEIPCINTERFACEWORKER_H

@@ -5,6 +5,7 @@
 #include <QObject>
 #include <QMultiHash>
 #include <QPointer>
+#include <QHostAddress>
 class QLocalSocket;
 
 // Local
@@ -26,8 +27,6 @@ class CuteIPCInterfacePrivate
     CuteIPCInterfacePrivate();
     virtual ~CuteIPCInterfacePrivate();
 
-    void registerSocket();
-
     bool checkConnectCorrection(const QString& signal, const QString& method);
     bool checkRemoteSlotExistance(const QString& slot);
     bool sendRemoteConnectRequest(const QString& signalSignature);
@@ -46,9 +45,13 @@ class CuteIPCInterfacePrivate
     CuteIPCInterface* q_ptr;
     QMultiHash<MethodData, CuteIPCSignalHandler*> m_localSignalHandlers;
     QString m_lastError;
+
     QThread* m_workerThread;
     CuteIPCInterfaceWorker* m_worker;
-    QString m_serverName;
+
+    QString m_localServer;
+    QPair<QHostAddress, quint16> m_tcpAddress;
+
     QMultiHash<QString, MethodData> m_connections;
 };
 
