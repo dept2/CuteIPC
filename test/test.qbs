@@ -110,4 +110,48 @@ Project {
       cpp.cxxFlags: [ "-std=c++11" ]
     }
   }
+
+  //6
+  CppApplication {
+    name: "TestTcpCommunication"
+
+    files: [ "src/ServiceTestObject.*",
+             "src/InterfaceTestObject.*",
+             "src/SignalWaiter.*",
+             "images/images.qrc",
+             "src/TestTcpCommunication.*"
+    ]
+
+    cpp.includePaths: "../src"
+
+    Depends { name: "Qt"; submodules: [ "core", "gui", "network", "test" ] }
+    Depends { name: "CuteIPC" }
+
+    Properties {
+      condition: qbs.toolchain.contains('gcc')
+      cpp.cxxFlags: [ "-std=c++11" ]
+    }
+  }
+
+  //6
+  CppApplication {
+    name: "TestTcpServer"
+
+    files: [ "src/ServiceTestObject.*",
+             "src/InterfaceTestObject.*",
+             "src/SignalWaiter.*",
+             "images/images.qrc",
+             "src/TestTcpServer.*"
+    ]
+
+    cpp.includePaths: "../src"
+
+    Depends { name: "Qt"; submodules: [ "core", "gui", "network", "test" ] }
+    Depends { name: "CuteIPC" }
+
+    Properties {
+      condition: qbs.toolchain.contains('gcc')
+      cpp.cxxFlags: [ "-std=c++11" ]
+    }
+  }
 }

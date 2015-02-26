@@ -174,3 +174,9 @@ void ServiceTestObject::emitQStringIntSignal(const QString& message, int value)
 {
   emit serviceQStringIntSignal(message, value);
 }
+
+
+void ServiceTestObject::emitTcpFinish()
+{
+  emit tcpFinish();
+}
