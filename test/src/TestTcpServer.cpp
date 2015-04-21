@@ -23,7 +23,7 @@ void TestTcpServer::init()
   m_service = new ServiceTestObject(0);
   QHostAddress address = QHostAddress::Any;
   qDebug() << "Trying to listen at" << address.toString() << primaryPort;
-  QVERIFY(m_service->listen(address, primaryPort));
+  QVERIFY(m_service->listenTcp(address, primaryPort));
 }
 
 

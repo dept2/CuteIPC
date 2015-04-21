@@ -95,3 +95,5 @@ a_test(TestMessageMarshalling src/TestMessageMarshalling.cpp src/TestMessageMars
 a_test(TestSignalHandler src/TestSignalHandler.cpp src/TestSignalHandler.h)
 a_test(TestSocketCommunication src/TestSocketCommunication.cpp src/TestSocketCommunication.h)
 a_test(TestErrorsHandling src/TestErrorsHandling.cpp src/TestErrorsHandling.h)
+a_test(TestTcpServer src/TestTcpServer.cpp src/TestTcpServer.h)
+a_test(TestTcpCommuncation src/TestTcpCommunication.cpp src/TestTcpCommunication.h)

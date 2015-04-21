@@ -216,7 +216,7 @@ CuteIPCService::~CuteIPCService()
 }
 
 
-bool CuteIPCService::listen(const QHostAddress& address, quint16 port, QObject* subject)
+bool CuteIPCService::listenTcp(const QHostAddress& address, quint16 port, QObject* subject)
 {
   Q_D(CuteIPCService);
 
@@ -228,6 +228,39 @@ bool CuteIPCService::listen(const QHostAddress& address, quint16 port, QObject* 
   d->m_subject = subject;
   return ok;
 }
+
+
+bool CuteIPCService::listenTcp(QObject* subject)
+{
+  return listenTcp(QHostAddress::Any, 0, subject);
+}
+
+
+quint16 CuteIPCService::tcpPort() const
+{
+  Q_D(const CuteIPCService);
+  if (!d->m_tcpServer)
+  {
+    qWarning() << "CuteIPC: trying to get TCP port without listening being established";
+    return -1;
+  }
+
+  return d->m_tcpServer->serverPort();
+}
+
+
+QHostAddress CuteIPCService::tcpAddress() const
+{
+  Q_D(const CuteIPCService);
+  if (!d->m_tcpServer)
+  {
+    qWarning() << "CuteIPC: trying to get TCP address without listening being established";
+    return QHostAddress::Null;
+  }
+
+  return d->m_tcpServer->serverAddress();
+}
+
 
 /*!
     Tells the server to listen for incoming connections on \a serverName.
@@ -296,6 +329,12 @@ void CuteIPCService::close()
 QString CuteIPCService::serverName() const
 {
   Q_D(const CuteIPCService);
+  if (!d->m_localServer)
+  {
+    qWarning() << "CuteIPC: trying to get local server name without listening being established";
+    return QString();
+  }
+
   return d->m_localServer->serverName();
 }
 

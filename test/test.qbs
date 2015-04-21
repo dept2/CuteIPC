@@ -89,28 +89,6 @@ Project {
     }
   }
 
-  //5
-  CppApplication {
-    name: "TestLocalTcpCommunication"
-
-    files: [ "src/ServiceTestObject.*",
-             "src/InterfaceTestObject.*",
-             "src/SignalWaiter.*",
-             "images/images.qrc",
-             "src/TestLocalTcpCommunication.*"
-    ]
-
-    cpp.includePaths: "../src"
-
-    Depends { name: "Qt"; submodules: [ "core", "gui", "network", "test" ] }
-    Depends { name: "CuteIPC" }
-
-    Properties {
-      condition: qbs.toolchain.contains('gcc')
-      cpp.cxxFlags: [ "-std=c++11" ]
-    }
-  }
-
   //6
   CppApplication {
     name: "TestTcpCommunication"
