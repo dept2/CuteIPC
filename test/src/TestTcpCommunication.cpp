@@ -14,7 +14,7 @@
 namespace
 {
   const int primaryPort = 5555;
-  const char* const host = "192.168.1.211";
+  const char* const host = "127.0.0.1";
 }
 
 
@@ -23,7 +23,7 @@ void TestTcpCommunication::init()
   m_interface = new CuteIPCInterface(0);
   QTime time;
   time.start();
-  QVERIFY(m_interface->connectToServer(QHostAddress(host), primaryPort));
+  QVERIFY2(m_interface->connectToServer(QHostAddress(host), primaryPort), "Connection failed. Check if TestTcpServer started");
   qDebug() << "Connect time:" << time.elapsed();
 }
 

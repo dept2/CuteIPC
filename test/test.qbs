@@ -115,8 +115,7 @@ Project {
   CppApplication {
     name: "TestTcpCommunication"
 
-    files: [ "src/ServiceTestObject.*",
-             "src/InterfaceTestObject.*",
+    files: [ "src/InterfaceTestObject.*",
              "src/SignalWaiter.*",
              "images/images.qrc",
              "src/TestTcpCommunication.*"
@@ -138,8 +137,6 @@ Project {
     name: "TestTcpServer"
 
     files: [ "src/ServiceTestObject.*",
-             "src/InterfaceTestObject.*",
-             "src/SignalWaiter.*",
              "images/images.qrc",
              "src/TestTcpServer.*"
     ]
