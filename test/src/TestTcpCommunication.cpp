@@ -156,32 +156,20 @@ void TestTcpCommunication::testLocalSignals()
   QVERIFY(m_interface->remoteSlotConnect(secondTestObject, SIGNAL(interfaceQStringSignal(QString)),
                                          SLOT(serviceQStringSlot(QString))));
 
-
-  // TODO: Придумать тут что-то адекватное!
-
-//  SignalWaiter waiter;
-//  waiter.addConnection(m_service, SIGNAL(slotWasCalled(QString)), 3);
+  QVERIFY(m_interface->remoteConnect(SIGNAL(slotWasCalled(QString)), firstTestObject, SIGNAL(slotWasCalled(QString))));
+  SignalWaiter waiter;
+  waiter.addConnection(firstTestObject, SIGNAL(slotWasCalled(QString)), 3);
 
   //test transfers
-//  QByteArray testByteArray(1 * 1024 * 1024, 'B');
+  QByteArray testByteArray(1 * 1024 * 1024, 'B');
+  QImage testImage(800, 600, QImage::Format_RGB888);
+  QString testString("testLocalSignalsString");
+  int testInt = 30;
 
-//  QImage testImage(800, 600, QImage::Format_RGB888);
-//  QString testString("testLocalSignalsString");
-//  int testInt = 30;
-
-//  firstTestObject->emitQByteArraySignal(testByteArray);
-//  firstTestObject->emitQImageSignal(testImage);
-//  secondTestObject->emitQStringIntSignal(testString, testInt);
-//  QVERIFY(waiter.wait());
-
-//  //Compare result values
-//  QCOMPARE(testByteArray, m_service->getByteArray());
-//  QCOMPARE(testImage.size(), m_service->getImage().size());
-//  QCOMPARE(testImage.pixel(0, 0), m_service->getImage().pixel(0, 0));
-//  QCOMPARE(testImage.pixel(50, 50), m_service->getImage().pixel(50, 50));
-
-//  QCOMPARE(testString, m_service->getString());
-//  QCOMPARE(testInt, m_service->getInt());
+  firstTestObject->emitQByteArraySignal(testByteArray);
+  firstTestObject->emitQImageSignal(testImage);
+  secondTestObject->emitQStringIntSignal(testString, testInt);
+  QVERIFY(waiter.wait());
 
   delete firstTestObject;
   delete secondTestObject;
@@ -408,6 +396,54 @@ void TestTcpCommunication::testThread()
   thread->quit();
   thread->wait();
   delete thread;
+}
+
+
+void TestTcpCommunication::testBothLocalAndRemote()
+{
+  if (QString(host) != "127.0.0.1")
+    QSKIP("Can be executed only with localhost server");
+
+  CuteIPCInterface* localInterface = new CuteIPCInterface(this);
+  QVERIFY(localInterface->connectToServer("LocalSocket"));
+
+  // direct calls
+  int intval;
+  QString testString("testCallString");
+  QVERIFY(m_interface->call("testQStringTransfer", Q_RETURN_ARG(int, intval), Q_ARG(QString, testString)) == true);
+  QCOMPARE(intval, testString.size());
+  QVERIFY(localInterface->call("testQStringTransfer", Q_RETURN_ARG(int, intval), Q_ARG(QString, testString)) == true);
+  QCOMPARE(intval, testString.size());
+
+  // signals
+  InterfaceTestObject* firstTestObject = new InterfaceTestObject(this);
+  InterfaceTestObject* secondTestObject = new InterfaceTestObject(this);
+  SignalWaiter waiter;
+  QVERIFY(m_interface->remoteConnect(SIGNAL(serviceQStringIntSignal(QString,int)), firstTestObject,
+                                     SLOT(interfaceQStringIntSlot(QString,int))));
+  QVERIFY(localInterface->remoteConnect(SIGNAL(serviceQStringIntSignal(QString,int)), secondTestObject,
+                                     SLOT(interfaceQStringIntSlot(QString,int))));
+  waiter.addConnection(firstTestObject, SIGNAL(slotWasCalled(QString)), 1);
+  waiter.addConnection(secondTestObject, SIGNAL(slotWasCalled(QString)), 1);
+  int testInt = 25;
+  testString = "testRemoteSignals";
+  m_interface->callNoReply("emitQStringIntSignal", Q_ARG(QString, testString), Q_ARG(int, testInt));
+  QVERIFY(waiter.wait());
+
+  // remote slots
+  QVERIFY(m_interface->remoteSlotConnect(firstTestObject, SIGNAL(interfaceQStringIntSignal(QString,int)),
+                                         SLOT(serviceQStringIntSlot(QString,int))));
+  QVERIFY(localInterface->remoteSlotConnect(secondTestObject, SIGNAL(interfaceQStringIntSignal(QString,int)),
+                                         SLOT(serviceQStringIntSlot(QString,int))));
+  QVERIFY(m_interface->remoteConnect(SIGNAL(slotWasCalled(QString)), firstTestObject, SIGNAL(slotWasCalled(QString))));
+  SignalWaiter waiter2;
+  waiter2.addConnection(firstTestObject, SIGNAL(slotWasCalled(QString)), 2);
+  testString = "testLocalSignals";
+  testInt = 30;
+
+  firstTestObject->emitQStringIntSignal(testString, testInt);
+  secondTestObject->emitQStringIntSignal(testString, testInt);
+  QVERIFY(waiter2.wait());
 }
 
 

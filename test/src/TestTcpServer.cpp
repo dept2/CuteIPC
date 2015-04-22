@@ -24,6 +24,7 @@ void TestTcpServer::init()
   QHostAddress address = QHostAddress::Any;
   qDebug() << "Trying to listen at" << address.toString() << primaryPort;
   QVERIFY(m_service->listenTcp(address, primaryPort));
+  QVERIFY(m_service->listen("LocalSocket"));
 }
 
 

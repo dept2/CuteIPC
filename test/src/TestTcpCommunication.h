@@ -46,6 +46,9 @@ class TestTcpCommunication : public QObject
     // thread tests
     void testThread();
 
+    // test immediate local and remote connections
+    void testBothLocalAndRemote();
+
     // finish
     void tcpFinish();
 
