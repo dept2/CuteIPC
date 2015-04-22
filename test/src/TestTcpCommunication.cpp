@@ -402,7 +402,7 @@ void TestTcpCommunication::testThread()
 void TestTcpCommunication::testBothLocalAndRemote()
 {
   if (QString(host) != "127.0.0.1")
-    QSKIP("Can be executed only with localhost server");
+    QSKIP("Can be executed only with localhost server", SkipSingle);
 
   CuteIPCInterface* localInterface = new CuteIPCInterface(this);
   QVERIFY(localInterface->connectToServer("LocalSocket"));
