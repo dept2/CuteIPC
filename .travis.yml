@@ -2,7 +2,7 @@ language : cpp
 compiler : gcc
 before_install:
   - sudo apt-get update -q
-  - sudo apt-get install -y libqt4-dev qmake-qt4
+  - sudo apt-get install -y libqt4-dev qt4-qmake
 script:
   - mkdir build
   - cd build
