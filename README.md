@@ -27,7 +27,7 @@ Finally, add the `include` directory of CuteIPC to your project.
 
 ##### Connection
 
-First, create a server associate it with a desired `QObject`.
+First, create a server and associate it with a desired `QObject`.
 The signals and slots of this object will be used in IPC.
 ``` cpp
 CuteIPCService* service = new CuteIPCService;
