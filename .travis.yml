@@ -18,4 +18,5 @@ script:
   - ./test_TestSignalHandler
   - ./test_TestSocketCommunication
   - ./test_TestTcpServer &
+  - sleep 1
   - ./test_TestTcpCommunication
