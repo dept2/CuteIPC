@@ -1,0 +1,17 @@
+language : cpp
+compiler : gcc
+before_install:
+  - sudo apt-get update -q
+  - sudo apt-get install -y libqt4-dev qmake-qt4
+script:
+  - mkdir build
+  - cd build
+  - cmake .. -DQT_DESIRED_VERSION=4
+  - make
+  - cd test
+  - ./test_TestErrorsHandling
+  - ./test_TestMessageMarshalling
+  - ./test_TestSignalHandler
+  - ./test_TestSocketCommunication
+  - ./test_TestTcpServer &
+  - ./test_TestTcpCommunication
