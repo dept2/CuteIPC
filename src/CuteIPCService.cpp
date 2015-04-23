@@ -21,22 +21,27 @@
 /*!
     \class CuteIPCService
 
-    \brief The CuteIPCService class provides an IPC-server,
-    based on Qt QLocalServer class and
-    intended for recieving remote call requests and Qt signals.
+    \brief The CuteIPCService class provides an IPC server
+    used to receive call requests and handle remote signals connections.
 
-    It can recieve messages from clients,
-    such as method invoke request or Qt signal,
-    process them and send a response back to the client.
+    Based on [QLocalServer](http://doc.qt.io/qt-5/qlocalserver.html)
+    and [QTcpServer](http://doc.qt.io/qt-5/qtcpserver.html), it
+    can be used locally or over TCP.
+    To start local server identified by its name,
+    use listen() method. Use listenTcp() method to start TCP server.
 
-    By inheriting the CuteIPCService class, you can invoke any method of your subclass,
-    or to connect your local signal to the client's remote slot.
+    You can specify a particular QObject to
+    invoke its methods and slots and handle its signals, by specifying this object
+    in the listen() or listenTcp() methods. In this case, the CuteIPCService
+    object behaves only as an adaptor.
+    Alternatively, you can inherit the CuteIPCService directly and invoke any method
+    or slot of your subclassed object.
 
-    Call listen() to have the server start listening.
+    You can connect multiple clients to the same CuteICPService object.
 
-    You can also connect client's signals and slots to the some other object
-    (in this case, the CuteIPCService behaves only as adaptor).
-    To make it possible, pass your object as argument in the listen() method.
+    \note It's possible (but not recommended) to listen on both local socket and
+    TCP socket. More native way in this case will be using TCP connection with
+    both remote and local connections from clients.
 
     \sa CuteIPCClient
 */
@@ -216,6 +221,18 @@ CuteIPCService::~CuteIPCService()
 }
 
 
+/*!
+    Tells the server to listen for incoming TCP connections.
+    The server is identified by a TCP \a port.
+    Internally, the [QTcpServer](http://doc.qt.io/qt-5/qtcpserver.html) is used in this case,
+    and parameters are comply with QTcpServer::listen method.
+
+    \param address host address. It could be any of QHostAddress::​SpecialAddress, e.g. QHostAddress::Any.
+    \param port TCP port.
+    \param subject Sets the object which methods will be invoked. By default, it is CuteIPCService
+    object itself. Previous subject will be replaced.
+    Returns true on success, otherwise false.
+ */
 bool CuteIPCService::listenTcp(const QHostAddress& address, quint16 port, QObject* subject)
 {
   Q_D(CuteIPCService);
@@ -230,12 +247,20 @@ bool CuteIPCService::listenTcp(const QHostAddress& address, quint16 port, QObjec
 }
 
 
+/*!
+ * This is an overloaded member function.
+ */
 bool CuteIPCService::listenTcp(QObject* subject)
 {
   return listenTcp(QHostAddress::Any, 0, subject);
 }
 
 
+/*!
+    Returns the server TCP port if the server is listening for TCP connections;
+    otherwise returns -1;
+    \sa listenTcp()
+ */
 quint16 CuteIPCService::tcpPort() const
 {
   Q_D(const CuteIPCService);
@@ -249,6 +274,11 @@ quint16 CuteIPCService::tcpPort() const
 }
 
 
+/*!
+    Returns the server host name if the server is listening for TCP connections;
+    otherwise returns QHostAddress::Null.
+    \sa listenTcp()
+ */
 QHostAddress CuteIPCService::tcpAddress() const
 {
   Q_D(const CuteIPCService);
@@ -263,13 +293,15 @@ QHostAddress CuteIPCService::tcpAddress() const
 
 
 /*!
-    Tells the server to listen for incoming connections on \a serverName.
-    If the serverName is an empty string, it generates the name based on class name.
-    If the server is currently listening then it will try
-    to reuse the existing pipe.
-    \param subject Sets the object, which methods will be invoked (by default, it well be the CuteIPCService
-    class itself)
-    Return true on success, otherwise false.
+    Tells the server to listen for incoming local connections.
+    The server is identified by a \a serverName.
+    Internally, the [QLocalServer](http://doc.qt.io/qt-5/qlocalserver.html) is used in this case.
+
+    \param serverName Server name. If it's empty,
+    the name will be generated based on class name and can be accessed by serverName() method.
+    \param subject Sets the object which methods will be invoked. By default, it is CuteIPCService
+    object itself. Previous subject will be replaced.
+    Returns true on success, otherwise false.
  */
 bool CuteIPCService::listen(const QString& serverName, QObject* subject)
 {
@@ -300,6 +332,9 @@ bool CuteIPCService::listen(const QString& serverName, QObject* subject)
 }
 
 
+/*!
+ * This is an overloaded member function.
+ */
 bool CuteIPCService::listen(QObject* subject)
 {
   return listen(QString(), subject);
@@ -307,8 +342,8 @@ bool CuteIPCService::listen(QObject* subject)
 
 
 /*!
-    Stop listening for incoming connections.
-    Existing connections are not effected, but any new connections will be refused.
+    Closes the server (listening for both TCP and local connections).
+    Internally, QLocalServer::close() and QTcpServer::close() are called.
  */
 void CuteIPCService::close()
 {
@@ -321,8 +356,8 @@ void CuteIPCService::close()
 
 
 /*!
-    Returns the server name if the server is listening for connections;
-    otherwise returns QString()
+    Returns the server name if the server is listening for local connections;
+    otherwise returns QString().
 
     \sa listen()
  */
@@ -340,31 +375,67 @@ QString CuteIPCService::serverName() const
 
 /*! \mainpage CuteIPC
  *
- * \section intro_sec Introduction
+ * \section intro_sec Intro
  *
- * The CuteIPC is a Qt library which is intended to
- * make remote method calls and to transmit Qt signals
- * through the local socket connection.
- *
- * It's based on QLocalSocket and QLocalServer Qt classes, thus adopts Qt
- * platform independence.
- *
+ * The CuteIPC library adds a facility to use Qt signals and slots across
+ * local processes and over TCP.
+ * CuteIPCService and CuteIPCInterface library classes are based on
+ * standard Qt sockets and provide cross platform IPC solution with native syntax for Qt programs.
  *
  * \section usage_sec Usage
  *
- * To use the library, just inherit the CuteIPCService class on the server side
- * and the CuteIPCInterface class on the client.
- * It makes it possible to call the methods of class that inherits the CuteIPCService
- * from the client.
- * You can also connect client's slots and signals to some other object on the server side
- * (in this case, the CuteIPCService class behaves as adaptor)
+ * #### Connection
+ * First, create a server and associate it with a desired \a QObject:
  *
- * The signature of the CuteIPCInterface call methods is completely concurs
- * with \a QMetaObject::invokeMethod() Qt method signature.
+ * \code{.cpp}
+ * // local server identified by name
+ * CuteIPCService* service = new CuteIPCService;
+ * service->listen("serverName", myObject);
+ * \endcode
+ * \code{.cpp}
+ * // tcp server identified by host and port
+ * CuteIPCService* service = new CuteIPCService;
+ * service->listenTcp(QHostAddress::Any, 31337, myObject);
+ * \endcode
+ * The signals and slots of the object myObject will be called in IPC.
  *
- * You can also remotely connect the server-side signals to the client's slots and signals.
- * On the other hand, you can connect client's local signals to the remote slots of
- * the server.
+ * On the other side, create the interface and connect to the server:
+ * \code{.cpp}
+ * // connect locally
+ * CuteIPCInterface* interface;
+ * interface = new CuteIPCInterface;
+ * interface->connectToServer("myServerName");
+ * \endcode
+ * \code{.cpp}
+ * // connect over TCP
+ * interface->connectToServer(QHostAddress("192.0.2.1"), 31337);
+ * \endcode
+ *
+ * #### Direct calls
+ * You can to directly invoke any [invokable](http://doc.qt.io/qt-5/qobject.html#Q_INVOKABLE) method or public slot of the corresponding object.
+ * The syntax is concurs with [QMetaObject::invokeMethod](http://doc.qt.io/qt-5/qmetaobject.html#invokeMethod).
+ *
+ * Use CuteIPCInterface::call() method to invoke synchronously and wait for result in the event loop:
+ * \code{.cpp}
+ * int result;
+ * interface->call("remoteMethod", Q_RETURN_ARG(int, result), Q_ARG(QString, methodParameter));
+ * \endcode
+ *
+ * Use CuteIPCInterface::callNoReply() to send invoke request asynchronously and return immediately:
+ * \code{.cpp}
+ * interface->callNoReply("remoteMethod", Q_ARG(QString, methodParameter));
+ * \endcode
+ *
+ * #### Signals and slots
+ * You can natively connect the remote signal to a local slot:
+ * \code{.cpp}
+ * interface->remoteConnect(SIGNAL(remoteSignal(QString)), receiver, SLOT(receiverSlot(QString)));
+ * \endcode
+ *
+ * or local signal to the remote slot:
+ * \code{.cpp}
+ * interface->remoteSlotConnect(senderObject, SIGNAL(localSignal(QString)), SLOT(remoteSlot(QString)));
+ * \endcode
  *
  * \note To enable debug output, set CUTEIPC_DEBUG environment variable to 1;
  *

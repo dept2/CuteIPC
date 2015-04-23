@@ -16,10 +16,12 @@
 /*!
     \class CuteIPCInterface
 
-    \brief The CuteIPCInterface class provides an IPC-client,
-    intended for sending remote call requests and Qt signals
-    to the server through the QLocalSocket connection.
+    \brief The CuteIPCInterface class provides an IPC client
+    used to send remote call requests and set connections between remote
+    signals and slots.
 
+    It is based on [QLocalSocket](http://doc.qt.io/qt-5/qlocalsocket.html)
+    and [QTcpSocket](http://doc.qt.io/qt-5/qtcpsocket.html).
     To connect to the server, call connectToServer() method.
 
     Use call() and callNoReply() methods to send method invoke requests to the server
@@ -75,7 +77,7 @@ bool CuteIPCInterfacePrivate::checkConnectCorrection(const QString& signal, cons
 
 bool CuteIPCInterfacePrivate::checkRemoteSlotExistance(const QString& slot)
 {
-  DEBUG << "Check remote slot existance" << slot;
+  DEBUG << "Check remote slot existence" << slot;
   CuteIPCMessage message(CuteIPCMessage::SlotConnectionRequest, slot);
   QByteArray request = CuteIPCMarshaller::marshallMessage(message);
   return sendSynchronousRequest(request);
@@ -333,7 +335,11 @@ CuteIPCInterface::~CuteIPCInterface()
 
 
 /*!
-    Attempts to make a connection to the server with given name.
+  Attempts to make a connection to the local server with a given \a name.
+  Returns true on success, otherwise false.
+  \param name Local server name
+  \sa CuteIPCInterface::connectToServer(const QHostAddress &host, quint16 port)
+  \sa CuteIPCService::serverName()
  */
 bool CuteIPCInterface::connectToServer(const QString& name)
 {
@@ -350,7 +356,14 @@ bool CuteIPCInterface::connectToServer(const QString& name)
   return connected;
 }
 
-
+/*!
+  Attempts to make a connection to the TCP server with a given \a host and \a port.
+  Returns true on success, otherwise false.
+  \param host Server host
+  \param port Server tcp port
+  \sa CuteIPCInterface::connectToServer(const QString& name)
+  \sa CuteIPCService::serverName()
+ */
 bool CuteIPCInterface::connectToServer(const QHostAddress& host, quint16 port)
 {
   Q_D(CuteIPCInterface);
@@ -383,7 +396,9 @@ void CuteIPCInterface::disconnectFromServer()
     The method is used to connect the remote signal (on the server-side) to the slot or signal
     of some local object.
     It returns true on success. False otherwise (the slot doesn't exist,
-    of signatures are incompatible, or if the server replies with an error).
+    or signatures are incompatible, or the server replies the error).
+
+    After the connection being established, signals will be delivered asynchronously.
 
     \note It is recommended to use this method the same way as you call QObject::connect() method
     (by using SIGNAL() and SLOT() macros).
@@ -462,7 +477,9 @@ bool CuteIPCInterface::disconnectSignal(const char* signal, QObject* object, con
     The method is used to connect the signal of some local object (on the client-side) to the remote slot
     of the server.
 
-    It returns true on success. False otherwise (If the local signal doesn't exist, or signatures are incompatible).
+    It returns true on success. False otherwise (the local signal doesn't exist, or signatures are incompatible).
+
+    After the connection being established, all signals will be delivered asynchronously.
 
     \note It is recommended to use this method the same way as you call QObject::connect() method
     (by using SIGNAL() and SLOT() macros).
@@ -471,7 +488,7 @@ bool CuteIPCInterface::disconnectSignal(const char* signal, QObject* object, con
     you can type:
     \code remoteSlotConnect(object, SIGNAL(exampleSignal()), SLOT(exampleSlot())); \endcode
 
-    \warning The method doesn't check the existance of the remote slot on the server-side.
+    \warning The method doesn't check the existence of the remote slot on the server-side.
 
     \sa remoteConnect(), call()
  */
@@ -542,7 +559,7 @@ bool CuteIPCInterface::disconnectSlot(QObject* localObject, const char* signal, 
 
 /*!
     Invokes the remote \a method (of the server). Returns true if the invokation was successful, false otherwise.
-    The invokation is synchronous (which means that client will be waiting for the response).
+    The invokation is synchronous (which means that client will be waiting for the response in the event loop).
     See callNoReply() method for asynchronous invokation.
 
     The signature of this method is completely concurs with QMetaObject::invokeMethod() Qt method signature.
@@ -628,7 +645,7 @@ void CuteIPCInterface::callNoReply(const QString& method, QGenericArgument val0,
 
 
 /*!
-    Returns the error that last occured.
+    Returns the last occured error.
  */
 QString CuteIPCInterface::lastError() const
 {
