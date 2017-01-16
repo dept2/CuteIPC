@@ -13,6 +13,7 @@
 
 void TestSocketCommunication::init()
 {
+  qRegisterMetaType<QList<QImage> >("QList<QImage>");
   m_service = new ServiceTestObject(0);
   m_interface = new CuteIPCInterface(0);
   QVERIFY(m_service->listen("TestSocket"));
@@ -80,6 +81,21 @@ void TestSocketCommunication::testDirectCalls()
   qDebug() << "ret" << returnedImage.format() << returnedImage.size();
   QCOMPARE(testImage, returnedImage);
 
+  //test QList<QImage> transfer
+  QList<QImage> testImageList = QList<QImage>() << testImage;
+  QVERIFY(m_interface->call("testQListOfQImageTransfer", Q_RETURN_ARG(int, intval), Q_ARG(QList<QImage>, testImageList)) == true);
+  QCOMPARE(testImageList.length(), m_service->getImageList().length());
+  QCOMPARE(testImageList.first().size(), m_service->getImageList().first().size());
+  QCOMPARE(testImageList.first().pixel(0, 0), m_service->getImageList().first().pixel(0, 0));
+  QCOMPARE(testImageList.first().pixel(50, 50), m_service->getImageList().first().pixel(50, 50));
+
+  // Test QList<QImage> return
+  QList<QImage> returnedImageList;
+  QVERIFY(m_interface->call("getImageList", Q_RETURN_ARG(QList<QImage>, returnedImageList)));
+  qDebug() << "ret" << returnedImageList.length() << returnedImageList.first().format() << returnedImageList.first().size();
+  QCOMPARE(testImageList.length(), returnedImageList.length());
+  QCOMPARE(testImage, returnedImageList.first());
+
   //test QString transfer
   QString testString("testCallString");
   QVERIFY(m_interface->call("testQStringTransfer", Q_RETURN_ARG(int, intval), Q_ARG(QString, testString)) == true);
@@ -104,8 +120,13 @@ void TestSocketCommunication::testRemoteSignals()
   //connected to the first object
   QVERIFY(m_interface->remoteConnect(SIGNAL(serviceQByteArraySignal(QByteArray)), firstTestObject,
                                      SLOT(interfaceQByteArraySlot(QByteArray))));
+
   QVERIFY(m_interface->remoteConnect(SIGNAL(serviceQImageSignal(QImage)), firstTestObject,
                                      SLOT(interfaceQImageSlot(QImage))));
+
+  QVERIFY(m_interface->remoteConnect(SIGNAL(serviceQListOfQImageSignal(QList<QImage>)), firstTestObject,
+                                     SLOT(interfaceQListOfQImageSlot(QList<QImage>))));
+
   QVERIFY(m_interface->remoteConnect(SIGNAL(serviceQStringIntSignal(QString,int)), secondTestObject,
                                      SLOT(interfaceQStringIntSlot(QString,int))));
 
@@ -152,6 +173,7 @@ void TestSocketCommunication::testRemoteSignalsWithSyncCall()
   QVERIFY(m_interface->remoteConnect(SIGNAL(serviceQStringIntSignal(QString,int)), testObject, SLOT(interfaceQStringIntSlot(QString,int))));
   QVERIFY(m_interface->remoteConnect(SIGNAL(serviceQByteArraySignal(QByteArray)), testObject, SLOT(interfaceQByteArraySlot(QByteArray))));
   QVERIFY(m_interface->remoteConnect(SIGNAL(serviceQImageSignal(QImage)), testObject, SLOT(interfaceQImageSlot(QImage))));
+  QVERIFY(m_interface->remoteConnect(SIGNAL(serviceQListOfQImageSignal(QList<QImage>)), testObject, SLOT(interfaceQListOfQImageSlot(QList<QImage>))));
   QVERIFY(m_interface->remoteConnect(SIGNAL(serviceIntSignal(int)), testObject, SLOT(interfaceIntSlot(int))));
 
   // all connections must be established before the following call
@@ -168,8 +190,12 @@ void TestSocketCommunication::testLocalSignals()
 
   QVERIFY(m_interface->remoteSlotConnect(firstTestObject, SIGNAL(interfaceQByteArraySignal(QByteArray)),
                                          SLOT(serviceQByteArraySlot(QByteArray))));
+
   QVERIFY(m_interface->remoteSlotConnect(firstTestObject, SIGNAL(interfaceQImageSignal(QImage)),
                                          SLOT(serviceQImageSlot(QImage))));
+
+  QVERIFY(m_interface->remoteSlotConnect(firstTestObject, SIGNAL(interfaceQListOfQImageSignal(QList<QImage>)),
+                                         SLOT(serviceQListOfQImageSlot(QList<QImage>))));
 
   QVERIFY(m_interface->remoteSlotConnect(secondTestObject, SIGNAL(interfaceQStringIntSignal(QString,int)),
                                          SLOT(serviceQStringIntSlot(QString,int))));
@@ -182,21 +208,28 @@ void TestSocketCommunication::testLocalSignals()
 
   //test transfers
   QByteArray testByteArray(1 * 1024 * 1024, 'B');
-
   QImage testImage(800, 600, QImage::Format_RGB888);
+  QList<QImage> testImageList = QList<QImage>() << testImage;
   QString testString("testLocalSignalsString");
   int testInt = 30;
 
   firstTestObject->emitQByteArraySignal(testByteArray);
   firstTestObject->emitQImageSignal(testImage);
+  firstTestObject->emitQListOfQImageSignal(testImageList);
   secondTestObject->emitQStringIntSignal(testString, testInt);
   QVERIFY(waiter.wait());
 
   //Compare result values
   QCOMPARE(testByteArray, m_service->getByteArray());
+
   QCOMPARE(testImage.size(), m_service->getImage().size());
   QCOMPARE(testImage.pixel(0, 0), m_service->getImage().pixel(0, 0));
   QCOMPARE(testImage.pixel(50, 50), m_service->getImage().pixel(50, 50));
+
+  QCOMPARE(testImageList.length(), m_service->getImageList().length());
+  QCOMPARE(testImageList.first().size(), m_service->getImageList().first().size());
+  QCOMPARE(testImageList.first().pixel(0, 0), m_service->getImageList().first().pixel(0, 0));
+  QCOMPARE(testImageList.first().pixel(50, 50), m_service->getImageList().first().pixel(50, 50));
 
   QCOMPARE(testString, m_service->getString());
   QCOMPARE(testInt, m_service->getInt());
@@ -259,6 +292,20 @@ void TestSocketCommunication::benchmarkQImageTransfer()
   QBENCHMARK
   {
     QVERIFY(m_interface->call("testQImageTransfer", Q_RETURN_ARG(int, intval), Q_ARG(QImage, testImage)));
+  }
+}
+
+
+void TestSocketCommunication::benchmarkQListOfQImageTransfer()
+{
+  int intval;
+  QImage testImage(QIMAGE_HEIGHT_WIDTH_FOR_BENCHMARK, QIMAGE_HEIGHT_WIDTH_FOR_BENCHMARK, QImage::Format_RGB888);
+  QList<QImage> testImageList = QList<QImage>() << testImage;
+  qDebug() << "Test QList<QImage> size:" << testImageList.length() * testImage.byteCount();
+
+  QBENCHMARK
+  {
+    QVERIFY(m_interface->call("testQListOfQImageTransfer", Q_RETURN_ARG(int, intval), Q_ARG(QList<QImage>, testImageList)));
   }
 }
 

@@ -20,6 +20,7 @@ namespace
 
 void TestTcpServer::init()
 {
+  qRegisterMetaType<QList<QImage> >("QList<QImage>");
   m_service = new ServiceTestObject(0);
   QHostAddress address = QHostAddress::Any;
   qDebug() << "Trying to listen at" << address.toString() << primaryPort;

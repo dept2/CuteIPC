@@ -33,6 +33,7 @@ class TestSocketCommunication : public QObject
     // benchmark tests
     void benchmarkQByteArrayTransfer();
     void benchmarkQImageTransfer();
+    void benchmarkQListOfQImageTransfer();
 
     // image tests
     void testImageDPI();

@@ -28,7 +28,13 @@ class CuteIPCMarshaller
 
     static bool marshallQImageToStream(QGenericArgument value, QDataStream& stream);
 
+    template <template<class QImage> class Container>
+    static bool marshallContainerOfQImagesToStream(QGenericArgument value, QDataStream& stream);
+
     static bool loadQImage(QDataStream& stream, void* data);
+
+    template <template<class QImage> class Container>
+    static bool loadContainerOfQImages(QDataStream& stream, void* data);
 };
 
 #endif // CUTEIPCMARSHALLER_P_H

@@ -9,6 +9,10 @@
 #include <QtGui/QImage>
 #include <QBuffer>
 #include <QDebug>
+#include <QList>
+#include <QLinkedList>
+#include <QStack>
+#include <QVector>
 
 
 QByteArray CuteIPCMarshaller::marshallMessage(const CuteIPCMessage& message)
@@ -116,7 +120,21 @@ CuteIPCMessage CuteIPCMarshaller::demarshallResponse(QByteArray& call, QGenericR
       if (type != QMetaType::type(arg.name()))
         qWarning() << "CuteIPC:" << "Type doesn't match:" << typeName << "Expected:" << arg.name();
 
-      bool dataLoaded = (type == QMetaType::QImage) ? loadQImage(stream, arg.data()) : QMetaType::load(stream, type, arg.data());
+      bool dataLoaded = false;
+
+      if (type == QMetaType::QImage)
+        dataLoaded = loadQImage(stream, arg.data());
+      else if (type == QMetaType::type("QLinkedList<QImage>"))
+        dataLoaded = loadContainerOfQImages<QLinkedList>(stream, arg.data());
+      else if (type == QMetaType::type("QList<QImage>"))
+        dataLoaded = loadContainerOfQImages<QList>(stream, arg.data());
+      else if (type == QMetaType::type("QStack<QImage>"))
+        dataLoaded = loadContainerOfQImages<QStack>(stream, arg.data());
+      else if (type == QMetaType::type("QVector<QImage>"))
+        dataLoaded = loadContainerOfQImages<QVector>(stream, arg.data());
+      else
+        dataLoaded = QMetaType::load(stream, type, arg.data());
+
       if (!dataLoaded)
         qWarning() << "CuteIPC:" << "Failed to deserialize argument value" << "of type" << typeName;
     }
@@ -135,8 +153,16 @@ bool CuteIPCMarshaller::marshallArgumentToStream(QGenericArgument value, QDataSt
     qWarning() << "CuteIPC:" << "Type" << value.name() << "have not been registered in Qt metaobject system";
     return false;
   }
-  if (type == QMetaType::type("QImage"))
+  if (type == QMetaType::QImage)
     return marshallQImageToStream(value, stream);
+  else if (type == QMetaType::type("QLinkedList<QImage>"))
+    return marshallContainerOfQImagesToStream<QLinkedList>(value, stream);
+  else if (type == QMetaType::type("QList<QImage>"))
+    return marshallContainerOfQImagesToStream<QList>(value, stream);
+  else if (type == QMetaType::type("QStack<QImage>"))
+    return marshallContainerOfQImagesToStream<QStack>(value, stream);
+  else if (type == QMetaType::type("QVector<QImage>"))
+    return marshallContainerOfQImagesToStream<QVector>(value, stream);
 
   stream << QString::fromLatin1(value.name());
   bool ok = QMetaType::save(stream, type, value.data());
@@ -144,7 +170,7 @@ bool CuteIPCMarshaller::marshallArgumentToStream(QGenericArgument value, QDataSt
   {
     qWarning() << "CuteIPC:" << "Failed to serialize" << value.name()
                << "to data stream. Call qRegisterMetaTypeStreamOperators to"
-                  " register stream operators for this metatype";
+                  "register stream operators for this metatype";
     return false;
   }
 
@@ -174,7 +200,21 @@ QGenericArgument CuteIPCMarshaller::demarshallArgumentFromStream(bool& ok, QData
   void* data = QMetaType::construct(type);
 #endif
 
-  bool dataLoaded = (type == QMetaType::QImage) ? loadQImage(stream, data) : QMetaType::load(stream, type, data);
+  bool dataLoaded = false;
+
+  if (type == QMetaType::QImage)
+    dataLoaded = loadQImage(stream, data);
+  else if (type == QMetaType::type("QLinkedList<QImage>"))
+    dataLoaded = loadContainerOfQImages<QLinkedList>(stream, data);
+  else if (type == QMetaType::type("QList<QImage>"))
+    dataLoaded = loadContainerOfQImages<QList>(stream, data);
+  else if (type == QMetaType::type("QStack<QImage>"))
+    dataLoaded = loadContainerOfQImages<QStack>(stream, data);
+  else if (type == QMetaType::type("QVector<QImage>"))
+    dataLoaded = loadContainerOfQImages<QVector>(stream, data);
+  else
+    dataLoaded = QMetaType::load(stream, type, data);
+
   if (!dataLoaded)
   {
     qWarning() << "CuteIPC:" << "Failed to deserialize argument value" << "of type" << typeName;
@@ -190,7 +230,7 @@ QGenericArgument CuteIPCMarshaller::demarshallArgumentFromStream(bool& ok, QData
 
 bool CuteIPCMarshaller::marshallQImageToStream(QGenericArgument value, QDataStream& stream)
 {
-  QImage* image = (QImage*) value.data();
+  QImage* image = static_cast<QImage*>(value.data());
   const uchar* imageData = image->constBits();
 
   stream << QString::fromLatin1(value.name());
@@ -206,7 +246,31 @@ bool CuteIPCMarshaller::marshallQImageToStream(QGenericArgument value, QDataStre
   stream << image->colorTable();
 
   stream << image->byteCount();
-  stream.writeRawData((const char*)imageData, image->byteCount());
+  stream.writeRawData(reinterpret_cast<const char*>(imageData), image->byteCount());
+  return true;
+}
+
+
+template <template<class QImage> class Container>
+bool CuteIPCMarshaller::marshallContainerOfQImagesToStream(QGenericArgument value, QDataStream& stream)
+{
+  const Container<QImage>* imgContainer = static_cast<Container<QImage>*>(value.data());
+
+  Container<QByteArray> dataContainer;
+  for (typename Container<QImage>::const_iterator it = imgContainer->begin(); it != imgContainer->end(); ++it)
+  {
+    QByteArray dt;
+    QDataStream dtStream(&dt, QIODevice::WriteOnly);
+    if (!marshallQImageToStream(Q_ARG(QImage, *it), dtStream))
+      return false;
+    dataContainer << dt;
+  }
+
+  stream << QString::fromLatin1(value.name());
+  stream << dataContainer.size();
+  for (typename Container<QByteArray>::iterator it = dataContainer.begin(); it != dataContainer.end(); ++it)
+    stream << *it;
+
   return true;
 }
 
@@ -250,6 +314,44 @@ bool CuteIPCMarshaller::loadQImage(QDataStream& stream, void* data)
   delete[] bits;
 
   *static_cast<QImage*>(data) = image;
+  return true;
+}
+
+
+template <template<class QImage> class Container>
+bool CuteIPCMarshaller::loadContainerOfQImages(QDataStream& stream, void* data)
+{
+  Container<QByteArray> dataContainer;
+  int dataContainerSize = 0;
+  stream >> dataContainerSize;
+  for (int i = 0; i < dataContainerSize; ++i)
+  {
+    QByteArray dt;
+    stream >> dt;
+    dataContainer << dt;
+    if (stream.atEnd())
+      break;
+  }
+
+  Container<QImage> imgContainer;
+  for (typename Container<QByteArray>::iterator it = dataContainer.begin(); it != dataContainer.end(); ++it)
+  {
+    QImage img;
+    QDataStream imgStream(&(*it), QIODevice::ReadOnly);
+
+    QString typeName;
+    imgStream >> typeName;
+
+    if (QMetaType::type(typeName.toLatin1()) != QMetaType::QImage)
+      return false;
+
+    if (!loadQImage(imgStream, static_cast<void*>(&img)))
+      return false;
+
+    imgContainer << img;
+  }
+
+  *static_cast<Container<QImage>*>(data) = imgContainer;
   return true;
 }
 

@@ -20,6 +20,7 @@ namespace
 
 void TestTcpCommunication::init()
 {
+  qRegisterMetaType<QList<QImage> >("QList<QImage>");
   m_interface = new CuteIPCInterface(0);
   QTime time;
   time.start();
@@ -63,6 +64,17 @@ void TestTcpCommunication::testDirectCalls()
   qDebug() << "ret" << returnedImage.format() << returnedImage.size();
   QCOMPARE(testImage, returnedImage);
 
+  //test QList<QImage> transfer
+  QList<QImage> testImageList = QList<QImage>() << testImage;
+  QVERIFY(m_interface->call("testQListOfQImageTransfer", Q_RETURN_ARG(int, intval), Q_ARG(QList<QImage>, testImageList)) == true);
+
+  // Test QList<QImage> return
+  QList<QImage> returnedImageList;
+  QVERIFY(m_interface->call("getImageList", Q_RETURN_ARG(QList<QImage>, returnedImageList)));
+  qDebug() << "ret" << returnedImageList.length() << returnedImageList.first().format() << returnedImageList.first().size();
+  QCOMPARE(testImageList.length(), returnedImageList.length());
+  QCOMPARE(testImage, returnedImageList.first());
+
   //test QString transfer
   QString testString("testCallString");
   QVERIFY(m_interface->call("testQStringTransfer", Q_RETURN_ARG(int, intval), Q_ARG(QString, testString)) == true);
@@ -83,8 +95,13 @@ void TestTcpCommunication::testRemoteSignals()
   //connected to the first object
   QVERIFY(m_interface->remoteConnect(SIGNAL(serviceQByteArraySignal(QByteArray)), firstTestObject,
                                      SLOT(interfaceQByteArraySlot(QByteArray))));
+
   QVERIFY(m_interface->remoteConnect(SIGNAL(serviceQImageSignal(QImage)), firstTestObject,
                                      SLOT(interfaceQImageSlot(QImage))));
+
+  QVERIFY(m_interface->remoteConnect(SIGNAL(serviceQListOfQImageSignal(QList<QImage>)), firstTestObject,
+                                     SLOT(interfaceQListOfQImageSlot(QList<QImage>))));
+
   QVERIFY(m_interface->remoteConnect(SIGNAL(serviceQStringIntSignal(QString,int)), secondTestObject,
                                      SLOT(interfaceQStringIntSlot(QString,int))));
 
@@ -131,6 +148,7 @@ void TestTcpCommunication::testRemoteSignalsWithSyncCall()
   QVERIFY(m_interface->remoteConnect(SIGNAL(serviceQStringIntSignal(QString,int)), testObject, SLOT(interfaceQStringIntSlot(QString,int))));
   QVERIFY(m_interface->remoteConnect(SIGNAL(serviceQByteArraySignal(QByteArray)), testObject, SLOT(interfaceQByteArraySlot(QByteArray))));
   QVERIFY(m_interface->remoteConnect(SIGNAL(serviceQImageSignal(QImage)), testObject, SLOT(interfaceQImageSlot(QImage))));
+  QVERIFY(m_interface->remoteConnect(SIGNAL(serviceQListOfQImageSignal(QList<QImage>)), testObject, SLOT(interfaceQListOfQImageSlot(QList<QImage>))));
   QVERIFY(m_interface->remoteConnect(SIGNAL(serviceIntSignal(int)), testObject, SLOT(interfaceIntSlot(int))));
 
   // all connections must be established before the following call
@@ -147,8 +165,12 @@ void TestTcpCommunication::testLocalSignals()
 
   QVERIFY(m_interface->remoteSlotConnect(firstTestObject, SIGNAL(interfaceQByteArraySignal(QByteArray)),
                                          SLOT(serviceQByteArraySlot(QByteArray))));
+
   QVERIFY(m_interface->remoteSlotConnect(firstTestObject, SIGNAL(interfaceQImageSignal(QImage)),
                                          SLOT(serviceQImageSlot(QImage))));
+
+  QVERIFY(m_interface->remoteSlotConnect(firstTestObject, SIGNAL(interfaceQListOfQImageSignal(QList<QImage>)),
+                                         SLOT(serviceQListOfQImageSlot(QList<QImage>))));
 
   QVERIFY(m_interface->remoteSlotConnect(secondTestObject, SIGNAL(interfaceQStringIntSignal(QString,int)),
                                          SLOT(serviceQStringIntSlot(QString,int))));
@@ -229,6 +251,20 @@ void TestTcpCommunication::benchmarkQImageTransfer()
   QBENCHMARK
   {
     QVERIFY(m_interface->call("testQImageTransfer", Q_RETURN_ARG(int, intval), Q_ARG(QImage, testImage)));
+  }
+}
+
+
+void TestTcpCommunication::benchmarkQListOfQImageTransfer()
+{
+  int intval;
+  QImage testImage(QIMAGE_HEIGHT_WIDTH_FOR_BENCHMARK, QIMAGE_HEIGHT_WIDTH_FOR_BENCHMARK, QImage::Format_RGB888);
+  QList<QImage> testImageList = QList<QImage>() << testImage;
+  qDebug() << "Test QList<QImage> size:" << testImageList.length() * testImage.byteCount();
+
+  QBENCHMARK
+  {
+    QVERIFY(m_interface->call("testQListOfQImageTransfer", Q_RETURN_ARG(int, intval), Q_ARG(QList<QImage>, testImageList)));
   }
 }
 

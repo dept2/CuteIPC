@@ -17,6 +17,7 @@ class ServiceTestObject : public CuteIPCService
 
     Q_INVOKABLE int testQByteArrayTransfer(const QByteArray&);
     Q_INVOKABLE int testQImageTransfer(const QImage&);
+    Q_INVOKABLE int testQListOfQImageTransfer(const QList<QImage>&);
     Q_INVOKABLE int testQStringTransfer(const QString&);
     Q_INVOKABLE QString testQStringTransfer2(const QString&);
     Q_INVOKABLE void testIntTransfer(int);
@@ -27,12 +28,14 @@ class ServiceTestObject : public CuteIPCService
 
     const QByteArray& getByteArray() const;
     Q_INVOKABLE QImage getImage() const;
+    Q_INVOKABLE QList<QImage> getImageList() const;
     const QString& getString() const;
     int getInt() const;
 
   signals:
     void serviceQByteArraySignal(const QByteArray&);
     void serviceQImageSignal(const QImage&);
+    void serviceQListOfQImageSignal(const QList<QImage>&);
     void serviceQStringSignal(const QString& message);
     void serviceIntSignal(int);
     void serviceQStringIntSignal(const QString& message, int value);
@@ -45,6 +48,7 @@ class ServiceTestObject : public CuteIPCService
   public slots:
     void serviceQByteArraySlot(const QByteArray&);
     void serviceQImageSlot(const QImage&);
+    void serviceQListOfQImageSlot(const QList<QImage>&);
     void serviceQStringSlot(const QString&);
     void serviceIntSlot(int);
     void serviceQStringIntSlot(const QString&, int);
@@ -55,6 +59,7 @@ class ServiceTestObject : public CuteIPCService
     //emit related signals
     void emitQByteArraySignal(const QByteArray&);
     void emitQImageSignal(const QImage&);
+    void emitQListOfQImageSignal(const QList<QImage>&);
     void emitQStringSignal(const QString& message);
     void emitIntSignal(int);
     void emitQStringIntSignal(const QString& message, int value);
@@ -63,6 +68,7 @@ class ServiceTestObject : public CuteIPCService
   private:
     QByteArray m_byteArray;
     QImage m_image;
+    QList<QImage> m_imageList;
     QString m_string;
     int m_int;
 };

@@ -9,6 +9,13 @@
 #include <QtTest/QtTest>
 #include <QtGui>
 
+
+void TestMessageMarshalling::init()
+{
+  qRegisterMetaType<QList<QImage> >("QList<QImage>");
+}
+
+
 void TestMessageMarshalling::constructMessageWithoutArgs()
 {
   CuteIPCMessage::Arguments args;
@@ -168,10 +175,7 @@ void TestMessageMarshalling::marshallLiterals()
 
 void TestMessageMarshalling::marshallQImageRGB888()
 {
-  QImage testImage(759, 663, QImage::Format_RGB888);
-  testImage.fill(0);
-  testImage.setPixel(50, 50, qRgb(255, 0, 0));
-
+  QImage testImage = createRGB888Image();
   CuteIPCMessage testMessage(CuteIPCMessage::MessageCallWithoutReturn, "testMessage", Q_ARG(QImage, testImage));
 
   QByteArray serializedMessage = CuteIPCMarshaller::marshallMessage(testMessage);
@@ -196,14 +200,7 @@ void TestMessageMarshalling::marshallQImageRGB888()
 
 void TestMessageMarshalling::marshallQImageIndexed8()
 {
-  QImage testImage(759, 657, QImage::Format_Indexed8);
-  testImage.setColorCount(255);
-  for (int i = 0; i <= 255; ++i)
-    testImage.setColor(i, qRgb(i, i, i));
-
-  testImage.fill(255);
-  testImage.scanLine(50)[50] = 0;
-
+  QImage testImage = createIndexed8Image();
   CuteIPCMessage testMessage(CuteIPCMessage::MessageCallWithoutReturn, "testMessage", Q_ARG(QImage, testImage));
 
   QByteArray serializedMessage = CuteIPCMarshaller::marshallMessage(testMessage);
@@ -223,6 +220,67 @@ void TestMessageMarshalling::marshallQImageIndexed8()
   QCOMPARE(deserializedImage->bytesPerLine(), testImage.bytesPerLine());
 
   CuteIPCMarshaller::freeArguments(deserializedMessage.arguments());
+}
+
+
+void TestMessageMarshalling::marshallQListOfQImage()
+{
+  QImage testRGB888Image = createRGB888Image();
+  QImage testIndexed8Image = createIndexed8Image();
+  QList<QImage> testImageList = QList<QImage>() << testRGB888Image << testIndexed8Image;
+
+  CuteIPCMessage testMessage(CuteIPCMessage::MessageCallWithoutReturn, "testMessage", Q_ARG(QList<QImage>, testImageList));
+
+  QByteArray serializedMessage = CuteIPCMarshaller::marshallMessage(testMessage);
+  CuteIPCMessage deserializedMessage = CuteIPCMarshaller::demarshallMessage(serializedMessage);
+
+  QVERIFY(deserializedMessage.arguments().size() == 1);
+  QCOMPARE(deserializedMessage.arguments().at(0).name(), "QList<QImage>");
+  QList<QImage>* deserializedImageList = reinterpret_cast<QList<QImage>*>(deserializedMessage.arguments().at(0).data());
+  QCOMPARE(deserializedImageList->size(), testImageList.length());
+
+  const QImage& deserializedRGB888Image = deserializedImageList->first();
+  QCOMPARE(deserializedRGB888Image.size(), testRGB888Image.size());
+  QCOMPARE(deserializedRGB888Image.pixel(0, 0), testRGB888Image.pixel(0, 0));
+  QCOMPARE(deserializedRGB888Image.pixel(50, 50), testRGB888Image.pixel(50, 50));
+  QCOMPARE(deserializedRGB888Image.pixel(deserializedRGB888Image.width() - 1, deserializedRGB888Image.height() - 1), testRGB888Image.pixel(testRGB888Image.width() - 1, testRGB888Image.height() - 1));
+  QCOMPARE(deserializedRGB888Image.format(), testRGB888Image.format());
+  QCOMPARE(deserializedRGB888Image.colorCount(), testRGB888Image.colorCount());
+  QCOMPARE(deserializedRGB888Image.colorTable(), testRGB888Image.colorTable());
+  QCOMPARE(deserializedRGB888Image.bytesPerLine(), testRGB888Image.bytesPerLine());
+
+  const QImage& deserializedIndexed8Image = deserializedImageList->last();
+  QCOMPARE(deserializedIndexed8Image.size(), testIndexed8Image.size());
+  QCOMPARE(deserializedIndexed8Image.pixel(0, 0), testIndexed8Image.pixel(0, 0));
+  QCOMPARE(deserializedIndexed8Image.pixel(50, 50), testIndexed8Image.pixel(50, 50));
+  QCOMPARE(deserializedIndexed8Image.pixel(deserializedIndexed8Image.width() - 1, deserializedIndexed8Image.height() - 1), testIndexed8Image.pixel(testIndexed8Image.width() - 1, testIndexed8Image.height() - 1));
+  QCOMPARE(deserializedIndexed8Image.format(), testIndexed8Image.format());
+  QCOMPARE(deserializedIndexed8Image.colorCount(), testIndexed8Image.colorCount());
+  QCOMPARE(deserializedIndexed8Image.colorTable(), testIndexed8Image.colorTable());
+  QCOMPARE(deserializedIndexed8Image.bytesPerLine(), testIndexed8Image.bytesPerLine());
+
+  CuteIPCMarshaller::freeArguments(deserializedMessage.arguments());
+}
+
+
+QImage TestMessageMarshalling::createRGB888Image() const
+{
+  QImage image(759, 663, QImage::Format_RGB888);
+  image.fill(0);
+  image.setPixel(50, 50, qRgb(255, 0, 0));
+  return image;
+}
+
+
+QImage TestMessageMarshalling::createIndexed8Image() const
+{
+  QImage image(759, 657, QImage::Format_Indexed8);
+  image.setColorCount(255);
+  for (int i = 0; i <= 255; ++i)
+    image.setColor(i, qRgb(i, i, i));
+  image.fill(255);
+  image.scanLine(50)[50] = 0;
+  return image;
 }
 
 

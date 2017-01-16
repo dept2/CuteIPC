@@ -15,12 +15,14 @@ class InterfaceTestObject : public QObject
 
     const QByteArray& getByteArray() const;
     const QImage& getImage() const;
+    const QList<QImage>& getImageList() const;
     const QString& getString() const;
     int getInt() const;
 
   signals:
     void interfaceQByteArraySignal(const QByteArray&);
     void interfaceQImageSignal(const QImage&);
+    void interfaceQListOfQImageSignal(const QList<QImage>&);
     void interfaceQStringSignal(const QString& msg);
     void interfaceIntSignal(int);
     void interfaceQStringIntSignal(const QString& message, int value);
@@ -33,6 +35,7 @@ class InterfaceTestObject : public QObject
   public slots:
     void interfaceQByteArraySlot(const QByteArray&);
     void interfaceQImageSlot(const QImage&);
+    void interfaceQListOfQImageSlot(const QList<QImage>&);
     void interfaceQStringSlot(const QString&);
     void interfaceIntSlot(int);
     void interfaceQStringIntSlot(const QString&, int);
@@ -43,6 +46,7 @@ class InterfaceTestObject : public QObject
     //emit related signals
     void emitQByteArraySignal(const QByteArray&);
     void emitQImageSignal(const QImage&);
+    void emitQListOfQImageSignal(const QList<QImage>&);
     void emitQStringSignal(const QString& message);
     void emitIntSignal(int);
     void emitQStringIntSignal(const QString& message, int value);
@@ -50,6 +54,7 @@ class InterfaceTestObject : public QObject
   private:
     QByteArray m_byteArray;
     QImage m_image;
+    QList<QImage> m_imageList;
     QString m_string;
     int m_int;
 };

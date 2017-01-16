@@ -24,6 +24,18 @@ int ServiceTestObject::testQImageTransfer(const QImage& img)
 }
 
 
+int ServiceTestObject::testQListOfQImageTransfer(const QList<QImage>& imgList)
+{
+  m_imageList = imgList;
+
+  int byteCount = 0;
+  for (int i = 0; i < imgList.size(); ++i)
+    byteCount += imgList.at(i).byteCount();
+
+  return byteCount;
+}
+
+
 int ServiceTestObject::testQStringTransfer(const QString& string)
 {
   m_string = string;
@@ -98,6 +110,13 @@ void ServiceTestObject::serviceQImageSlot(const QImage& img)
 }
 
 
+void ServiceTestObject::serviceQListOfQImageSlot(const QList<QImage>& imgList)
+{
+  this->testQListOfQImageTransfer(imgList);
+  emit slotWasCalled(Q_FUNC_INFO);
+}
+
+
 void ServiceTestObject::serviceQStringSlot(const QString& str)
 {
   this->testQStringTransfer(str);
@@ -138,6 +157,11 @@ QImage ServiceTestObject::getImage() const
   return m_image;
 }
 
+QList<QImage> ServiceTestObject::getImageList() const
+{
+  return m_imageList;
+}
+
 
 const QString& ServiceTestObject::getString() const
 {
@@ -158,6 +182,11 @@ void ServiceTestObject::emitQByteArraySignal(const QByteArray& ba)
 void ServiceTestObject::emitQImageSignal(const QImage& img)
 {
   emit serviceQImageSignal(img);
+}
+
+void ServiceTestObject::emitQListOfQImageSignal(const QList<QImage>& imgList)
+{
+  emit serviceQListOfQImageSignal(imgList);
 }
 
 void ServiceTestObject::emitQStringSignal(const QString& message)

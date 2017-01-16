@@ -23,6 +23,13 @@ void InterfaceTestObject::interfaceQImageSlot(const QImage& img)
 }
 
 
+void InterfaceTestObject::interfaceQListOfQImageSlot(const QList<QImage>& imgList)
+{
+  m_imageList = imgList;
+  emit slotWasCalled(Q_FUNC_INFO);
+}
+
+
 void InterfaceTestObject::interfaceQStringSlot(const QString& str)
 {
   m_string = str;
@@ -64,6 +71,12 @@ const QImage& InterfaceTestObject::getImage() const
 }
 
 
+const QList<QImage>&InterfaceTestObject::getImageList() const
+{
+  return m_imageList;
+}
+
+
 const QString& InterfaceTestObject::getString() const
 {
   return m_string;
@@ -84,6 +97,11 @@ void InterfaceTestObject::emitQByteArraySignal(const QByteArray& ba)
 void InterfaceTestObject::emitQImageSignal(const QImage& img)
 {
   emit interfaceQImageSignal(img);
+}
+
+void InterfaceTestObject::emitQListOfQImageSignal(const QList<QImage>& imgList)
+{
+  emit interfaceQListOfQImageSignal(imgList);
 }
 
 void InterfaceTestObject::emitQStringSignal(const QString& message)
