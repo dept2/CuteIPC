@@ -20,3 +20,5 @@ script:
   - ./test_TestTcpServer &
   - sleep 1
   - ./test_TestTcpCommunication
+dist: trusty
+sudo: required
