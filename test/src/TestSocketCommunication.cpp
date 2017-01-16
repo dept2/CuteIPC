@@ -204,7 +204,7 @@ void TestSocketCommunication::testLocalSignals()
                                          SLOT(serviceQStringSlot(QString))));
 
   SignalWaiter waiter;
-  waiter.addConnection(m_service, SIGNAL(slotWasCalled(QString)), 3);
+  waiter.addConnection(m_service, SIGNAL(slotWasCalled(QString)), 4);
 
   //test transfers
   QByteArray testByteArray(1 * 1024 * 1024, 'B');
