@@ -18,7 +18,7 @@ CuteIPCInterfaceWorker::CuteIPCInterfaceWorker(QObject* parent)
 CuteIPCInterfaceWorker::~CuteIPCInterfaceWorker()
 {
   if (m_socket)
-    m_socket->deleteLater();
+    delete m_socket;
 }
 
 
