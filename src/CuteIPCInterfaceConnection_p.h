@@ -22,7 +22,7 @@ class CuteIPCInterfaceConnection : public QObject
     void sendCallRequest(const QByteArray& request);
     void setReturnedObject(QGenericReturnArgument returnedObject);
     bool lastCallSuccessful() const;
-	bool isConnected();
+    bool isConnected();
 
   signals:
     void callFinished();
