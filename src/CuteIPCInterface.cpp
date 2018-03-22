@@ -329,9 +329,9 @@ CuteIPCInterface::CuteIPCInterface(CuteIPCInterfacePrivate& dd, QObject* parent)
 
 
 bool CuteIPCInterface::isConnected() {
-	Q_D(CuteIPCInterface);
-	d->q_ptr = this;
-	return d->m_worker->isConnected();
+  Q_D(CuteIPCInterface);
+  d->q_ptr = this;
+  return d->m_worker->isConnected();
 }
 
 /*!
