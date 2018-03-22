@@ -135,7 +135,8 @@ bool CuteIPCInterfacePrivate::sendSynchronousRequest(const QByteArray& request, 
 
     QEventLoop loop;
     QObject::connect(&connection, SIGNAL(callFinished()), &loop, SLOT(quit()));
-	QObject::connect(&connection, SIGNAL(socketDisconnected()), SIGNAL(disconnected()));
+
+	QObject::connect(&connection, SIGNAL(socketDisconnected()), q_ptr, SIGNAL(disconnected()));
     QObject::connect(&connection, SIGNAL(socketDisconnected()), &loop, SLOT(quit()));
     connection.sendCallRequest(request);
     loop.exec();
@@ -162,7 +163,6 @@ bool CuteIPCInterfacePrivate::sendSynchronousRequest(const QByteArray& request, 
 
     QEventLoop loop;
     QObject::connect(&connection, SIGNAL(callFinished()), &loop, SLOT(quit()));
-	QObject::connect(&connection, SIGNAL(socketDisconnected()), SIGNAL(disconnected()));
     QObject::connect(&connection, SIGNAL(socketDisconnected()), &loop, SLOT(quit()));
     connection.sendCallRequest(request);
     loop.exec();
@@ -298,6 +298,7 @@ CuteIPCInterface::CuteIPCInterface(QObject* parent)
   Q_D(CuteIPCInterface);
   d->q_ptr = this;
 
+  connect(d->m_worker, SIGNAL(disconnected()), SIGNAL(disconnected()));
   connect(d->m_worker, SIGNAL(setLastError(QString)), SLOT(_q_setLastError(QString)));
   connect(d->m_worker, SIGNAL(invokeRemoteSignal(QString, CuteIPCMessage::Arguments)),
           SLOT(_q_invokeRemoteSignal(QString, CuteIPCMessage::Arguments)));

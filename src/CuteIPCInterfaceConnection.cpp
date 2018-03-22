@@ -15,6 +15,7 @@ CuteIPCInterfaceConnection::CuteIPCInterfaceConnection(QLocalSocket* socket, QOb
     m_socket(socket),
     m_nextBlockSize(0)
 {
+
   connect(socket, SIGNAL(disconnected()), SIGNAL(socketDisconnected()));
   connect(socket, SIGNAL(error(QLocalSocket::LocalSocketError)), SLOT(errorOccured(QLocalSocket::LocalSocketError)));
   connect(socket, SIGNAL(readyRead()), SLOT(readyRead()));

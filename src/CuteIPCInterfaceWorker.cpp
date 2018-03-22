@@ -91,7 +91,7 @@ void CuteIPCInterfaceWorker::connectToTcpServer(const QHostAddress& host, const 
     connect(m_connection, SIGNAL(errorOccured(QString)), this, SIGNAL(setLastError(QString)));
 
 	connect(m_connection, SIGNAL(socketDisconnected()), SIGNAL(disconnected()));
-    connect(m_connection, SIGNAL(socketDisconnected()), m_connection, SLOT(deleteLater()));
+	connect(m_connection, SIGNAL(socketDisconnected()), m_connection, SLOT(deleteLater()));
     connect(m_connection, SIGNAL(socketDisconnected()), socket, SLOT(deleteLater()));
 
     DEBUG << "CuteIPC:" << "Connected over network:" << host << port << connected;
@@ -134,7 +134,7 @@ void CuteIPCInterfaceWorker::disconnectFromServer()
 }
 
 
-void CuteIPCInterfaceWorker::isConnected() {
+bool CuteIPCInterfaceWorker::isConnected() {
   return m_connection->isConnected();
 }
 
