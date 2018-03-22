@@ -136,7 +136,7 @@ bool CuteIPCInterfacePrivate::sendSynchronousRequest(const QByteArray& request, 
     QEventLoop loop;
     QObject::connect(&connection, SIGNAL(callFinished()), &loop, SLOT(quit()));
 
-	QObject::connect(&connection, SIGNAL(socketDisconnected()), q_ptr, SIGNAL(disconnected()));
+    QObject::connect(&connection, SIGNAL(socketDisconnected()), q_ptr, SIGNAL(disconnected()));
     QObject::connect(&connection, SIGNAL(socketDisconnected()), &loop, SLOT(quit()));
     connection.sendCallRequest(request);
     loop.exec();
