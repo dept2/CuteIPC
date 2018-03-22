@@ -135,6 +135,7 @@ bool CuteIPCInterfacePrivate::sendSynchronousRequest(const QByteArray& request, 
 
     QEventLoop loop;
     QObject::connect(&connection, SIGNAL(callFinished()), &loop, SLOT(quit()));
+	QObject::connect(&connection, SIGNAL(socketDisconnected()), SIGNAL(disconnected()));
     QObject::connect(&connection, SIGNAL(socketDisconnected()), &loop, SLOT(quit()));
     connection.sendCallRequest(request);
     loop.exec();
@@ -161,6 +162,7 @@ bool CuteIPCInterfacePrivate::sendSynchronousRequest(const QByteArray& request, 
 
     QEventLoop loop;
     QObject::connect(&connection, SIGNAL(callFinished()), &loop, SLOT(quit()));
+	QObject::connect(&connection, SIGNAL(socketDisconnected()), SIGNAL(disconnected()));
     QObject::connect(&connection, SIGNAL(socketDisconnected()), &loop, SLOT(quit()));
     connection.sendCallRequest(request);
     loop.exec();
@@ -324,6 +326,12 @@ CuteIPCInterface::CuteIPCInterface(CuteIPCInterfacePrivate& dd, QObject* parent)
   qRegisterMetaType<QHostAddress>("QHostAddress");
 }
 
+
+bool CuteIPCInterface::isConnected() {
+	Q_D(CuteIPCInterface);
+	d->q_ptr = this;
+	return d->m_worker->isConnected();
+}
 
 /*!
     Destroyes the object.

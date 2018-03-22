@@ -21,7 +21,7 @@ class CuteIPCInterface : public QObject
     bool connectToServer(const QHostAddress& host, quint16 port);
 
     void disconnectFromServer();
-
+	bool isConnected();
     bool remoteConnect(const char* signal, QObject* object, const char* method);
     bool remoteSlotConnect(QObject* localObject, const char* signal, const char* remoteSlot);
 
@@ -51,6 +51,9 @@ class CuteIPCInterface : public QObject
               QGenericArgument val9 = QGenericArgument());
 
     QString lastError() const;
+
+  signals:
+	void disconnected();
 
   protected:
     CuteIPCInterfacePrivate* const d_ptr;

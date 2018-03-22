@@ -31,6 +31,9 @@ CuteIPCInterfaceConnection::CuteIPCInterfaceConnection(QTcpSocket* socket, QObje
   connect(socket, SIGNAL(readyRead()), SLOT(readyRead()));
 }
 
+bool CuteIPCInterfaceConnection::isConnected() {
+	return m_socket && m_socket->isOpen();
+}
 
 void CuteIPCInterfaceConnection::sendCallRequest(const QByteArray& request)
 {
