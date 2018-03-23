@@ -53,6 +53,7 @@ class CuteIPCInterface : public QObject
     QString lastError() const;
 
   signals:
+    void connected();
     void disconnected();
 
 

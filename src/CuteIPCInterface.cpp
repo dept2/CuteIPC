@@ -330,7 +330,6 @@ CuteIPCInterface::CuteIPCInterface(CuteIPCInterfacePrivate& dd, QObject* parent)
 
 bool CuteIPCInterface::isConnected() {
   Q_D(CuteIPCInterface);
-  d->q_ptr = this;
   return d->m_worker->isConnected();
 }
 
@@ -353,16 +352,18 @@ CuteIPCInterface::~CuteIPCInterface()
 bool CuteIPCInterface::connectToServer(const QString& name)
 {
   Q_D(CuteIPCInterface);
-  bool connected;
+  bool isConnected;
 
   QEventLoop loop;
   connect(d->m_worker, SIGNAL(connectToServerFinished()), &loop, SLOT(quit()));
-  QMetaObject::invokeMethod(d->m_worker, "connectToServer", Q_ARG(QString, name), Q_ARG(void*, &connected));
+  QMetaObject::invokeMethod(d->m_worker, "connectToServer", Q_ARG(QString, name), Q_ARG(void*, &isConnected));
   loop.exec();
 
   d->m_localServer = name;
+  if (isConnected)
+      emit connected();
 
-  return connected;
+  return isConnected;
 }
 
 /*!
@@ -376,15 +377,18 @@ bool CuteIPCInterface::connectToServer(const QString& name)
 bool CuteIPCInterface::connectToServer(const QHostAddress& host, quint16 port)
 {
   Q_D(CuteIPCInterface);
-  bool connected;
+  bool isConnected;
 
   QEventLoop loop;
   connect(d->m_worker, SIGNAL(connectToServerFinished()), &loop, SLOT(quit()));
-  QMetaObject::invokeMethod(d->m_worker, "connectToTcpServer", Q_ARG(QHostAddress, host), Q_ARG(quint16, port), Q_ARG(void*, &connected));
+  QMetaObject::invokeMethod(d->m_worker, "connectToTcpServer", Q_ARG(QHostAddress, host), Q_ARG(quint16, port), Q_ARG(void*, &isConnected));
   loop.exec();
 
   d->m_tcpAddress = qMakePair(host, port);
-  return connected;
+  if (isConnected)
+      emit connected();
+
+  return isConnected;
 }
 
 
