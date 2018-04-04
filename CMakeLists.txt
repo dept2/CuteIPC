@@ -114,4 +114,14 @@ ADD_SUBDIRECTORY(example/client)
 ADD_SUBDIRECTORY(example/server)
 ADD_SUBDIRECTORY(test)
 
-INSTALL(TARGETS ${lib_target} LIBRARY DESTINATION lib)
+#INSTALL(TARGETS ${lib_target} LIBRARY DESTINATION lib)
+
+if(WIN32)
+    INSTALL(TARGETS ${lib_target} 
+        RUNTIME DESTINATION lib
+    )
+else()
+    INSTALL(TARGETS ${lib_target} 
+        LIBRARY DESTINATION lib
+    )
+endif()
