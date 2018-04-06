@@ -123,7 +123,7 @@ bool CuteIPCInterfacePrivate::sendSynchronousRequest(const QByteArray& request, 
     if (!connected)
     {
       socket.disconnectFromServer();
-      QString error("CuteIPC: Не удалось подключиться к серверу при вызове синхронного метода");
+      QString error("CuteIPC: Could not connect to the server when the synchronous method was called");
       qWarning() << error;
       _q_setLastError(error);
       return false;
@@ -151,7 +151,7 @@ bool CuteIPCInterfacePrivate::sendSynchronousRequest(const QByteArray& request, 
     if (!connected)
     {
       socket.disconnectFromHost();
-      QString error("CuteIPC: Не удалось подключиться к серверу при вызове синхронного метода");
+      QString error("CuteIPC: Could not connect to the server when the synchronous method was called");
       qWarning() << error;
       _q_setLastError(error);
       return false;

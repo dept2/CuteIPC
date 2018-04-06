@@ -111,7 +111,7 @@ bool CuteIPCInterfaceConnection::readMessageFromSocket()
       }
       case CuteIPCMessage::AboutToCloseSocket:
       {
-        DEBUG << "Сервер сообщает о закрытии соединения";
+        DEBUG << "The server reports that the connection is closed";
         CuteIPCMessage message = CuteIPCMarshaller::demarshallMessage(m_block);
         CuteIPCMarshaller::freeArguments(message.arguments());
         m_lastCallSuccessful = false;
