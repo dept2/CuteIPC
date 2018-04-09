@@ -107,7 +107,9 @@ ELSE()
   TARGET_LINK_LIBRARIES(${lib_target} ${QT_LIBRARIES})
 ENDIF()
 
-
+TARGET_INCLUDE_DIRECTORIES(${lib_target} PUBLIC
+  ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
 
 # Examples
 ADD_SUBDIRECTORY(example/client)
