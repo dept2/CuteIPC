@@ -6,6 +6,7 @@
 #include "CuteIPCSignalHandler_p.h"
 
 // Qt
+#include <QCoreApplication>
 #include <QLocalServer>
 #include <QLocalSocket>
 #include <QTime>
@@ -62,11 +63,13 @@ CuteIPCServicePrivate::~CuteIPCServicePrivate()
   }
 
   // Clients reaction timeout
-  QEventLoop loop;
-  QTimer timer;
-  QObject::connect(&timer, SIGNAL(timeout()), &loop, SLOT(quit()));
-  timer.start(CLIENTS_DISCONNECT_TIMEOUT);
-  loop.exec();
+  if ( QCoreApplication::instance() ) {
+      QEventLoop loop;
+      QTimer timer;
+      QObject::connect(&timer, SIGNAL(timeout()), &loop, SLOT(quit()));
+      timer.start(CLIENTS_DISCONNECT_TIMEOUT);
+      loop.exec();
+  }
 }
 
 
