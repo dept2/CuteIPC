@@ -53,6 +53,9 @@ ELSE()
   INCLUDE_DIRECTORIES(include src ${CMAKE_CURRENT_BINARY_DIR})
 ENDIF()
 
+# Turn off automoc
+SET(CMAKE_AUTOMOC OFF)
+
 SET(sources
   src/CuteIPCService.cpp
   src/CuteIPCInterface.cpp
