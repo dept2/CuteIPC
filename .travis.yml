@@ -10,7 +10,7 @@ before_install:
 script:
   - mkdir build
   - cd build
-  - cmake .. -DQT_DESIRED_VERSION=4
+  - cmake .. -DQT_DESIRED_VERSION=4 -DCUTEIPC_BUILD_TESTS=ON
   - make
   - cd test
   - ./test_TestErrorsHandling
