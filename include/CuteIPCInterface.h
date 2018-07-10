@@ -1,6 +1,16 @@
 #ifndef CUTEIPCINTERFACE_H
 #define CUTEIPCINTERFACE_H
 
+#if __cplusplus >= 201402L
+#  define DECL_DEPRECATED(x) [[deprecated(x)]]
+#elif defined(__GNUC__)
+#  define DECL_DEPRECATED(x) __attribute__((deprecated(x)))
+#elif defined(_MSC_VER)
+#  define DECL_DEPRECATED(x) __pragma deprecated(x)
+#else
+#  define DECL_DEPRECATED(x)
+#endif
+
 // Qt
 #include <QObject>
 class QHostAddress;
@@ -23,9 +33,15 @@ class CuteIPCInterface : public QObject
     void disconnectFromServer();
 
     bool remoteConnect(const char* signal, QObject* object, const char* method);
+    bool remoteConnect(QObject* localObject, const char* localSignal, const char* remoteMethod);
+
+    DECL_DEPRECATED("Replaced by remoteConnect(), which can connect to both signals and slots")
     bool remoteSlotConnect(QObject* localObject, const char* signal, const char* remoteSlot);
 
     bool disconnectSignal(const char* signal, QObject* object, const char* method);
+    bool disconnectRemoteMethod(QObject* localObject, const char* signal, const char* remoteMethod);
+
+    DECL_DEPRECATED("Replaced by disconnectRemoteMethod(), which can disconnect from both signals and slots")
     bool disconnectSlot(QObject* localObject, const char* signal, const char* remoteSlot);
 
     bool call(const QString& method, QGenericReturnArgument ret, QGenericArgument val0 = QGenericArgument(),

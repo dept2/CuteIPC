@@ -21,6 +21,7 @@ class TestErrorsHandling : public QObject
     void testInvokeErrors();
     void testRemoteSignalsErrors();
     void testRemoteSlotErrors();
+    void testRemoteMethodErrors();
 
   private:
     ServiceTestObject* m_service;

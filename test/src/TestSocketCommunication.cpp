@@ -239,6 +239,115 @@ void TestSocketCommunication::testLocalSignals()
 }
 
 
+void TestSocketCommunication::testLocalSignalsToRemoteMethods()
+{
+  InterfaceTestObject* firstTestObject = new InterfaceTestObject(this);
+  InterfaceTestObject* secondTestObject = new InterfaceTestObject(this);
+
+  QVERIFY(m_interface->remoteConnect(firstTestObject, SIGNAL(interfaceQByteArraySignal(QByteArray)),
+                                         SLOT(serviceQByteArraySlot(QByteArray))));
+
+  QVERIFY(m_interface->remoteConnect(firstTestObject, SIGNAL(interfaceQImageSignal(QImage)),
+                                         SLOT(serviceQImageSlot(QImage))));
+
+  QVERIFY(m_interface->remoteConnect(firstTestObject, SIGNAL(interfaceQListOfQImageSignal(QList<QImage>)),
+                                         SLOT(serviceQListOfQImageSlot(QList<QImage>))));
+
+  QVERIFY(m_interface->remoteConnect(secondTestObject, SIGNAL(interfaceQStringIntSignal(QString,int)),
+                                         SLOT(serviceQStringIntSlot(QString,int))));
+
+  QVERIFY(m_interface->remoteConnect(secondTestObject, SIGNAL(interfaceQStringSignal(QString)),
+                                         SLOT(serviceQStringSlot(QString))));
+
+
+  QVERIFY(m_interface->remoteConnect(firstTestObject, SIGNAL(interfaceQByteArraySignal(QByteArray)),
+                                         SIGNAL(serviceQByteArraySignal(QByteArray))));
+
+  QVERIFY(m_interface->remoteConnect(firstTestObject, SIGNAL(interfaceQImageSignal(QImage)),
+                                         SIGNAL(serviceQImageSignal(QImage))));
+
+  QVERIFY(m_interface->remoteConnect(firstTestObject, SIGNAL(interfaceQListOfQImageSignal(QList<QImage>)),
+                                         SIGNAL(serviceQListOfQImageSignal(QList<QImage>))));
+
+  QVERIFY(m_interface->remoteConnect(secondTestObject, SIGNAL(interfaceQStringIntSignal(QString,int)),
+                                         SIGNAL(serviceQStringIntSignal(QString,int))));
+
+  QVERIFY(m_interface->remoteConnect(secondTestObject, SIGNAL(interfaceQStringSignal(QString)),
+                                         SIGNAL(serviceQStringSignal(QString))));
+
+  SignalWaiter waiter;
+  waiter.addConnection(m_service, SIGNAL(slotWasCalled(QString)), 4);
+
+  waiter.addConnection(m_service, SIGNAL(serviceQByteArraySignal(QByteArray)), 1);
+  waiter.addConnection(m_service, SIGNAL(serviceQImageSignal(QImage)), 1);
+  waiter.addConnection(m_service, SIGNAL(serviceQListOfQImageSignal(QList<QImage>)), 1);
+  waiter.addConnection(m_service, SIGNAL(serviceQStringIntSignal(QString,int)), 1);
+
+  //test transfers
+  QByteArray testByteArray(1 * 1024 * 1024, 'B');
+  QImage testImage(800, 600, QImage::Format_RGB888);
+  QList<QImage> testImageList = QList<QImage>() << testImage;
+  QString testString("testLocalSignalsString");
+  int testInt = 30;
+
+  firstTestObject->emitQByteArraySignal(testByteArray);
+  firstTestObject->emitQImageSignal(testImage);
+  firstTestObject->emitQListOfQImageSignal(testImageList);
+  secondTestObject->emitQStringIntSignal(testString, testInt);
+  QVERIFY(waiter.wait());
+
+  //Compare result values
+  QCOMPARE(testByteArray, m_service->getByteArray());
+
+  QCOMPARE(testImage.size(), m_service->getImage().size());
+  QCOMPARE(testImage.pixel(0, 0), m_service->getImage().pixel(0, 0));
+  QCOMPARE(testImage.pixel(50, 50), m_service->getImage().pixel(50, 50));
+
+  QCOMPARE(testImageList.length(), m_service->getImageList().length());
+  QCOMPARE(testImageList.first().size(), m_service->getImageList().first().size());
+  QCOMPARE(testImageList.first().pixel(0, 0), m_service->getImageList().first().pixel(0, 0));
+  QCOMPARE(testImageList.first().pixel(50, 50), m_service->getImageList().first().pixel(50, 50));
+
+  QCOMPARE(testString, m_service->getString());
+  QCOMPARE(testInt, m_service->getInt());
+
+  ///////////////
+  QVERIFY(m_interface->disconnectRemoteMethod(firstTestObject, SIGNAL(interfaceQListOfQImageSignal(QList<QImage>)),
+                                         SLOT(serviceQListOfQImageSlot(QList<QImage>))));
+
+  QVERIFY(m_interface->disconnectRemoteMethod(secondTestObject, SIGNAL(interfaceQStringIntSignal(QString,int)),
+                                         SLOT(serviceQStringIntSlot(QString,int))));
+
+  QVERIFY(m_interface->disconnectRemoteMethod(secondTestObject, SIGNAL(interfaceQStringSignal(QString)),
+                                         SLOT(serviceQStringSlot(QString))));
+
+
+  QVERIFY(m_interface->disconnectRemoteMethod(firstTestObject, SIGNAL(interfaceQListOfQImageSignal(QList<QImage>)),
+                                         SIGNAL(serviceQListOfQImageSignal(QList<QImage>))));
+
+  QVERIFY(m_interface->disconnectRemoteMethod(secondTestObject, SIGNAL(interfaceQStringIntSignal(QString,int)),
+                                         SIGNAL(serviceQStringIntSignal(QString,int))));
+
+  QVERIFY(m_interface->disconnectRemoteMethod(secondTestObject, SIGNAL(interfaceQStringSignal(QString)),
+                                         SIGNAL(serviceQStringSignal(QString))));
+
+  waiter.addConnection(m_service, SIGNAL(slotWasCalled(QString)), 2);
+
+  waiter.addConnection(m_service, SIGNAL(serviceQByteArraySignal(QByteArray)), 1);
+  waiter.addConnection(m_service, SIGNAL(serviceQImageSignal(QImage)), 1);
+
+  firstTestObject->emitQByteArraySignal(testByteArray);
+  firstTestObject->emitQImageSignal(testImage);
+  firstTestObject->emitQListOfQImageSignal(testImageList);
+  secondTestObject->emitQStringIntSignal(testString, testInt);
+  QVERIFY(waiter.wait());
+
+
+  delete firstTestObject;
+  delete secondTestObject;
+}
+
+
 void TestSocketCommunication::testRemoteSignalToSignal()
 {
   InterfaceTestObject* testObject = new InterfaceTestObject(this);

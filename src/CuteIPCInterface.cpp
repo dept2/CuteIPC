@@ -215,7 +215,7 @@ void CuteIPCInterfacePrivate::handleLocalSignalRequest(QObject* localObject, con
   MethodData data(localObject, signalSignature);
 
   QList<CuteIPCSignalHandler*> handlers = m_localSignalHandlers.values(data);
-  CuteIPCSignalHandler* handler = 0;
+  CuteIPCSignalHandler* handler = nullptr;
   foreach (CuteIPCSignalHandler* existingHandler, handlers)
   {
     if (existingHandler->signature() == slotSignature)
@@ -448,6 +448,73 @@ bool CuteIPCInterface::remoteConnect(const char* signal, QObject* object, const 
   return ok;
 }
 
+
+/*!
+    The method is used to connect the signal of some local object (on the client-side) to the remote signal or slot
+    of the server.
+
+    It returns true on success. False otherwise (the local signal doesn't exist, or signatures are incompatible).
+
+    After the connection being established, all signals will be delivered asynchronously.
+
+    \note It is recommended to use this method the same way as you call QObject::connect() method
+    (by using SIGNAL() and SLOT() macros).
+    \par
+    For example, to connect the exampleSignal() signal of some local \a object to the remote \a exampleSlot() slot,
+    you can type:
+    \code remoteSlotConnect(object, SIGNAL(exampleSignal()), SLOT(exampleSlot())); \endcode
+
+    \warning The method doesn't check the existence of the remote signal/slot on the server-side.
+
+    \sa remoteConnect(), call()
+ */
+bool CuteIPCInterface::remoteConnect(QObject* localObject, const char* localSignal, const char* remoteMethod)
+{
+  Q_D(CuteIPCInterface);
+
+  QString signalSignature = QString::fromLatin1(localSignal);
+  QString remoteMethodSignature = QString::fromLatin1(remoteMethod);
+
+  if (!d->checkConnectCorrection(signalSignature, remoteMethodSignature))
+    return false;
+
+  signalSignature = signalSignature.mid(1);
+  QChar type = remoteMethodSignature[0];
+  remoteMethodSignature = remoteMethodSignature.mid(1);
+
+  int signalIndex = localObject->metaObject()->indexOfSignal(
+      QMetaObject::normalizedSignature(signalSignature.toLatin1()));
+
+  if (signalIndex == -1)
+  {
+    d->m_lastError = "Signal doesn't exist:" + signalSignature;
+    qWarning() << "CuteIPC:" << "Error: " + d->m_lastError + "; object:" << localObject;
+    return false;
+  }
+
+
+  if (type == '1') // slot
+  {
+    if (!d->checkRemoteSlotExistance(remoteMethodSignature))
+    {
+      d->m_lastError = "Remote slot doesn't exist:" + remoteMethodSignature;
+      return false;
+    }
+  }
+  else if (type == '2') // signal
+  {
+    if (!d->sendRemoteConnectRequest(remoteMethodSignature))
+    {
+      d->m_lastError = "Remote signal doesn't exist:" + remoteMethodSignature;
+      return false;
+    }
+  }
+
+  d->handleLocalSignalRequest(localObject, signalSignature, remoteMethodSignature);
+  return true;
+}
+
+
 /*!
     Disconnects remote signal of server
     from local slot in object receiver.
@@ -469,6 +536,37 @@ bool CuteIPCInterface::disconnectSignal(const char* signal, QObject* object, con
   d->m_connections.remove(signalSignature, QPair<QObject*, QString>(object, methodSignature));
   if (!d->m_connections.contains(signalSignature))
     d->sendRemoteDisconnectRequest(signalSignature);
+  return true;
+}
+
+
+/*!
+    Disconnects local signal from remote slot of server.
+    Returns true if the connection is successfully broken;
+    otherwise returns false.
+
+    \sa remoteConnect
+ */
+bool CuteIPCInterface::disconnectRemoteMethod(QObject* localObject, const char* signal, const char* remoteMethod)
+{
+  Q_D(CuteIPCInterface);
+
+  if (signal[0] != '2' || (remoteMethod[0] != '1' && remoteMethod[0] != '2'))
+    return false;
+
+  QString signalSignature = QString::fromLatin1(signal).mid(1);
+  QString methodSignature = QString::fromLatin1(remoteMethod).mid(1);
+  CuteIPCInterfacePrivate::MethodData data(localObject, signalSignature);
+
+  QList<CuteIPCSignalHandler*> handlers = d->m_localSignalHandlers.values(data);
+  foreach (CuteIPCSignalHandler* handler, handlers)
+  {
+    if (handler->signature() == methodSignature)
+    {
+      delete handler;
+      d->m_localSignalHandlers.remove(data, handler);
+    }
+  }
   return true;
 }
 

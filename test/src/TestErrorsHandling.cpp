@@ -117,6 +117,47 @@ void TestErrorsHandling::testRemoteSlotErrors()
 }
 
 
+void TestErrorsHandling::testRemoteMethodErrors()
+{
+  QVERIFY(m_service->listen("TestSocket"));
+  QVERIFY(m_interface->connectToServer("TestSocket"));
+
+  InterfaceTestObject* firstTestObject = new InterfaceTestObject(this);
+
+  //incompatible signatures
+  QVERIFY(!m_interface->remoteConnect(firstTestObject, SIGNAL(interfaceQByteArraySignal(QByteArray)),
+                                          SLOT(serviceQByteArraySlot(int))));
+  QCOMPARE(m_interface->lastError(),
+           QString("Incompatible signatures: interfaceQByteArraySignal(QByteArray),serviceQByteArraySlot(int)"));
+
+  //unexisted signal
+  QVERIFY(!m_interface->remoteConnect(firstTestObject, SIGNAL(interfaceQImageSignal(QByteArray)),
+                                          SLOT(serviceQByteArraySlot(QByteArray))));
+  QCOMPARE(m_interface->lastError(), QString("Signal doesn't exist:interfaceQImageSignal(QByteArray)"));
+
+  //unexisted remote slot
+  QVERIFY(!m_interface->remoteConnect(firstTestObject, SIGNAL(interfaceQImageSignal(QImage)),
+                                          SLOT(unexistedSlot(QImage))));
+  QCOMPARE(m_interface->lastError(), QString("Remote slot doesn't exist:unexistedSlot(QImage)"));
+
+  //incompatible signatures
+  QVERIFY(!m_interface->remoteConnect(firstTestObject, SIGNAL(interfaceQByteArraySignal(QByteArray)),
+                                          SIGNAL(serviceQByteArraySignal(int))));
+  QCOMPARE(m_interface->lastError(),
+           QString("Incompatible signatures: interfaceQByteArraySignal(QByteArray),serviceQByteArraySignal(int)"));
+
+  //unexisted signal
+  QVERIFY(!m_interface->remoteConnect(firstTestObject, SIGNAL(interfaceQImageSignal(QByteArray)),
+                                          SIGNAL(serviceQByteArraySignal(QByteArray))));
+  QCOMPARE(m_interface->lastError(), QString("Signal doesn't exist:interfaceQImageSignal(QByteArray)"));
+
+  //unexisted remote signal
+  QVERIFY(!m_interface->remoteConnect(firstTestObject, SIGNAL(interfaceQImageSignal(QImage)),
+                                          SIGNAL(unexistedSignal(QImage))));
+  QCOMPARE(m_interface->lastError(), QString("Remote signal doesn't exist:unexistedSignal(QImage)"));
+}
+
+
 void TestErrorsHandling::sleep(int msecs)
 {
   QEventLoop loop;
