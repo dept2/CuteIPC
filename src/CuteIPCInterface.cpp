@@ -415,6 +415,13 @@ bool CuteIPCInterface::remoteConnect(const char* signal, QObject* object, const 
 {
   Q_D(CuteIPCInterface);
 
+  if (!object)
+  {
+    d->m_lastError = "Object doesn't exist";
+    qWarning() << "CuteIPC:" << "Error: " + d->m_lastError + "; object:" << object;
+    return false;
+  }
+
   QString signalSignature = QString::fromLatin1(signal);
   QString methodSignature = QString::fromLatin1(method);
 
@@ -472,6 +479,13 @@ bool CuteIPCInterface::remoteConnect(QObject* localObject, const char* localSign
 {
   Q_D(CuteIPCInterface);
 
+  if (!localObject)
+  {
+    d->m_lastError = "Object doesn't exist";
+    qWarning() << "CuteIPC:" << "Error: " + d->m_lastError + "; object:" << localObject;
+    return false;
+  }
+
   QString signalSignature = QString::fromLatin1(localSignal);
   QString remoteMethodSignature = QString::fromLatin1(remoteMethod);
 
@@ -527,6 +541,13 @@ bool CuteIPCInterface::disconnectSignal(const char* signal, QObject* object, con
 {
   Q_D(CuteIPCInterface);
 
+  if (!object)
+  {
+    d->m_lastError = "Object doesn't exist";
+    qWarning() << "CuteIPC:" << "Error: " + d->m_lastError + "; object:" << object;
+    return false;
+  }
+
   if (signal[0] != '2' || (method[0] != '1' && method[0] != '2'))
     return false;
 
@@ -550,6 +571,13 @@ bool CuteIPCInterface::disconnectSignal(const char* signal, QObject* object, con
 bool CuteIPCInterface::disconnectRemoteMethod(QObject* localObject, const char* signal, const char* remoteMethod)
 {
   Q_D(CuteIPCInterface);
+
+  if (!localObject)
+  {
+    d->m_lastError = "Object doesn't exist";
+    qWarning() << "CuteIPC:" << "Error: " + d->m_lastError + "; object:" << localObject;
+    return false;
+  }
 
   if (signal[0] != '2' || (remoteMethod[0] != '1' && remoteMethod[0] != '2'))
     return false;
@@ -594,6 +622,13 @@ bool CuteIPCInterface::remoteSlotConnect(QObject* localObject, const char* signa
 {
   Q_D(CuteIPCInterface);
 
+  if (!localObject)
+  {
+    d->m_lastError = "Object doesn't exist";
+    qWarning() << "CuteIPC:" << "Error: " + d->m_lastError + "; object:" << localObject;
+    return false;
+  }
+
   QString signalSignature = QString::fromLatin1(signal);
   QString slotSignature = QString::fromLatin1(remoteSlot);
 
@@ -634,6 +669,13 @@ bool CuteIPCInterface::remoteSlotConnect(QObject* localObject, const char* signa
 bool CuteIPCInterface::disconnectSlot(QObject* localObject, const char* signal, const char* remoteSlot)
 {
   Q_D(CuteIPCInterface);
+
+  if (!localObject)
+  {
+    d->m_lastError = "Object doesn't exist";
+    qWarning() << "CuteIPC:" << "Error: " + d->m_lastError + "; object:" << localObject;
+    return false;
+  }
 
   if (signal[0] != '2' || remoteSlot[0] != '1')
     return false;
