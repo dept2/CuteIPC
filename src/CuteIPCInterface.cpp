@@ -215,7 +215,7 @@ void CuteIPCInterfacePrivate::handleLocalSignalRequest(QObject* localObject, con
   MethodData data(localObject, signalSignature);
 
   QList<CuteIPCSignalHandler*> handlers = m_localSignalHandlers.values(data);
-  CuteIPCSignalHandler* handler = nullptr;
+  CuteIPCSignalHandler* handler = 0;
   foreach (CuteIPCSignalHandler* existingHandler, handlers)
   {
     if (existingHandler->signature() == slotSignature)

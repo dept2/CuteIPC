@@ -311,7 +311,6 @@ void TestSocketCommunication::testLocalSignalsToRemoteMethods()
   QCOMPARE(testString, m_service->getString());
   QCOMPARE(testInt, m_service->getInt());
 
-  ///////////////
   QVERIFY(m_interface->disconnectRemoteMethod(firstTestObject, SIGNAL(interfaceQListOfQImageSignal(QList<QImage>)),
                                          SLOT(serviceQListOfQImageSlot(QList<QImage>))));
 
