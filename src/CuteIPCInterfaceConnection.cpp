@@ -13,7 +13,8 @@
 CuteIPCInterfaceConnection::CuteIPCInterfaceConnection(QLocalSocket* socket, QObject* parent)
   : QObject(parent),
     m_socket(socket),
-    m_nextBlockSize(0)
+    m_nextBlockSize(0),
+    m_lastCallSuccessful(false)
 {
   connect(socket, SIGNAL(disconnected()), SIGNAL(socketDisconnected()));
   connect(socket, SIGNAL(error(QLocalSocket::LocalSocketError)), SLOT(errorOccured(QLocalSocket::LocalSocketError)));
@@ -24,7 +25,8 @@ CuteIPCInterfaceConnection::CuteIPCInterfaceConnection(QLocalSocket* socket, QOb
 CuteIPCInterfaceConnection::CuteIPCInterfaceConnection(QTcpSocket* socket, QObject* parent)
   : QObject(parent),
     m_socket(socket),
-    m_nextBlockSize(0)
+    m_nextBlockSize(0),
+    m_lastCallSuccessful(false)
 {
   connect(socket, SIGNAL(disconnected()), SIGNAL(socketDisconnected()));
   connect(socket, SIGNAL(error(QAbstractSocket::SocketError)), SLOT(errorOccured(QAbstractSocket::SocketError)));
