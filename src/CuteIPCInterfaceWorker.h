@@ -21,8 +21,10 @@ class CuteIPCInterfaceWorker : public QObject
     explicit CuteIPCInterfaceWorker(QObject* parent = 0);
     ~CuteIPCInterfaceWorker();
 
+    bool isConnected();
   signals:
     void setLastError(const QString& error);
+    void disconnected();
 
     // slot finish signals
     void connectToServerFinished();

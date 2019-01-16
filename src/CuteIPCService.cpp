@@ -6,6 +6,7 @@
 #include "CuteIPCSignalHandler_p.h"
 
 // Qt
+#include <QCoreApplication>
 #include <QLocalServer>
 #include <QLocalSocket>
 #include <QTime>
@@ -62,11 +63,13 @@ CuteIPCServicePrivate::~CuteIPCServicePrivate()
   }
 
   // Clients reaction timeout
-  QEventLoop loop;
-  QTimer timer;
-  QObject::connect(&timer, SIGNAL(timeout()), &loop, SLOT(quit()));
-  timer.start(CLIENTS_DISCONNECT_TIMEOUT);
-  loop.exec();
+  if ( QCoreApplication::instance() ) {
+      QEventLoop loop;
+      QTimer timer;
+      QObject::connect(&timer, SIGNAL(timeout()), &loop, SLOT(quit()));
+      timer.start(CLIENTS_DISCONNECT_TIMEOUT);
+      loop.exec();
+  }
 }
 
 
@@ -303,7 +306,7 @@ QHostAddress CuteIPCService::tcpAddress() const
     object itself. Previous subject will be replaced.
     Returns true on success, otherwise false.
  */
-bool CuteIPCService::listen(const QString& serverName, QObject* subject)
+bool CuteIPCService::listen(const QString& serverName, QObject* subject, QLocalServer::SocketOptions options)
 {
   Q_D(CuteIPCService);
   QString name = serverName;
@@ -312,6 +315,7 @@ bool CuteIPCService::listen(const QString& serverName, QObject* subject)
 
   DEBUG << "Trying to listen" << name;
   d->registerLocalServer();
+  d->m_localServer->setSocketOptions(options);
   bool ok = d->m_localServer->listen(name);
 
   if (!ok)
@@ -335,9 +339,9 @@ bool CuteIPCService::listen(const QString& serverName, QObject* subject)
 /*!
  * This is an overloaded member function.
  */
-bool CuteIPCService::listen(QObject* subject)
+bool CuteIPCService::listen(QObject* subject, QLocalServer::SocketOptions options)
 {
-  return listen(QString(), subject);
+  return listen(QString(), subject, options);
 }
 
 

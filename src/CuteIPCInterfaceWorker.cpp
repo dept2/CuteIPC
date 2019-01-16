@@ -28,6 +28,7 @@ void CuteIPCInterfaceWorker::connectToServer(const QString& name, void* successf
 
   QLocalSocket* socket = new QLocalSocket;
   socket->connectToServer(name);
+
   bool connected = socket->waitForConnected(5000);
   if (!connected)
   {
@@ -42,6 +43,7 @@ void CuteIPCInterfaceWorker::connectToServer(const QString& name, void* successf
             this, SIGNAL(invokeRemoteSignal(QString, CuteIPCMessage::Arguments)));
     connect(m_connection, SIGNAL(errorOccured(QString)), this, SIGNAL(setLastError(QString)));
 
+    connect(m_connection, SIGNAL(socketDisconnected()), SIGNAL(disconnected()));
     connect(m_connection, SIGNAL(socketDisconnected()), m_connection, SLOT(deleteLater()));
     connect(m_connection, SIGNAL(socketDisconnected()), socket, SLOT(deleteLater()));
 
@@ -88,6 +90,7 @@ void CuteIPCInterfaceWorker::connectToTcpServer(const QHostAddress& host, const 
             this, SIGNAL(invokeRemoteSignal(QString, CuteIPCMessage::Arguments)));
     connect(m_connection, SIGNAL(errorOccured(QString)), this, SIGNAL(setLastError(QString)));
 
+    connect(m_connection, SIGNAL(socketDisconnected()), SIGNAL(disconnected()));
     connect(m_connection, SIGNAL(socketDisconnected()), m_connection, SLOT(deleteLater()));
     connect(m_connection, SIGNAL(socketDisconnected()), socket, SLOT(deleteLater()));
 
@@ -130,6 +133,10 @@ void CuteIPCInterfaceWorker::disconnectFromServer()
   emit disconnectFromServerFinished();
 }
 
+
+bool CuteIPCInterfaceWorker::isConnected() {
+  return m_connection->isConnected();
+}
 
 void CuteIPCInterfaceWorker::sendCallRequest(const QByteArray& request)
 {

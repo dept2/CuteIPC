@@ -4,6 +4,7 @@
 // Qt
 #include <QObject>
 #include <QtNetwork/QHostAddress>
+#include <QLocalServer>
 
 // Local
 class CuteIPCServicePrivate;
@@ -16,8 +17,8 @@ class CuteIPCService : public QObject
     explicit CuteIPCService(QObject* parent = 0);
     ~CuteIPCService();
 
-    bool listen(const QString& name = QString(), QObject* subject = 0);
-    bool listen(QObject* subject);
+    bool listen(const QString& name = QString(), QObject* subject = 0, QLocalServer::SocketOptions options=QLocalServer::NoOptions);
+    bool listen(QObject* subject, QLocalServer::SocketOptions options=QLocalServer::NoOptions);
     QString serverName() const;
 
     bool listenTcp(const QHostAddress& address = QHostAddress::Any, quint16 port = 0, QObject* subject = 0);
