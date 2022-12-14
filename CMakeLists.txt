@@ -122,4 +122,14 @@ IF (CUTEIPC_BUILD_TESTS)
   ADD_SUBDIRECTORY(test)
 ENDIF ()
 
-INSTALL(TARGETS ${lib_target} LIBRARY DESTINATION lib)
+#INSTALL(TARGETS ${lib_target} LIBRARY DESTINATION lib)
+
+if(WIN32)
+    INSTALL(TARGETS ${lib_target} 
+        RUNTIME DESTINATION lib
+    )
+else()
+    INSTALL(TARGETS ${lib_target} 
+        LIBRARY DESTINATION lib
+    )
+endif()

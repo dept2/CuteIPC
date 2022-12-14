@@ -33,6 +33,9 @@ CuteIPCInterfaceConnection::CuteIPCInterfaceConnection(QTcpSocket* socket, QObje
   connect(socket, SIGNAL(readyRead()), SLOT(readyRead()));
 }
 
+bool CuteIPCInterfaceConnection::isConnected() {
+  return m_socket && m_socket->isOpen();
+}
 
 void CuteIPCInterfaceConnection::sendCallRequest(const QByteArray& request)
 {
@@ -110,7 +113,7 @@ bool CuteIPCInterfaceConnection::readMessageFromSocket()
       }
       case CuteIPCMessage::AboutToCloseSocket:
       {
-        DEBUG << "Сервер сообщает о закрытии соединения";
+        DEBUG << "The server reports that the connection is closed";
         CuteIPCMessage message = CuteIPCMarshaller::demarshallMessage(m_block);
         CuteIPCMarshaller::freeArguments(message.arguments());
         m_lastCallSuccessful = false;
